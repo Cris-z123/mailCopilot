@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "validation_rules": {
+    "message_id": {
+      "require_angle_brackets": false,
+      "allow_local_domains": true,
+      "min_length": 3,
+      "max_length": 254
+    },
+    "anomaly_handling": {
+      "fail_on_missing_message_id": false,
+      "fail_on_malformed_message_id": false,
+      "log_all_anomalies": true,
+      "show_anomaly_summary_in_report": true
+    },
+    "duplicate_detection": {
+      "enabled": true,
+      "use_composite_key": true,
+      "composite_key_format": "{message_id}:{file_path}"
+    }
+  }
+}

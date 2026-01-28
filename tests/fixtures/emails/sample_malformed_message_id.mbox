@@ -1,0 +1,10 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Test Email with Malformed Message-ID
+Date: Mon, 13 Jan 2025 10:32:00 +0000
+Message-ID: invalid-format
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+This email has a malformed Message-ID (no @ symbol).
+It should be flagged as an anomaly.
