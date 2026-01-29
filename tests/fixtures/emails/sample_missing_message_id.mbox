@@ -1,9 +1,0 @@
-From: sender@example.com
-To: recipient@example.com
-Subject: Test Email without Message-ID
-Date: Mon, 13 Jan 2025 10:31:00 +0000
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-
-This email is missing the Message-ID header.
-It should be flagged as an anomaly.

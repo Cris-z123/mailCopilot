@@ -1,1 +1,0 @@
-"""Email fixtures for testing."""

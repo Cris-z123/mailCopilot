@@ -1,7 +1,0 @@
-# Core dependencies
-pydantic>=2.0
-keyring>=25.0
-
-# Testing dependencies
-pytest>=7.0
-pytest-cov>=4.0

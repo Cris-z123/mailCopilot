@@ -1,9 +1,0 @@
-From: "Very Long Name That Goes On And On" <sender@example.com>
-To: recipient@example.com
-Subject: This is an extremely long subject line that exceeds fifty characters and should be truncated
-Date: Mon, 13 Jan 2025 10:33:00 +0000
-Message-ID: <test67890@example.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-
-This email has a long subject line to test truncation.
