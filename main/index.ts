@@ -1,0 +1,270 @@
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
+import * as url from 'url';
+import DatabaseManager from './database/Database.js';
+import { SchemaManager } from './database/schema.js';
+import { ConfigManager } from './config/ConfigManager.js';
+import { StructuredLogger } from './logging/StructuredLogger.js';
+import { IPC_CHANNELS } from './ipc/channels.js';
+import { SingleInstanceManager, ApplicationManager } from './app.js';
+
+/**
+ * Main Process Entry Point
+ *
+ * Responsibilities:
+ * - Application initialization
+ * - Window creation and management
+ * - IPC handler registration
+ * - Lifecycle management (ready, quit, window-all-closed)
+ */
+
+class Application {
+  private mainWindow: BrowserWindow | null = null;
+  private isQuitting = false;
+
+  constructor() {
+    // Initialize application manager and check for single-instance
+    if (!ApplicationManager.initialize()) {
+      // Second instance detected - quit immediately
+      // (This will never return as app.quit() is called)
+      throw new Error('Second instance detected - exiting');
+    }
+
+    this.setupEventHandlers();
+  }
+
+  /**
+   * Setup application event handlers
+   */
+  private setupEventHandlers(): void {
+    // App ready event
+    app.whenReady().then(() => this.onReady());
+
+    // Window all closed event
+    app.on('window-all-closed', () => this.onWindowAllClosed());
+
+    // App before quit event
+    app.on('before-quit', () => this.onBeforeQuit());
+
+    // App activation (macOS)
+    app.on('activate', () => this.onActivate());
+  }
+
+  /**
+   * Initialize application when ready
+   */
+  private async onReady(): Promise<void> {
+    try {
+      // Initialize structured logging
+      StructuredLogger.initialize();
+      StructuredLogger.info('Application', 'Application starting up');
+
+      // Initialize database
+      DatabaseManager.initialize();
+      StructuredLogger.info('Database', 'Database initialized');
+
+      // Initialize schema
+      await SchemaManager.initialize();
+      StructuredLogger.info('Schema', 'Schema initialized');
+
+      // Initialize config manager
+      await ConfigManager.initialize();
+      await ConfigManager.initializeDefaults();
+      StructuredLogger.info('Config', 'Configuration initialized');
+
+      // Setup IPC handlers
+      this.setupIPCHandlers();
+      StructuredLogger.info('IPC', 'IPC handlers registered');
+
+      // Create main window
+      this.createMainWindow();
+      StructuredLogger.info('Window', 'Main window created');
+
+      // Check for updates (if in remote mode)
+      const config = await ConfigManager.get(['llm.mode']);
+      if (config['llm.mode'] === 'remote') {
+        // TODO: Implement update check
+        StructuredLogger.info('Update', 'Auto-update check skipped (not implemented yet)');
+      }
+
+      // Mark application as ready
+      ApplicationManager.setReady();
+    } catch (error) {
+      StructuredLogger.error('Application', 'Failed to initialize application', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create main application window
+   */
+  private createMainWindow(): void {
+    this.mainWindow = new BrowserWindow({
+      width: 1200,
+      height: 800,
+      minWidth: 800,
+      minHeight: 600,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+        preload: path.join(__dirname, '../preload/index.js'),
+      },
+      show: false, // Don't show until ready
+    });
+
+    // Load renderer
+    if (process.env.NODE_ENV === 'development') {
+      this.mainWindow.loadURL('http://localhost:3000');
+      this.mainWindow.webContents.openDevTools();
+    } else {
+      this.mainWindow.loadFile(
+        path.join(__dirname, '../renderer/index.html')
+      );
+    }
+
+    // Show window when ready
+    this.mainWindow.once('ready-to-show', () => {
+      this.mainWindow?.show();
+      StructuredLogger.info('Window', 'Main window shown');
+    });
+
+    // Register window with single-instance manager
+    SingleInstanceManager.setMainWindow(this.mainWindow);
+
+    // Handle window closed
+    this.mainWindow.on('closed', () => {
+      this.mainWindow = null;
+      StructuredLogger.info('Window', 'Main window closed');
+    });
+
+    // Log renderer errors
+    this.mainWindow.webContents.on('render-process-gone', (event, details) => {
+      StructuredLogger.error('Renderer', `Render process gone: ${details.reason}`, details);
+    });
+  }
+
+  /**
+   * Setup IPC handlers
+   */
+  private setupIPCHandlers(): void {
+    // Placeholder handlers for all IPC channels
+    // Full implementation will be in user stories
+
+    // LLM generate
+    ipcMain.handle(IPC_CHANNELS.LLM_GENERATE, async (event, request) => {
+      StructuredLogger.debug('IPC', 'LLM generate request received');
+      // TODO: Implement in US1
+      return { success: false, error: 'NOT_IMPLEMENTED' };
+    });
+
+    // Database query history
+    ipcMain.handle(IPC_CHANNELS.DB_QUERY_HISTORY, async (event, request) => {
+      StructuredLogger.debug('IPC', 'Database query history request received');
+      // TODO: Implement in US1
+      return { reports: [], total: 0 };
+    });
+
+    // Database export
+    ipcMain.handle(IPC_CHANNELS.DB_EXPORT, async (event, request) => {
+      StructuredLogger.debug('IPC', 'Database export request received');
+      // TODO: Implement in Polish phase
+      return { success: false, error: 'NOT_IMPLEMENTED' };
+    });
+
+    // Config get
+    ipcMain.handle(IPC_CHANNELS.CONFIG_GET, async (event, request) => {
+      StructuredLogger.debug('IPC', 'Config get request received');
+      const keys = request?.keys;
+      return { config: await ConfigManager.get(keys) };
+    });
+
+    // Config set
+    ipcMain.handle(IPC_CHANNELS.CONFIG_SET, async (event, request) => {
+      StructuredLogger.debug('IPC', 'Config set request received');
+      const updated = await ConfigManager.set(request.updates);
+      return { success: true, updated };
+    });
+
+    // App check update
+    ipcMain.handle(IPC_CHANNELS.APP_CHECK_UPDATE, async (event, request) => {
+      StructuredLogger.debug('IPC', 'Update check request received');
+      // TODO: Implement in US5
+      return { hasUpdate: false };
+    });
+
+    // Email fetch metadata
+    ipcMain.handle(IPC_CHANNELS.EMAIL_FETCH_META, async (event, request) => {
+      StructuredLogger.debug('IPC', 'Email metadata fetch request received');
+      // TODO: Implement in US4
+      return { success: false, error: 'NOT_IMPLEMENTED' };
+    });
+
+    // Feedback submit
+    ipcMain.handle(IPC_CHANNELS.FEEDBACK_SUBMIT, async (event, request) => {
+      StructuredLogger.debug('IPC', 'Feedback submit request received');
+      // TODO: Implement in US3
+      return { success: false, error: 'NOT_IMPLEMENTED' };
+    });
+
+    // Feedback stats
+    ipcMain.handle(IPC_CHANNELS.FEEDBACK_STATS, async (event) => {
+      StructuredLogger.debug('IPC', 'Feedback stats request received');
+      // TODO: Implement in US3
+      return { total: 0, byType: {} };
+    });
+
+    // Feedback destroy
+    ipcMain.handle(IPC_CHANNELS.FEEDBACK_DESTROY, async (event) => {
+      StructuredLogger.debug('IPC', 'Feedback destroy request received');
+      // TODO: Implement in US3
+      return { success: false, error: 'NOT_IMPLEMENTED' };
+    });
+
+    StructuredLogger.info('IPC', 'All IPC handlers registered');
+  }
+
+  /**
+   * Handle window-all-closed event
+   */
+  private onWindowAllClosed(): void {
+    // On macOS, keep app running even when all windows are closed
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  }
+
+  /**
+   * Handle before-quit event
+   */
+  private onBeforeQuit(): void {
+    this.isQuitting = true;
+    StructuredLogger.info('Application', 'Application quitting');
+
+    // Close database connection
+    DatabaseManager.close();
+    StructuredLogger.info('Database', 'Database connection closed');
+  }
+
+  /**
+   * Handle activate event (macOS dock click)
+   */
+  private onActivate(): void {
+    // On macOS, re-create window when dock icon is clicked
+    if (BrowserWindow.getAllWindows().length === 0) {
+      this.createMainWindow();
+    }
+  }
+
+  /**
+   * Check if application is quitting
+   */
+  public isAppQuitting(): boolean {
+    return this.isQuitting;
+  }
+}
+
+// Initialize application
+new Application();
+
+export default Application;
