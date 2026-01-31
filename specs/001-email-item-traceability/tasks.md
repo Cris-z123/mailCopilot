@@ -1,7 +1,11 @@
 # Tasks: Email Item Traceability & Verification System
 
 **Input**: Design documents from `/specs/001-email-item-traceability/`
-**Prerequisites**: plan.md ✅, spec.md ✅, data-model.md (embedded in plan.md), contracts/ (embedded in plan.md)
+**Prerequisites**: plan.md v1.1.0 ✅, spec.md ✅, data-model.md (embedded in plan.md), contracts/ (embedded in plan.md)
+
+**Plan Version**: 1.1.0 (依赖版本更新: Electron 29.4.6, Zustand 4.5, better-sqlite3 11.10.0)
+**Last Regenerated**: 2026-01-31
+**Completed Tasks Preserved**: T001-T017 (Foundation Phase)
 
 **Tests**: Tests are OPTIONAL per plan.md. Test tasks are included as per constitution Principle V (60% unit, 40% integration, no E2E).
 
@@ -25,7 +29,7 @@
 
 **Purpose**: Project initialization and basic structure for Electron desktop application
 
-- [X] T001 Initialize package.json with dependencies (Electron 28.2.0, React 18, TypeScript 5.4, better-sqlite3 9.4, Zod, QuickJS WASM)
+- [X] T001 Initialize package.json with dependencies (Electron 29.4.6, React 18, TypeScript 5.4, better-sqlite3 11.10.0, Zustand 4.5, Zod, QuickJS WASM)
 - [X] T002 [P] Configure TypeScript (tsconfig.json for main, renderer, shared)
 - [X] T003 [P] Setup ESLint and Prettier with TypeScript support
 - [X] T004 [P] Configure Vitest for unit testing (60% coverage target, 100% for security modules)
@@ -430,3 +434,38 @@ With 3 developers after Foundational phase:
 - P2 stories (US4-US6) = 27 tasks ~2-3 weeks
 - Polish = 15 tasks ~1 week
 - **Total**: ~6-8 weeks for full feature delivery
+
+---
+
+## Version History
+
+### v1.1.0 (2026-01-31)
+**Change Type**: chore - 依赖版本更新
+**Plan Version**: 1.1.0
+
+**依赖版本变更**:
+- Electron: 28.2.0 → 29.4.6
+- Zustand: 4.4 → 4.5
+- better-sqlite3: 9.4 → 11.10.0
+
+**影响**:
+- ✅ T001 已更新依赖版本
+- ✅ T001-T017 保持完成状态
+- ✅ 所有待办任务保持不变
+- ✅ 无破坏性 API 变更
+- ✅ 代码无需修改
+
+**兼容性**:
+- Foundation Phase 基础设施完全兼容
+- 所有任务接口保持不变
+- 数据库 Schema 保持不变
+
+**迁移**:
+- 无需任务列表调整
+- 无需修改已完成代码
+- 仅需更新 package.json 并运行 npm install
+
+### v1.0.0 (Initial)
+**Initial task list generation from plan.md v1.0.0**
+- All 101 tasks defined across 9 phases
+- Foundation Phase (T001-T017) completed

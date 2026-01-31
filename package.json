@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Email Item Traceability & Verification System",
   "main": "dist/main/index.js",
-  "author": "",
+  "author": "Cris-z123",
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
@@ -24,7 +24,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
   },
   "dependencies": {
-    "better-sqlite3": "^9.4.0",
+    "better-sqlite3": "^11.10.0",
     "mailparser": "^3.6.5",
     "zod": "^3.22.4"
   },
@@ -38,7 +38,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^1.2.1",
     "concurrently": "^8.2.2",
-    "electron": "^28.2.0",
+    "electron": "^29.4.6",
     "electron-builder": "^24.9.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
@@ -51,7 +51,7 @@
     "typescript": "^5.4.5",
     "vite": "^5.0.12",
     "vitest": "^1.2.1",
-    "zustand": "^4.4.7"
+    "zustand": "^4.5.0"
   },
   "optionalDependencies": {
     "msg-extractor": "^0.22.0",

@@ -5,6 +5,14 @@
 
 **Note**: This plan is based on existing technical architecture v2.6 from `docs/tech-architecture.md`
 
+---
+**Plan Version**: 1.1.0
+**Last Plan Version**: 1.0.0
+**Change Type**: chore (dependency version updates)
+**Spec Frozen**: true (spec.md remains unchanged)
+**Completed Tasks Preserved**: [] (Foundation phase infrastructure remains intact)
+---
+
 ## Summary
 
 This feature implements **complete email item traceability** with 100% source verification, dual-mode LLM operation (local/remote), confidence-based warnings, and privacy-preserving user feedback. The system extracts action items from emails while maintaining mandatory traceability through Message-ID or SHA-256 fingerprint, with degradation handling that never silently drops data.
@@ -15,14 +23,26 @@ This feature implements **complete email item traceability** with 100% source ve
 
 **Language/Version**: TypeScript 5.4 + Node.js 20.x
 **Primary Dependencies**:
+```diff
 - Electron 28.2.0 (desktop framework)
++ Electron 29.4.6 (desktop framework)
 - React 18 + Zustand 4.4 (frontend)
++ React 18 + Zustand 4.5 (frontend)
 - better-sqlite3 9.4 (database with field-level encryption)
++ better-sqlite3 11.10.0 (database with field-level encryption)
+```
 - QuickJS WASM (rule engine sandbox)
 - Zod (schema validation)
 - imapflow + mailparser (email parsing)
 - msg-extractor / libpff (Outlook format support)
 - puppeteer (PDF export)
+
+**Version Change Summary** (v1.1.0):
+- **Electron 28.2.0 → 29.4.6**: Updated to latest stable Electron 29.x series for improved security patches and Chromium engine upgrade
+- **Zustand 4.4 → 4.5**: Minor version update with enhanced TypeScript types and performance improvements
+- **better-sqlite3 9.4 → 11.10.0**: Major version upgrade with SQLite 3.43+ support, improved WAL mode performance, and better Windows ARM64 compatibility
+- **Impact**: No breaking API changes - all library interfaces remain compatible with existing Foundation Phase implementation
+- **Migration**: No code changes required, but `npm install` must be run after pulling this update
 
 **Storage**: better-sqlite3 with SQLite database, field-level AES-256-GCM encryption for sensitive fields, WAL mode enabled
 **Testing**: Vitest (unit), integration tests for database/IPC/LLM adapters, 100% coverage for security modules
