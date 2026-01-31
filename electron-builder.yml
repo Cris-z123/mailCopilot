@@ -1,0 +1,54 @@
+appId: com.mailcopilot.app
+productName: mailCopilot
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - dist/main/**/*
+  - dist/renderer/**/*
+  - dist/shared/**/*
+  - package.json
+
+extraMetadata:
+  main: dist/main/index.js
+
+asar: true
+asarUnpack:
+  - node_modules/better-sqlite3/**
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+
+mac:
+  target:
+    - target: dmg
+    - target: zip
+  icon: build/icon.icns
+  category: public.app-category.productivity
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+linux:
+  target:
+    - target: AppImage
+    - target: deb
+  icon: build/icon.png
+  category: Productivity
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+publish:
+  provider: github
+  owner: your-org
+  repo: mailcopilot
