@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Notification } from 'electron';
-import { StructuredLogger } from './logging/StructuredLogger.js';
+import { logger } from './config/logger.js';
 
 /**
  * Single-Instance Lock Manager
@@ -27,16 +27,16 @@ export class SingleInstanceManager {
 
     if (!this.hasLock) {
       // Another instance is already running
-      StructuredLogger.warn('SingleInstance', 'Second instance detected - quitting');
+      logger.warn('SingleInstance', 'Second instance detected - quitting');
       return false;
     }
 
     // Register handler for second-instance events
-    app.on('second-instance', (event, commandLine, workingDirectory) => {
-      this.onSecondInstance(commandLine, workingDirectory);
+    app.on('second-instance', (_event, commandLine, workingDirectory) => {
+      this.onSecondInstance(_event, commandLine, workingDirectory);
     });
 
-    StructuredLogger.info('SingleInstance', 'Single-instance lock acquired');
+    logger.info('SingleInstance', 'Single-instance lock acquired');
     return true;
   }
 
@@ -47,17 +47,18 @@ export class SingleInstanceManager {
    */
   static setMainWindow(window: BrowserWindow): void {
     this.mainWindow = window;
-    StructuredLogger.debug('SingleInstance', 'Main window registered');
+    logger.debug('SingleInstance', 'Main window registered');
   }
 
   /**
    * Handle second-instance launch attempt
    *
+   * @param _event - Second instance event (unused)
    * @param commandLine - Command line arguments from second instance
    * @param workingDirectory - Working directory from second instance
    */
-  private static onSecondInstance(commandLine: string[], workingDirectory: string): void {
-    StructuredLogger.info('SingleInstance', 'Second instance launch detected', {
+  private static onSecondInstance(_event: Electron.Event, commandLine: string[], workingDirectory: string): void {
+    logger.info('SingleInstance', 'Second instance launch detected', {
       commandLine,
       workingDirectory,
     });
@@ -66,17 +67,17 @@ export class SingleInstanceManager {
       // Restore window if minimized
       if (this.mainWindow.isMinimized()) {
         this.mainWindow.restore();
-        StructuredLogger.debug('SingleInstance', 'Window restored from minimized state');
+        logger.debug('SingleInstance', 'Window restored from minimized state');
       }
 
       // Focus the window
       this.mainWindow.focus();
-      StructuredLogger.debug('SingleInstance', 'Window focused');
+      logger.debug('SingleInstance', 'Window focused');
 
       // Show notification to user
       this.showNotification();
     } else {
-      StructuredLogger.warn('SingleInstance', 'Second instance detected but no main window available');
+      logger.warn('SingleInstance', 'Second instance detected but no main window available');
     }
   }
 
@@ -98,9 +99,9 @@ export class SingleInstanceManager {
       });
 
       notification.show();
-      StructuredLogger.debug('SingleInstance', 'User notification displayed');
+      logger.debug('SingleInstance', 'User notification displayed');
     } catch (error) {
-      StructuredLogger.error('SingleInstance', 'Failed to show notification', error);
+      logger.error('SingleInstance', 'Failed to show notification', error);
     }
   }
 
@@ -111,7 +112,7 @@ export class SingleInstanceManager {
     if (this.hasLock) {
       app.releaseSingleInstanceLock();
       this.hasLock = false;
-      StructuredLogger.info('SingleInstance', 'Single-instance lock released');
+      logger.info('SingleInstance', 'Single-instance lock released');
     }
   }
 
@@ -157,7 +158,7 @@ export class ApplicationManager {
       this.onWillQuit(event);
     });
 
-    StructuredLogger.info('Application', 'Application manager initialized');
+    logger.info('Application', 'Application manager initialized');
     return true;
   }
 
@@ -166,7 +167,7 @@ export class ApplicationManager {
    */
   static setReady(): void {
     this.isReady = true;
-    StructuredLogger.info('Application', 'Application is ready');
+    logger.info('Application', 'Application is ready');
   }
 
   /**
@@ -180,13 +181,13 @@ export class ApplicationManager {
    * Handle before-quit event
    */
   private static onBeforeQuit(): void {
-    StructuredLogger.info('Application', 'Application is about to quit');
+    logger.info('Application', 'Application is about to quit');
   }
 
   /**
    * Handle will-quit event
    */
-  private static onWillQuit(event: Electron.Event): void {
+  private static onWillQuit(_event: Electron.Event): void {
     // Prevent default quit behavior to clean up
     // event.preventDefault(); // Don't prevent - let quit happen
 
@@ -198,7 +199,7 @@ export class ApplicationManager {
    * Quit the application
    */
   static quit(): void {
-    StructuredLogger.info('Application', 'Application quit requested');
+    logger.info('Application', 'Application quit requested');
     app.quit();
   }
 }

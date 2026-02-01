@@ -16,6 +16,10 @@ export interface EncryptedData {
   authTag: string; // Base64 encoded authentication tag
 }
 
+// CryptoKey type - using any to avoid complex webcrypto type issues
+// This is safe because we only get CryptoKey from webcrypto.subtle.generateKey()
+export type CryptoKey = any;
+
 /**
  * Generate a random 256-bit encryption key
  */

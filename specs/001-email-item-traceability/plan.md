@@ -6,9 +6,9 @@
 **Note**: This plan is based on existing technical architecture v2.6 from `docs/tech-architecture.md`
 
 ---
-**Plan Version**: 1.1.0
-**Last Plan Version**: 1.0.0
-**Change Type**: chore (dependency version updates)
+**Plan Version**: 1.2.0
+**Last Plan Version**: 1.1.0
+**Change Type**: refactoring (replace custom StructuredLogger with electron-log v5)
 **Spec Frozen**: true (spec.md remains unchanged)
 **Completed Tasks Preserved**: [] (Foundation phase infrastructure remains intact)
 ---
@@ -30,6 +30,7 @@ This feature implements **complete email item traceability** with 100% source ve
 + React 18 + Zustand 4.5 (frontend)
 - better-sqlite3 9.4 (database with field-level encryption)
 + better-sqlite3 11.10.0 (database with field-level encryption)
++ electron-log 5.0.0 (application logging)
 ```
 - QuickJS WASM (rule engine sandbox)
 - Zod (schema validation)
@@ -37,17 +38,21 @@ This feature implements **complete email item traceability** with 100% source ve
 - msg-extractor / libpff (Outlook format support)
 - puppeteer (PDF export)
 
+**Version Change Summary** (v1.2.0):
+- **NEW: electron-log 5.0.0**: Replaces custom StructuredLogger implementation with industry-standard logging library for Electron applications
+- **Impact**: Simplifies logging implementation, reduces maintenance burden, provides built-in log rotation and cross-platform log file handling
+- **Migration**: Custom StructuredLogger class removed, replaced with electron-log transports configuration
+
 **Version Change Summary** (v1.1.0):
 - **Electron 28.2.0 → 29.4.6**: Updated to latest stable Electron 29.x series for improved security patches and Chromium engine upgrade
 - **Zustand 4.4 → 4.5**: Minor version update with enhanced TypeScript types and performance improvements
 - **better-sqlite3 9.4 → 11.10.0**: Major version upgrade with SQLite 3.43+ support, improved WAL mode performance, and better Windows ARM64 compatibility
-- **Impact**: No breaking API changes - all library interfaces remain compatible with existing Foundation Phase implementation
-- **Migration**: No code changes required, but `npm install` must be run after pulling this update
 
 **Storage**: better-sqlite3 with SQLite database, field-level AES-256-GCM encryption for sensitive fields, WAL mode enabled
 **Testing**: Vitest (unit), integration tests for database/IPC/LLM adapters, 100% coverage for security modules
 **Target Platform**: Cross-platform desktop (Windows 10+, macOS 11+, Linux)
 **Project Type**: Electron desktop application (single project with main process + renderer process)
+**Logging**: electron-log v5 with structured JSON output, file rotation, and console/renderer transports
 **Performance Goals**:
 - Email metadata extraction ≤100ms per email
 - Local LLM processing ≤2s per email
@@ -156,13 +161,14 @@ This feature implements **complete email item traceability** with 100% source ve
 **Requirement**: Structured logging, performance benchmarks, resource limits, database optimization, memory management
 
 **Compliance**:
-- ✅ FR-053: Structured logging with error type, module, message, timestamp, context ID
+- ✅ FR-053: Structured logging with error type, module, message, timestamp, context ID (via electron-log v5)
+- ✅ electron-log provides built-in log rotation, file transport, and structured JSON output
 - ✅ Performance targets defined (SC-014 through SC-017)
 - ✅ FR-056, FR-057, FR-058: Resource limits (5s rule engine, 30s LLM, 128MB QuickJS)
 - ✅ Database: WAL mode, synchronous=NORMAL (from architecture)
 - ✅ Architecture specifies Buffer.fill(0) for sensitive data cleanup
 
-**Status**: Fully compliant - observability and performance requirements specified
+**Status**: Fully compliant - observability and performance requirements specified using industry-standard logging library
 
 ### Overall Constitution Check Status
 
@@ -195,7 +201,8 @@ mailcopilot/
 │   ├── app.ts              # Application entry point, single-instance lock
 │   ├── config/             # Configuration management
 │   │   ├── ConfigManager.ts
-│   │   └── encryption.ts   # AES-256-GCM field encryption
+│   │   ├── encryption.ts   # AES-256-GCM field encryption
+│   │   └── logger.ts       # electron-log v5 configuration
 │   ├── database/           # SQLite database layer
 │   │   ├── Database.ts     # better-sqlite3 wrapper
 │   │   ├── migrations/     # Database migration scripts
@@ -1522,6 +1529,171 @@ npm run dev
 - **Technical Architecture**: `docs/tech-architecture.md`
 - **API Documentation**: `specs/001-email-item-traceability/contracts/`
 - **Database Schema**: `specs/001-email-item-traceability/contracts/database-schema.sql`
+
+---
+
+# Diff from Previous Plan (v1.1.0 → v1.2.0)
+
+## Overview
+
+**Change Type**: Refactoring
+**Objective**: Replace custom StructuredLogger implementation with electron-log v5 to reduce maintenance burden and leverage industry-standard logging features.
+
+## Key Changes
+
+### 1. Dependencies
+
+```diff
+# Removed (custom implementation):
+- main/utils/StructuredLogger.ts (custom class)
+
+# Added:
++ electron-log@5.0.0
+```
+
+### 2. Project Structure
+
+```diff
+mailcopilot/
+├── main/
+│   ├── config/
+- │   │   └── StructuredLogger.ts  # Custom logger implementation
++ │   │   └── logger.ts            # electron-log v5 configuration
+```
+
+### 3. Implementation Changes
+
+#### Logging Configuration (NEW in v1.2.0)
+
+**File**: `main/config/logger.ts`
+
+```typescript
+// electron-log v5 configuration
+import log from 'electron-log';
+
+// Configure main process logging
+log.transports.file.level = 'debug';
+log.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] [{processType}] {text}';
+log.transports.file.maxSize = 10 * 1024 * 1024; // 10MB per file
+log.transports.file.file = getPath('logs', 'main.log');
+
+// Configure console transport for development
+if (process.env.NODE_ENV === 'development') {
+  log.transports.console.level = 'debug';
+}
+
+// Structured logging helper
+export const logger = {
+  debug: (module: string, message: string, context?: Record<string, any>) => {
+    log.debug({ module, message, ...context });
+  },
+  info: (module: string, message: string, context?: Record<string, any>) => {
+    log.info({ module, message, ...context });
+  },
+  warn: (module: string, message: string, context?: Record<string, any>) => {
+    log.warn({ module, message, ...context });
+  },
+  error: (module: string, message: string, error?: Error, context?: Record<string, any>) => {
+    log.error({
+      module,
+      message,
+      error: error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : undefined,
+      ...context
+    });
+  }
+};
+
+export default log;
+```
+
+#### Usage Example (CHANGED from v1.1.0)
+
+```diff
+- import { StructuredLogger } from '../config/StructuredLogger';
+- const logger = new StructuredLogger('LLMAdapter');
+
+- logger.info('Processing email batch', { emailCount: 50 });
++ import { logger } from '../config/logger';
++ logger.info('LLMAdapter', 'Processing email batch', { emailCount: 50 });
+```
+
+### 4. Removed Custom Implementation
+
+**Deleted**: `main/config/StructuredLogger.ts` (approximately 150 lines)
+
+The following features are now handled by electron-log instead of custom code:
+- ✅ Log file rotation (built-in with `maxSize` and `pattern`)
+- ✅ Cross-platform path resolution (handles Windows/macOS/Linux differences)
+- ✅ Structured JSON output (via object-based logging)
+- ✅ Log levels (DEBUG, INFO, WARN, ERROR)
+- ✅ Console and file transports
+- ✅ Timestamp formatting
+- ✅ Error serialization
+
+### 5. Migration Impact
+
+**Breaking Changes**: None (internal refactor only)
+
+**Code Updates Required**:
+1. Replace all `StructuredLogger` imports with `logger` from `electron-log`
+2. Update logger instantiation: `new StructuredLogger(module)` → `logger.info(module, ...)`
+3. Remove custom log rotation logic (handled by electron-log)
+
+**Estimated Refactor Effort**: ~2-3 hours
+- Update imports across ~20 files
+- Update logger calls (~200 instances)
+- Remove StructuredLogger.ts
+- Test log output format
+- Verify log rotation works correctly
+
+### 6. Benefits of electron-log v5
+
+| Feature | Custom StructuredLogger | electron-log v5 |
+|---------|------------------------|-----------------|
+| Maintenance | Custom code to maintain | Battle-tested library |
+| Log Rotation | Manual implementation | Built-in with `maxSize` |
+| Cross-Platform | Custom path handling | Automatic OS detection |
+| Transports | File only | File, Console, Renderer, Remote |
+| Serialization | Custom error handling | Automatic error serialization |
+| Testing | Must test custom code | Well-tested library |
+| File Size | ~150 lines custom code | ~5KB minified library |
+| Electron Updates | Manual compatibility testing | Automatic compatibility |
+
+### 7. Technical Justification
+
+**Why This Change**:
+1. **Reduced Maintenance**: Custom logging code requires ongoing maintenance and testing. electron-log is actively maintained (10M+ weekly downloads).
+2. **Better Features**: Built-in log rotation, multiple transports, renderer process logging, and remote logging capabilities.
+3. **Proven Reliability**: Used by thousands of Electron apps, battle-tested in production.
+4. **Faster Development**: Eliminates ~150 lines of custom code that must be written, tested, and maintained.
+5. **Standards Compliance**: Follows Electron logging best practices and conventions.
+
+**Constitution Compliance**: ✅ No impact on constitutional principles. FR-053 (structured logging) still fully satisfied with enhanced capabilities.
+
+**Backward Compatibility**: ✅ Internal refactor only - no API changes, no database schema changes, no user-facing changes.
+
+### 8. Testing Requirements
+
+**Unit Tests**:
+- ✅ Test logger configuration (file transport, console transport)
+- ✅ Test structured logging output format
+- ✅ Test error serialization
+- ✅ Test log rotation (verify max size enforcement)
+
+**Integration Tests**:
+- ✅ Verify logs are written to correct file path
+- ✅ Verify logs survive application restart
+- ✅ Verify log files rotate when size exceeded
+- ✅ Verify renderer process logs are captured
+
+**Manual Testing**:
+- ✅ Run application, check `~/.mailcopilot/logs/main.log`
+- ✅ Trigger error scenarios, verify error stack traces captured
+- ✅ Verify log level filtering works in development vs production
 
 ---
 
