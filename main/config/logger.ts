@@ -14,9 +14,23 @@ import { app } from 'electron';
 import path from 'path';
 
 /**
+ * Check if running in test environment
+ */
+function isTestEnvironment(): boolean {
+  return process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+}
+
+/**
  * Initialize electron-log transports
  */
 function initializeLogger(): void {
+  // Skip file transport initialization in test environment
+  if (isTestEnvironment()) {
+    // Configure console transport only for tests
+    (log.transports.console as any).level = 'debug';
+    return;
+  }
+
   // Ensure logs directory exists
   const logsDir = path.join(app.getPath('userData'), '.mailcopilot', 'logs');
 

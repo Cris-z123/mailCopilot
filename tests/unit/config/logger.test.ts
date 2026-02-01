@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('Logger Configuration', () => {
   it('should export logger object with all required methods', async () => {
-    const { logger } = await import('../../../../main/config/logger.js');
+    const { logger } = await import('@/config/logger');
 
     expect(logger).toBeDefined();
     expect(logger.debug).toBeTypeOf('function');
@@ -17,14 +17,14 @@ describe('Logger Configuration', () => {
   });
 
   it('should export context functions', async () => {
-    const { setContextId, clearContextId } = await import('../../../../main/config/logger.js');
+    const { setContextId, clearContextId } = await import('@/config/logger');
 
     expect(setContextId).toBeTypeOf('function');
     expect(clearContextId).toBeTypeOf('function');
   });
 
   it('should have correct method signatures', async () => {
-    const { logger } = await import('../../../../main/config/logger.js');
+    const { logger } = await import('@/config/logger');
 
     // Test debug method
     expect(() => logger.debug('TestModule', 'Test message')).not.toThrow();
@@ -45,7 +45,7 @@ describe('Logger Configuration', () => {
   });
 
   it('should serialize error objects correctly', async () => {
-    const { logger } = await import('../../../../main/config/logger.js');
+    const { logger } = await import('@/config/logger');
 
     const testError = new Error('Test error message');
     testError.name = 'TestError';
@@ -55,7 +55,7 @@ describe('Logger Configuration', () => {
   });
 
   it('should handle context ID functions', async () => {
-    const { setContextId, clearContextId } = await import('../../../../main/config/logger.js');
+    const { setContextId, clearContextId } = await import('@/config/logger');
 
     expect(() => setContextId('test-context-id')).not.toThrow();
     expect(() => clearContextId()).not.toThrow();
@@ -64,7 +64,7 @@ describe('Logger Configuration', () => {
 
 describe('Logger API Compatibility', () => {
   it('should match old StructuredLogger API', async () => {
-    const { logger } = await import('../../../../main/config/logger.js');
+    const { logger } = await import('@/config/logger');
 
     // Old API: StructuredLogger.info(module, message, metadata)
     // New API: logger.info(module, message, context)
@@ -72,7 +72,7 @@ describe('Logger API Compatibility', () => {
   });
 
   it('should handle error parameter correctly', async () => {
-    const { logger } = await import('../../../../main/config/logger.js');
+    const { logger } = await import('@/config/logger');
 
     // Old API: StructuredLogger.error(module, message, error, metadata)
     // New API: logger.error(module, message, error?, context?)
