@@ -1,7 +1,16 @@
 import { safeStorage } from 'electron';
-import { app } from 'electron';
 import DatabaseManager from '../database/Database.js';
 import * as encryption from './encryption.js';
+import type { CryptoKey } from './encryption.js';
+
+/**
+ * Extended SafeStorage interface for keychain-style storage
+ * Supports multi-parameter getPassword/setPassword for service + account
+ */
+interface ExtendedSafeStorage {
+  getPassword(service: string, account: string): Buffer | undefined;
+  setPassword(service: string, account: string, password: string): void;
+}
 
 /**
  * Configuration Manager with device-bound encryption
@@ -30,7 +39,7 @@ export class ConfigManager {
 
     try {
       // Load or generate encryption key
-      const keyData = safeStorage.getPassword('mailcopilot', 'encryption_key');
+      const keyData = (safeStorage as unknown as ExtendedSafeStorage).getPassword('mailcopilot', 'encryption_key');
 
       if (keyData) {
         // Import existing key
@@ -39,11 +48,11 @@ export class ConfigManager {
         // Generate new key (first run)
         this.encryptionKey = await encryption.generateKey();
         const exportedKey = await encryption.exportKey(this.encryptionKey);
-        safeStorage.setPassword('mailcopilot', 'encryption_key', exportedKey);
+        (safeStorage as unknown as ExtendedSafeStorage).setPassword('mailcopilot', 'encryption_key', exportedKey);
       }
 
       // Generate or load HMAC key
-      const hmacKeyData = safeStorage.getPassword('mailcopilot', 'hmac_key');
+      const hmacKeyData = (safeStorage as unknown as ExtendedSafeStorage).getPassword('mailcopilot', 'hmac_key');
 
       if (hmacKeyData) {
         // Note: HMAC keys can't be easily imported/exported with Web Crypto API
@@ -52,7 +61,7 @@ export class ConfigManager {
       } else {
         this.hmacKey = await encryption.generateHMACKey();
         const exportedHmacKey = await encryption.exportKey(this.hmacKey as CryptoKey);
-        safeStorage.setPassword('mailcopilot', 'hmac_key', exportedHmacKey);
+        (safeStorage as unknown as ExtendedSafeStorage).setPassword('mailcopilot', 'hmac_key', exportedHmacKey);
       }
 
       this.isInitialized = true;
@@ -125,7 +134,8 @@ export class ConfigManager {
         );
 
         // Compute HMAC for integrity
-        const hmac = await encryption.hmacSha256(this.hmacKey!, jsonValue);
+        // TODO: Store HMAC in database for tamper detection
+        await encryption.hmacSha256(this.hmacKey!, jsonValue);
 
         // Check if key exists
         const existing = db

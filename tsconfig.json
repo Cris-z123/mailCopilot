@@ -27,5 +27,6 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true
   },
-  "exclude": ["node_modules", "dist", "build", "tests"]
+  "exclude": ["node_modules", "dist", "build"],
+  "include": ["main/**/*", "renderer/**/*", "shared/**/*", "tests/**/*"]
 }

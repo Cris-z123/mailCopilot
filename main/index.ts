@@ -1,10 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
-import * as url from 'url';
 import DatabaseManager from './database/Database.js';
 import { SchemaManager } from './database/schema.js';
 import { ConfigManager } from './config/ConfigManager.js';
-import { StructuredLogger } from './logging/StructuredLogger.js';
+import { logger } from './config/logger.js';
 import { IPC_CHANNELS } from './ipc/channels.js';
 import { SingleInstanceManager, ApplicationManager } from './app.js';
 
@@ -55,42 +54,41 @@ class Application {
    */
   private async onReady(): Promise<void> {
     try {
-      // Initialize structured logging
-      StructuredLogger.initialize();
-      StructuredLogger.info('Application', 'Application starting up');
+      // Application is starting (logger auto-initializes via electron-log)
+      logger.info('Application', 'Application starting up');
 
       // Initialize database
       DatabaseManager.initialize();
-      StructuredLogger.info('Database', 'Database initialized');
+      logger.info('Database', 'Database initialized');
 
       // Initialize schema
       await SchemaManager.initialize();
-      StructuredLogger.info('Schema', 'Schema initialized');
+      logger.info('Schema', 'Schema initialized');
 
       // Initialize config manager
       await ConfigManager.initialize();
       await ConfigManager.initializeDefaults();
-      StructuredLogger.info('Config', 'Configuration initialized');
+      logger.info('Config', 'Configuration initialized');
 
       // Setup IPC handlers
       this.setupIPCHandlers();
-      StructuredLogger.info('IPC', 'IPC handlers registered');
+      logger.info('IPC', 'IPC handlers registered');
 
       // Create main window
       this.createMainWindow();
-      StructuredLogger.info('Window', 'Main window created');
+      logger.info('Window', 'Main window created');
 
       // Check for updates (if in remote mode)
       const config = await ConfigManager.get(['llm.mode']);
       if (config['llm.mode'] === 'remote') {
         // TODO: Implement update check
-        StructuredLogger.info('Update', 'Auto-update check skipped (not implemented yet)');
+        logger.info('Update', 'Auto-update check skipped (not implemented yet)');
       }
 
       // Mark application as ready
       ApplicationManager.setReady();
     } catch (error) {
-      StructuredLogger.error('Application', 'Failed to initialize application', error);
+      logger.error('Application', 'Failed to initialize application', error);
       throw error;
     }
   }
@@ -126,7 +124,7 @@ class Application {
     // Show window when ready
     this.mainWindow.once('ready-to-show', () => {
       this.mainWindow?.show();
-      StructuredLogger.info('Window', 'Main window shown');
+      logger.info('Window', 'Main window shown');
     });
 
     // Register window with single-instance manager
@@ -135,12 +133,12 @@ class Application {
     // Handle window closed
     this.mainWindow.on('closed', () => {
       this.mainWindow = null;
-      StructuredLogger.info('Window', 'Main window closed');
+      logger.info('Window', 'Main window closed');
     });
 
     // Log renderer errors
-    this.mainWindow.webContents.on('render-process-gone', (event, details) => {
-      StructuredLogger.error('Renderer', `Render process gone: ${details.reason}`, details);
+    this.mainWindow.webContents.on('render-process-gone', (_event, details) => {
+      logger.error('Renderer', `Render process gone: ${details.reason}`, details);
     });
   }
 
@@ -152,76 +150,76 @@ class Application {
     // Full implementation will be in user stories
 
     // LLM generate
-    ipcMain.handle(IPC_CHANNELS.LLM_GENERATE, async (event, request) => {
-      StructuredLogger.debug('IPC', 'LLM generate request received');
+    ipcMain.handle(IPC_CHANNELS.LLM_GENERATE, async (_event, _request) => {
+      logger.debug('IPC', 'LLM generate request received');
       // TODO: Implement in US1
       return { success: false, error: 'NOT_IMPLEMENTED' };
     });
 
     // Database query history
-    ipcMain.handle(IPC_CHANNELS.DB_QUERY_HISTORY, async (event, request) => {
-      StructuredLogger.debug('IPC', 'Database query history request received');
+    ipcMain.handle(IPC_CHANNELS.DB_QUERY_HISTORY, async (_event, _request) => {
+      logger.debug('IPC', 'Database query history request received');
       // TODO: Implement in US1
       return { reports: [], total: 0 };
     });
 
     // Database export
-    ipcMain.handle(IPC_CHANNELS.DB_EXPORT, async (event, request) => {
-      StructuredLogger.debug('IPC', 'Database export request received');
+    ipcMain.handle(IPC_CHANNELS.DB_EXPORT, async (_event, _request) => {
+      logger.debug('IPC', 'Database export request received');
       // TODO: Implement in Polish phase
       return { success: false, error: 'NOT_IMPLEMENTED' };
     });
 
     // Config get
-    ipcMain.handle(IPC_CHANNELS.CONFIG_GET, async (event, request) => {
-      StructuredLogger.debug('IPC', 'Config get request received');
+    ipcMain.handle(IPC_CHANNELS.CONFIG_GET, async (_event, request) => {
+      logger.debug('IPC', 'Config get request received');
       const keys = request?.keys;
       return { config: await ConfigManager.get(keys) };
     });
 
     // Config set
-    ipcMain.handle(IPC_CHANNELS.CONFIG_SET, async (event, request) => {
-      StructuredLogger.debug('IPC', 'Config set request received');
+    ipcMain.handle(IPC_CHANNELS.CONFIG_SET, async (_event, request) => {
+      logger.debug('IPC', 'Config set request received');
       const updated = await ConfigManager.set(request.updates);
       return { success: true, updated };
     });
 
     // App check update
-    ipcMain.handle(IPC_CHANNELS.APP_CHECK_UPDATE, async (event, request) => {
-      StructuredLogger.debug('IPC', 'Update check request received');
+    ipcMain.handle(IPC_CHANNELS.APP_CHECK_UPDATE, async (_event, _request) => {
+      logger.debug('IPC', 'Update check request received');
       // TODO: Implement in US5
       return { hasUpdate: false };
     });
 
     // Email fetch metadata
-    ipcMain.handle(IPC_CHANNELS.EMAIL_FETCH_META, async (event, request) => {
-      StructuredLogger.debug('IPC', 'Email metadata fetch request received');
+    ipcMain.handle(IPC_CHANNELS.EMAIL_FETCH_META, async (_event, _request) => {
+      logger.debug('IPC', 'Email metadata fetch request received');
       // TODO: Implement in US4
       return { success: false, error: 'NOT_IMPLEMENTED' };
     });
 
     // Feedback submit
-    ipcMain.handle(IPC_CHANNELS.FEEDBACK_SUBMIT, async (event, request) => {
-      StructuredLogger.debug('IPC', 'Feedback submit request received');
+    ipcMain.handle(IPC_CHANNELS.FEEDBACK_SUBMIT, async (_event, _request) => {
+      logger.debug('IPC', 'Feedback submit request received');
       // TODO: Implement in US3
       return { success: false, error: 'NOT_IMPLEMENTED' };
     });
 
     // Feedback stats
-    ipcMain.handle(IPC_CHANNELS.FEEDBACK_STATS, async (event) => {
-      StructuredLogger.debug('IPC', 'Feedback stats request received');
+    ipcMain.handle(IPC_CHANNELS.FEEDBACK_STATS, async (_event) => {
+      logger.debug('IPC', 'Feedback stats request received');
       // TODO: Implement in US3
       return { total: 0, byType: {} };
     });
 
     // Feedback destroy
-    ipcMain.handle(IPC_CHANNELS.FEEDBACK_DESTROY, async (event) => {
-      StructuredLogger.debug('IPC', 'Feedback destroy request received');
+    ipcMain.handle(IPC_CHANNELS.FEEDBACK_DESTROY, async (_event) => {
+      logger.debug('IPC', 'Feedback destroy request received');
       // TODO: Implement in US3
       return { success: false, error: 'NOT_IMPLEMENTED' };
     });
 
-    StructuredLogger.info('IPC', 'All IPC handlers registered');
+    logger.info('IPC', 'All IPC handlers registered');
   }
 
   /**
@@ -239,11 +237,11 @@ class Application {
    */
   private onBeforeQuit(): void {
     this.isQuitting = true;
-    StructuredLogger.info('Application', 'Application quitting');
+    logger.info('Application', 'Application quitting');
 
     // Close database connection
     DatabaseManager.close();
-    StructuredLogger.info('Database', 'Database connection closed');
+    logger.info('Database', 'Database connection closed');
   }
 
   /**

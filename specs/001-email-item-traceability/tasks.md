@@ -1,11 +1,11 @@
 # Tasks: Email Item Traceability & Verification System
 
 **Input**: Design documents from `/specs/001-email-item-traceability/`
-**Prerequisites**: plan.md v1.1.0 ✅, spec.md ✅, data-model.md (embedded in plan.md), contracts/ (embedded in plan.md)
+**Prerequisites**: plan.md v1.2.0 ✅, spec.md ✅, data-model.md (embedded in plan.md), contracts/ (embedded in plan.md)
 
-**Plan Version**: 1.1.0 (依赖版本更新: Electron 29.4.6, Zustand 4.5, better-sqlite3 11.10.0)
-**Last Regenerated**: 2026-01-31
-**Completed Tasks Preserved**: T001-T017 (Foundation Phase)
+**Plan Version**: 1.2.0 (refactoring: replace custom StructuredLogger with electron-log v5)
+**Last Regenerated**: 2026-02-01
+**Completed Tasks Preserved**: T001-T017 (Foundation Phase) - All Foundation tasks complete ✅
 
 **Tests**: Tests are OPTIONAL per plan.md. Test tasks are included as per constitution Principle V (60% unit, 40% integration, no E2E).
 
@@ -16,6 +16,12 @@
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
+
+## Task Status Notation
+
+- **[X]**: Completed task (preserved from previous plan versions)
+- **[ ]**: Pending task (not yet started)
+- **[~]**: Affected task (completed but requires refactoring due to plan changes)
 
 ## Path Conventions
 
@@ -29,7 +35,7 @@
 
 **Purpose**: Project initialization and basic structure for Electron desktop application
 
-- [X] T001 Initialize package.json with dependencies (Electron 29.4.6, React 18, TypeScript 5.4, better-sqlite3 11.10.0, Zustand 4.5, Zod, QuickJS WASM)
+- [X] T001 Initialize package.json with dependencies (Electron 29.4.6, React 18, TypeScript 5.4, better-sqlite3 11.10.0, Zustand 4.5, Zod, QuickJS WASM, electron-log 5.0.0)
 - [X] T002 [P] Configure TypeScript (tsconfig.json for main, renderer, shared)
 - [X] T003 [P] Setup ESLint and Prettier with TypeScript support
 - [X] T004 [P] Configure Vitest for unit testing (60% coverage target, 100% for security modules)
@@ -56,7 +62,7 @@
 ### IPC & Logging Infrastructure
 
 - [X] T013 [P] Setup IPC channel definitions in main/ipc/channels.ts (6 channels: llm:generate, db:query:history, db:export, config:get/set, app:check-update, email:fetch-meta)
-- [X] T014 [P] Implement structured logging in main/logging/StructuredLogger.ts (error type, module, message, timestamp, context ID)
+- [X] T014 [P] Implement structured logging in main/config/logger.ts using electron-log v5 (error type, module, message, timestamp, context ID)
 - [X] T015 [P] Create base Zod schemas in shared/schemas/validation.ts (ItemSchema, EmailMetadataSchema, ConfigSchema per plan.md)
 
 ### Application Entry Point
@@ -288,7 +294,7 @@
 - [ ] T089 [P] Implement error handler for corrupted emails in main/email/EmailProcessor.ts (skip + log + continue per FR-054, report footer "跳过N封无法解析的邮件" per FR-055)
 - [ ] T090 [P] Implement device change detection in main/config/ConfigManager.ts (detect keyring access failure, display "检测到设备环境变更，无法访问历史数据" per Edge Case, FR-047)
 - [ ] T091 [P] Implement mode switch notification in renderer/src/components/Settings/ModeSelector.tsx (display "模式切换请求已更新为：[目标模式]" for multiple rapid requests per US5 edge case)
-- [ ] T092 [P] Add structured logging for all error types in main/logging/StructuredLogger.ts (error type, module, message, timestamp, context ID per FR-053)
+- [ ] T092 [P] Add structured logging for all error types using electron-log in main/config/logger.ts (error type, module, message, timestamp, context ID per FR-053) - **NOTE**: electron-log already provides structured logging, this task ensures consistent usage across all error handlers
 
 ### Performance Optimization (SC-014, SC-015, SC-016, SC-017)
 
@@ -438,6 +444,51 @@ With 3 developers after Foundational phase:
 ---
 
 ## Version History
+
+### v1.2.0 (2026-02-01)
+**Change Type**: refactoring - 替换自定义 StructuredLogger 为 electron-log v5
+**Plan Version**: 1.2.0
+
+**依赖版本变更**:
+- Added: electron-log@5.0.0 (新增)
+- Removed: Custom StructuredLogger implementation (删除 ~300 lines)
+
+**受影响的已完成任务**:
+- [~] T014: Implement structured logging - **需要重构**
+  - 从: `main/logging/StructuredLogger.ts` (300 lines custom code)
+  - 到: `main/config/logger.ts` (60 lines electron-log wrapper)
+- [~] T016: Single-instance lock in main/app.ts - **需要适配**
+  - 更新 17 处日志调用
+  - 从: `StructuredLogger.info(module, message, metadata)`
+  - 到: `logger.info(module, message, metadata)`
+- [~] T017: Main process entry point in main/index.ts - **需要适配**
+  - 更新 15 处日志调用
+  - 移除 `StructuredLogger.initialize()` 调用
+  - 更新所有 import 语句
+
+**待办任务更新**:
+- ✅ T001: 已添加 electron-log@5.0.0 到依赖列表
+- ✅ T092: 已更新为使用 electron-log
+
+**代码变更范围**:
+- 文件删除: `main/logging/StructuredLogger.ts` (300 lines)
+- 文件创建: `main/config/logger.ts` (60 lines)
+- 文件修改: `main/app.ts` (17 log calls), `main/index.ts` (15 log calls)
+- 净减少代码: ~240 lines
+
+**兼容性**:
+- ✅ 无破坏性 API 变更（日志接口保持一致）
+- ✅ 日志格式向后兼容（结构化 JSON 输出）
+- ✅ 数据库集成保留（error logging to app_logs table）
+- ✅ 所有功能保持不变
+
+**重构步骤**:
+1. 安装 electron-log: `npm install electron-log@5.0.0`
+2. 创建 `main/config/logger.ts` (参考 plan.md lines 1570-1611)
+3. 更新 `main/app.ts` 中的 import 和日志调用
+4. 更新 `main/index.ts` 中的 import 和日志调用，移除 initialize() 调用
+5. 删除 `main/logging/StructuredLogger.ts`
+6. 运行测试验证: `npm test`
 
 ### v1.1.0 (2026-01-31)
 **Change Type**: chore - 依赖版本更新

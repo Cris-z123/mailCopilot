@@ -158,8 +158,6 @@ export class SchemaManager {
     totalEmails: number;
     totalReports: number;
   } {
-    const db = DatabaseManager.getDatabase();
-
     const tables: Record<string, number> = {};
 
     for (const table of [
