@@ -84,15 +84,15 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T018 [P] [US1] Unit test for field encryption/decryption in tests/unit/encryption/encryption.test.ts (Buffer.fill(0) cleanup verification, AES-256-GCM validation)
-- [ ] T019 [P] [US1] Unit test for SHA-256 fingerprint generation in tests/unit/email/fingerprint.test.ts (collision resistance, Message-ID+fingerprint combinations)
-- [ ] T020 [P] [US1] Integration test for database operations in tests/integration/database/crud.test.ts (transaction wrapping, foreign key constraints, encrypted field storage)
+- [X] T018 [P] [US1] Unit test for field encryption/decryption in tests/unit/encryption/encryption.test.ts (Buffer.fill(0) cleanup verification, AES-256-GCM validation)
+- [X] T019 [P] [US1] Unit test for SHA-256 fingerprint generation in tests/unit/email/fingerprint.test.ts (collision resistance, Message-ID+fingerprint combinations)
+- [X] T020 [P] [US1] Integration test for database operations in tests/integration/database/crud.test.ts (transaction wrapping, foreign key constraints, encrypted field storage)
 
 ### Data Layer for US1
 
-- [ ] T021 [P] [US1] Create EmailSource entity/model in main/database/entities/EmailSource.ts (email_hash, processed_at, last_seen_at, search_string, file_path, extract_status)
-- [ ] T022 [P] [US1] Create ActionItem entity/model in main/database/entities/ActionItem.ts (item_id, content_encrypted, source_status, confidence_score, feedback_type)
-- [ ] T023 [P] [US1] Create ItemEmailRef entity/model in main/database/entities/ItemEmailRef.ts (many-to-many relationship, evidence_text, confidence)
+- [X] T021 [P] [US1] Create EmailSource entity/model in main/database/entities/EmailSource.ts (email_hash, processed_at, last_seen_at, search_string, file_path, extract_status)
+- [X] T022 [P] [US1] Create ActionItem entity/model in main/database/entities/ActionItem.ts (item_id, content_encrypted, source_status, confidence_score, feedback_type)
+- [X] T023 [P] [US1] Create ItemEmailRef entity/model in main/database/entities/ItemEmailRef.ts (many-to-many relationship, evidence_text, confidence)
 
 ### Email Parsing for US1
 

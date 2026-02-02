@@ -66,16 +66,14 @@ export async function encrypt(
     data
   );
 
-  // Extract auth tag from GCM ciphertext (last 16 bytes)
-  const authTagLength = 16;
+  // Web Crypto API GCM mode includes auth tag in ciphertext
+  // For database storage, we store the complete ciphertext (with auth tag embedded)
   const ciphertextBuffer = new Uint8Array(ciphertext);
-  const encryptedData = ciphertextBuffer.slice(0, -authTagLength);
-  const authTag = ciphertextBuffer.slice(-authTagLength);
 
   return {
-    ciphertext: bufferToBase64(encryptedData),
+    ciphertext: bufferToBase64(ciphertextBuffer),
     iv: bufferToBase64(iv),
-    authTag: bufferToBase64(authTag),
+    authTag: '', // Empty since auth tag is embedded in ciphertext
   };
 }
 
@@ -90,14 +88,10 @@ export async function decrypt(
   key: CryptoKey,
   encryptedData: EncryptedData
 ): Promise<string> {
-  const { ciphertext, iv, authTag } = encryptedData;
+  const { ciphertext, iv } = encryptedData;
 
-  // Combine ciphertext and auth tag for GCM decryption
+  // Web Crypto API GCM mode expects ciphertext with embedded auth tag
   const ciphertextBuffer = base64ToBuffer(ciphertext);
-  const authTagBuffer = base64ToBuffer(authTag);
-  const combined = new Uint8Array(ciphertextBuffer.length + authTagBuffer.length);
-  combined.set(ciphertextBuffer);
-  combined.set(authTagBuffer, ciphertextBuffer.length);
 
   const decrypted = await webcrypto.subtle.decrypt(
     {
@@ -105,11 +99,11 @@ export async function decrypt(
       iv: base64ToBuffer(iv),
     },
     key,
-    combined
+    ciphertextBuffer
   );
 
   // Clean up sensitive data
-  combined.fill(0);
+  ciphertextBuffer.fill(0);
 
   return new TextDecoder().decode(decrypted);
 }
