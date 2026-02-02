@@ -9,6 +9,12 @@
     "checkJs": false,
     "outDir": "./dist",
     "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["main/*"],
+      "@renderer/*": ["renderer/src/*"],
+      "@shared/*": ["shared/*"]
+    },
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
