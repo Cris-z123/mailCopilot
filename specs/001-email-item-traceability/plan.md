@@ -537,7 +537,7 @@ File: /Users/user/Mail/2026/01/Finance.eml
 
 ### R0-10: Testing Framework Selection
 
-**Decision**: Vitest for unit tests, custom integration test framework
+**Decision**: Vitest 3.x for unit tests, custom integration test framework
 
 **Test Stack**:
 - **Unit Tests**: Vitest with 85%+ coverage, 100% for security modules

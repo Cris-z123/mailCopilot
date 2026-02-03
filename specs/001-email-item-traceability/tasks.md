@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/001-email-item-traceability/`
 **Prerequisites**: plan.md v1.2.1 ✅, spec.md ✅, data-model.md (embedded in plan.md), contracts/ (embedded in plan.md)
 
-**Plan Version**: 1.2.1 (refactoring: standardize date handling to use date-fns v4.x)
+**Plan Version**: 1.2.1 (refactoring: standardize date handling to use date-fns v4.x, update Vitest to 3.x)
 **Last Regenerated**: 2026-02-03
 **Completed Tasks Preserved**: T001-T023 (US1 Data Layer) - Data layer complete ✅
 **Affected Tasks**: T024-T026 (Date handling needs refactoring)
@@ -39,7 +39,7 @@
 - [X] T001 Initialize package.json with dependencies (Electron 29.4.6, React 18, TypeScript 5.4, better-sqlite3 11.10.0, Zustand 4.5, Zod, QuickJS WASM, electron-log 5.0.0)
 - [X] T002 [P] Configure TypeScript (tsconfig.json for main, renderer, shared)
 - [X] T003 [P] Setup ESLint and Prettier with TypeScript support
-- [X] T004 [P] Configure Vitest for unit testing (60% coverage target, 100% for security modules)
+- [X] T004 [P] Configure Vitest 3.x for unit testing (85%+ coverage target, 100% for security modules per plan.md R0-10)
 - [X] T005 [P] Create project directory structure (main/, renderer/, shared/, tests/)
 - [X] T006 [P] Setup Electron build configuration (electron-builder for packaging)
 - [X] T007 [P] Configure environment variable management (.env.local support)
@@ -454,14 +454,16 @@ With 3 developers after Foundational phase:
 
 ## Version History
 
-### v1.2.1 (2026-02-03)
-**Change Type**: refactoring - 标准化日期处理为使用 date-fns v4.x
+### v1.2.1 (2026-02-03) - Updated
+**Change Type**: refactoring - 标准化日期处理为使用 date-fns v4.x，更新 Vitest 配置为 3.x
 **Plan Version**: 1.2.1
 
 **依赖版本变更**:
 - Added: date-fns@^4.0.0 (新增)
+- Updated: Vitest → 3.x (per plan.md R0-10)
 
 **受影响的已完成任务**:
+- [~] T004: **需要更新** - Update Vitest configuration to 3.x (85%+ coverage target per R0-10)
 - [~] T008: **新任务** - Install and configure date-fns v4.x
 - [~] T025: EmlParser - **需要重构**
   - 替换 `new Date().toISOString()` 为 date-fns `formatISO`
