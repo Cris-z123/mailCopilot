@@ -1,0 +1,536 @@
+openapi: 4.104.0
+info:
+  title: MailCopilot LLM Integration API
+  description: |
+    Internal API contract for LLM adapter layer. This specification defines
+    the interface between the email processing pipeline and LLM services
+    (remote OpenAI API and local Ollama API).
+
+    **IMPORTANT**: This is an internal API contract for the main process,
+    not exposed to external users.
+  version: 1.0.0
+  contact:
+    name: MailCopilot Development Team
+    email: dev@mailcopilot.example.com
+
+servers:
+  - url: http://localhost:11434
+    description: Local Ollama server
+  - url: https://api.openai.com/v1
+    description: Remote OpenAI API
+
+tags:
+  - name: LLM Adapter
+    description: LLM adapter interface operations
+  - name: Validation
+    description: LLM output validation operations
+
+paths:
+  /llm/generate:
+    post:
+      tags:
+        - LLM Adapter
+      summary: Generate action items from email batch
+      description: |
+        Sends email batch to LLM service and extracts structured action items.
+        Per plan.md FR-057: 30s timeout enforced. Per R0-5: 2-retry limit with
+        exponential backoff.
+      operationId: generateActionItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailBatch'
+            examples:
+              remote_mode:
+                summary: Remote mode with OpenAI
+                value:
+                  emails:
+                    - message_id: "msg123@example.com"
+                      from: "sender@example.com"
+                      subject: "Project Update"
+                      date: "2026-02-03T10:00:00Z"
+                      body: "Please complete the Q1 report by Friday."
+                      email_hash: "a1b2c3d4e5f6..."
+                  report_date: "2026-02-03"
+                  mode: "remote"
+              local_mode:
+                summary: Local mode with Ollama
+                value:
+                  emails:
+                    - message_id: "msg456@example.com"
+                      from: "manager@example.com"
+                      subject: "Task Assignment"
+                      date: "2026-02-03T11:00:00Z"
+                      body: "Review the proposal by next Monday."
+                      email_hash: "f6e5d4c3b2a1..."
+                  report_date: "2026-02-03"
+                  mode: "local"
+      responses:
+        '200':
+          description: Successful action item extraction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LLMOutput'
+              examples:
+                verified_items:
+                  summary: High-confidence verified items
+                  value:
+                    items:
+                      - content: "Complete Q1 report"
+                        type: "pending"
+                        source_email_indices: [0]
+                        evidence: "Deadline keyword 'Friday' detected"
+                        confidence: 85
+                        source_status: "verified"
+                    batch_info:
+                      total_emails: 1
+                      processed_emails: 1
+                      skipped_emails: 0
+                degraded_items:
+                  summary: Low-confidence unverified items
+                  value:
+                    items:
+                      - content: "Follow up on project"
+                        type: "pending"
+                        source_email_indices: [0]
+                        evidence: "Generic action item without clear deadline"
+                        confidence: 40
+                        source_status: "unverified"
+                    batch_info:
+                      total_emails: 1
+                      processed_emails: 1
+                      skipped_emails: 0
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '408':
+          $ref: '#/components/responses/RequestTimeout'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /llm/health:
+    get:
+      tags:
+        - LLM Adapter
+      summary: Check LLM service health
+      description: |
+        Performs lightweight health check on LLM service.
+        - Remote mode: HEAD request to API endpoint
+        - Local mode: GET request to Ollama /api/tags
+      operationId: checkHealth
+      responses:
+        '200':
+          description: LLM service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  healthy:
+                    type: boolean
+                    example: true
+                  model:
+                    type: string
+                    example: "gpt-4-turbo-preview"
+                  endpoint:
+                    type: string
+                    example: "https://api.openai.com/v1"
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /validation/validate:
+    post:
+      tags:
+        - Validation
+      summary: Validate LLM output against schema
+      description: |
+        Validates LLM output against Zod schema with retry logic.
+        Per R0-5: 2-retry limit with reinforced schema instructions.
+        Per FR-017: Degradation fallback to rule-engine-only on validation failure.
+      operationId: validateOutput
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LLMOutput'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+              examples:
+                valid:
+                  summary: Valid output
+                  value:
+                    output:
+                      items:
+                        - content: "Submit report"
+                          type: "pending"
+                          confidence: 80
+                          source_status: "verified"
+                      batch_info:
+                        total_emails: 1
+                        processed_emails: 1
+                        skipped_emails: 0
+                    is_valid: true
+                    retry_count: 0
+                    is_degraded: false
+                degraded:
+                  summary: Degraded output after validation failure
+                  value:
+                    output:
+                      items:
+                        - content: "Unknown action"
+                          type: "pending"
+                          confidence: 40
+                          source_status: "unverified"
+                      batch_info:
+                        total_emails: 1
+                        processed_emails: 0
+                        skipped_emails: 1
+                    is_valid: false
+                    retry_count: 2
+                    is_degraded: true
+                    errors:
+                      - "Missing required field: source_email_indices"
+                      - "Invalid confidence value: > 100"
+
+components:
+  schemas:
+    EmailBatch:
+      type: object
+      required:
+        - emails
+        - report_date
+        - mode
+      properties:
+        emails:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ParsedEmail'
+          description: |
+            Array of parsed emails. Maximum 50 emails per batch (plan.md constraint).
+        report_date:
+          type: string
+          format: date
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: "2026-02-03"
+          description: Report date in YYYY-MM-DD format
+        mode:
+          type: string
+          enum: [local, remote]
+          description: Processing mode (affects confidence calculation)
+
+    ParsedEmail:
+      type: object
+      required:
+        - from
+        - subject
+        - date
+        - email_hash
+      properties:
+        message_id:
+          type: string
+          maxLength: 255
+          description: Message-ID header (optional for .msg/.html formats)
+          example: "msg123@example.com"
+        from:
+          type: string
+          format: email
+          description: Sender email address
+          example: "sender@example.com"
+        subject:
+          type: string
+          maxLength: 1000
+          description: Email subject line
+          example: "Project Update: Q1 Report Due Friday"
+        date:
+          type: string
+          format: date-time
+          description: Email date in ISO 8601 format (UTC)
+          example: "2026-02-03T10:00:00Z"
+        body:
+          type: string
+          maxLength: 100000
+          description: |
+            Email body content (truncated to 100k characters).
+            Cleared immediately after processing per FR-044.
+          example: "Please complete the Q1 report by Friday COB."
+        email_hash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: |
+            SHA-256 fingerprint of Message-ID + Date + From.
+            Used for duplicate detection per R0-4.
+          example: "a1b2c3d4e5f6789012345678901234567890123456789012345678901234abcd"
+
+    ExtractedItem:
+      type: object
+      required:
+        - content
+        - type
+        - source_email_indices
+        - evidence
+        - confidence
+        - source_status
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Action item description
+          example: "Complete Q1 financial report by Friday 5pm"
+        type:
+          type: string
+          enum: [completed, pending]
+          description: Item classification
+        source_email_indices:
+          type: array
+          minItems: 1
+          items:
+            type: integer
+            minimum: 0
+          description: |
+            Indices of source emails in batch (0-based).
+            Required for traceability per Principle II.
+          example: [0, 2]
+        evidence:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Extraction rationale (desensitized)
+          example: "Deadline keyword 'Friday' + sender 'manager@company.com' detected"
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: LLM confidence score (0-100)
+          example: 85
+        source_status:
+          type: string
+          enum: [verified, unverified]
+          description: |
+            Traceability status per R0-5.
+            - verified: Has valid Message-ID or fingerprint
+            - unverified: Schema validation failure, capped at 60% confidence
+          example: "verified"
+
+    LLMOutput:
+      type: object
+      required:
+        - items
+        - batch_info
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtractedItem'
+          description: Array of extracted action items
+        batch_info:
+          $ref: '#/components/schemas/BatchInfo'
+
+    BatchInfo:
+      type: object
+      required:
+        - total_emails
+        - processed_emails
+        - skipped_emails
+      properties:
+        total_emails:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Total emails in input batch
+          example: 10
+        processed_emails:
+          type: integer
+          minimum: 0
+          maximum: 50
+          description: Successfully processed emails
+          example: 8
+        skipped_emails:
+          type: integer
+          minimum: 0
+          maximum: 50
+          description: |
+            Skipped emails (duplicates, parsing failures).
+            Per FR-008A: Same-batch and cross-batch duplicates.
+          example: 2
+
+    ValidationResult:
+      type: object
+      required:
+        - output
+        - is_valid
+        - retry_count
+        - is_degraded
+      properties:
+        output:
+          $ref: '#/components/schemas/LLMOutput'
+          description: Validated or degraded output
+        is_valid:
+          type: boolean
+          description: True if validation passed without degradation
+          example: true
+        retry_count:
+          type: integer
+          minimum: 0
+          maximum: 2
+          description: Number of retry attempts (per R0-5: max 2)
+          example: 0
+        is_degraded:
+          type: boolean
+          description: |
+            True if output degraded to rule-engine-only mode.
+            Per FR-017: Degradation on validation failure.
+          example: false
+        errors:
+          type: array
+          items:
+            type: string
+          description: Validation errors (if any)
+          example:
+            - "Missing required field: source_email_indices"
+            - "Invalid type: must be 'completed' or 'pending'"
+
+    LLMAdapterConfig:
+      type: object
+      properties:
+        timeout:
+          type: integer
+          minimum: 1000
+          maximum: 120000
+          default: 30000
+          description: Request timeout in milliseconds (30s default per FR-057)
+          example: 30000
+        maxRetries:
+          type: integer
+          minimum: 0
+          maximum: 5
+          default: 2
+          description: Maximum retry attempts (2 default per R0-5)
+          example: 2
+        debug:
+          type: boolean
+          default: false
+          description: Enable detailed logging
+        endpoint:
+          type: string
+          format: uri
+          description: Custom API endpoint (remote mode only)
+          example: "https://api.openai.com/v1"
+        apiKey:
+          type: string
+          minLength: 20
+          description: API key for authentication (remote mode only)
+          example: "sk-proj-abc123..."
+        model:
+          type: string
+          description: Model name/identifier
+          example: "gpt-4-turbo-preview"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - message
+            - type
+          properties:
+            message:
+              type: string
+              description: Human-readable error message
+            type:
+              type: string
+              enum:
+                - validation_error
+                - timeout_error
+                - rate_limit_error
+                - network_error
+                - api_error
+                - internal_error
+              description: Error type for programmatic handling
+            retryable:
+              type: boolean
+              description: Whether error is retryable
+            details:
+              type: object
+              additionalProperties: true
+              description: Additional error context
+
+  responses:
+    BadRequest:
+      description: Bad request (invalid input)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              message: "Batch size exceeds maximum of 50 emails"
+              type: "validation_error"
+              retryable: false
+
+    RequestTimeout:
+      description: Request timeout (30s per FR-057)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              message: "Request timeout after 30000ms (per FR-057)"
+              type: "timeout_error"
+              retryable: false
+
+    RateLimitExceeded:
+      description: Rate limit exceeded (retryable)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              message: "Rate limit exceeded, retry after 5 seconds"
+              type: "rate_limit_error"
+              retryable: true
+              details:
+                retry_after: 5
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              message: "Unexpected error during LLM request"
+              type: "internal_error"
+              retryable: false
+
+    ServiceUnavailable:
+      description: LLM service unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              message: "Local model service unavailable"
+              type: "api_error"
+              retryable: false
