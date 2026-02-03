@@ -48,7 +48,7 @@ export function formatYYYYMMDD(dateInput: string | Date | number): string {
     }
 
     return format(date, 'yyyy-MM-dd');
-  } catch (error) {
+  } catch {
     // On any error, return current date
     return format(new Date(), 'yyyy-MM-dd');
   }
@@ -91,7 +91,7 @@ export function formatISO8601(dateInput: string | Date | number): string {
     }
 
     return formatISO(date);
-  } catch (error) {
+  } catch {
     // On any error, return current date
     return formatISO(new Date());
   }
@@ -134,7 +134,7 @@ export function parseEmailDate(dateHeader: string): string {
     }
 
     return formatISO(date);
-  } catch (error) {
+  } catch {
     // On any error, return current date
     return formatISO(new Date());
   }
