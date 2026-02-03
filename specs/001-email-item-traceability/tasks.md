@@ -111,8 +111,8 @@
 
 ### Duplicate Detection for US1
 
-- [ ] T027 [US1] Implement DuplicateDetector in main/email/DuplicateDetector.ts (SHA-256 fingerprint: SHA256(Message-ID + Date + From), cross-batch detection, update last_seen_at per FR-008A)
-- [ ] T028 [P] [US1] Unit test for duplicate detection in tests/unit/email/duplicate-detector.test.ts (same-batch skip, cross-batch timestamp update, audit logging)
+- [X] T027 [US1] Implement DuplicateDetector in main/email/DuplicateDetector.ts (SHA-256 fingerprint: SHA256(Message-ID + Date + From), cross-batch detection, update last_seen_at per FR-008A)
+- [X] T028 [P] [US1] Unit test for duplicate detection in tests/unit/email/duplicate-detector.test.ts (same-batch skip, cross-batch timestamp update, audit logging)
 
 ### LLM Integration for US1
 
