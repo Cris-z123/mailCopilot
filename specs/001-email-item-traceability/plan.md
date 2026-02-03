@@ -520,7 +520,7 @@ function calculateConfidence(ruleMatchScore: number, llmOutput: any, isLocalMode
 **Format Specification**:
 - Sender: `from:email@domain.com`
 - Subject: `subject:"keyword snippet"` (first 30 chars, quotes for multi-word)
-- Date: `date:YYYY-MM-DD` (ISO date from email Date header)
+- Date: Use date-fns v4.x as the date - handling library，`date:YYYY-MM-DD` (ISO date from email Date header)，Mixing the native Date for complex calculations is prohibited. (Use date-fns uniformly for time zones and formatting.)
 - File path: Absolute path to original email file
 
 **Example**:

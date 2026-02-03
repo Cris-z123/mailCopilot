@@ -1,11 +1,12 @@
 # Tasks: Email Item Traceability & Verification System
 
 **Input**: Design documents from `/specs/001-email-item-traceability/`
-**Prerequisites**: plan.md v1.2.0 ✅, spec.md ✅, data-model.md (embedded in plan.md), contracts/ (embedded in plan.md)
+**Prerequisites**: plan.md v1.2.1 ✅, spec.md ✅, data-model.md (embedded in plan.md), contracts/ (embedded in plan.md)
 
-**Plan Version**: 1.2.0 (refactoring: replace custom StructuredLogger with electron-log v5)
-**Last Regenerated**: 2026-02-01
-**Completed Tasks Preserved**: T001-T017 (Foundation Phase) - All Foundation tasks complete ✅
+**Plan Version**: 1.2.1 (refactoring: standardize date handling to use date-fns v4.x)
+**Last Regenerated**: 2026-02-03
+**Completed Tasks Preserved**: T001-T023 (US1 Data Layer) - Data layer complete ✅
+**Affected Tasks**: T024-T026 (Date handling needs refactoring)
 
 **Tests**: Tests are OPTIONAL per plan.md. Test tasks are included as per constitution Principle V (60% unit, 40% integration, no E2E).
 
@@ -42,6 +43,7 @@
 - [X] T005 [P] Create project directory structure (main/, renderer/, shared/, tests/)
 - [X] T006 [P] Setup Electron build configuration (electron-builder for packaging)
 - [X] T007 [P] Configure environment variable management (.env.local support)
+- [X] T008 [P] Install and configure date-fns v4.x in package.json (add date-fns@^4.0.0 to dependencies per plan.md R0-9)
 
 ---
 
@@ -96,9 +98,16 @@
 
 ### Email Parsing for US1
 
-- [ ] T024 [US1] Implement EmailParser interface in main/email/parsers/EmailParser.ts (parse(filePath: string): Promise<ParsedEmail>)
-- [ ] T025 [US1] Implement EmlParser in main/email/parsers/EmlParser.ts (RFC 5322 .eml parsing, ≥95% Message-ID extraction per SC-004)
-- [ ] T026 [US1] Implement TraceabilityGenerator in main/email/TraceabilityGenerator.ts (search string format: `from:sender subject:"snippet" date:YYYY-MM-DD`, subject truncation to 30 chars)
+- [X] T024 [US1] Implement EmailParser interface in main/email/parsers/EmailParser.ts (parse(filePath: string): Promise<ParsedEmail>)
+- [X] T025 [US1] Implement EmlParser in main/email/parsers/EmlParser.ts (RFC 5322 .eml parsing, ≥95% Message-ID extraction per SC-004)
+- [X] T026 [US1] Implement TraceabilityGenerator in main/email/TraceabilityGenerator.ts (search string format: `from:sender subject:"snippet" date:YYYY-MM-DD`, subject truncation to 30 chars)
+
+### Date Handling Refactoring for US1 (Required by plan.md R0-9)
+
+- [X] T026a [P] [US1] Refactor EmlParser date extraction in main/email/parsers/EmlParser.ts (replace `new Date().toISOString()` with date-fns `formatISO`, `parseISO` for consistent date handling)
+- [X] T026b [P] [US1] Refactor TraceabilityGenerator date formatting in main/email/TraceabilityGenerator.ts (replace `new Date()`, `getFullYear()`, `getMonth()`, `getDate()` with date-fns `format`, `parseISO` per plan.md R0-9)
+- [X] T026c [P] [US1] Create date utility module in shared/utils/dateUtils.ts (export `formatYYYYMMDD`, `formatISO8601`, `parseEmailDate` using date-fns v4.x for consistent date operations across codebase)
+- [X] T026d [P] [US1] Unit test for date utilities in tests/unit/utils/dateUtils.test.ts (test `formatYYYYMMDD`, `formatISO8601`, `parseEmailDate` with edge cases: invalid dates, timezone handling, leap years)
 
 ### Duplicate Detection for US1
 
@@ -433,10 +442,10 @@ With 3 developers after Foundational phase:
 - **Privacy-first**: Local-only storage, device-bound keys, no cloud backup (Principle I)
 - **Mode isolation**: Network-layer blocking in local mode, no auto-fallback (Principle IV)
 
-**Total Tasks**: 101 tasks across 9 phases
+**Total Tasks**: 106 tasks across 9 phases (101 original + 5 date handling refactoring tasks)
 **Estimated Effort**:
-- Setup (7 tasks) + Foundational (10 tasks) = 17 tasks ~1 week
-- P1 stories (US1-US3) = 42 tasks ~3-4 weeks
+- Setup (8 tasks, +1 date-fns install) + Foundational (10 tasks) = 18 tasks ~1 week
+- P1 stories (US1-US3) = 46 tasks (42 original + 4 date refactoring) ~3-4 weeks
 - P2 stories (US4-US6) = 27 tasks ~2-3 weeks
 - Polish = 15 tasks ~1 week
 - **Total**: ~6-8 weeks for full feature delivery
@@ -444,6 +453,50 @@ With 3 developers after Foundational phase:
 ---
 
 ## Version History
+
+### v1.2.1 (2026-02-03)
+**Change Type**: refactoring - 标准化日期处理为使用 date-fns v4.x
+**Plan Version**: 1.2.1
+
+**依赖版本变更**:
+- Added: date-fns@^4.0.0 (新增)
+
+**受影响的已完成任务**:
+- [~] T008: **新任务** - Install and configure date-fns v4.x
+- [~] T025: EmlParser - **需要重构**
+  - 替换 `new Date().toISOString()` 为 date-fns `formatISO`
+  - 使用 `parseISO` 解析日期字符串
+  - 确保时区处理一致性
+- [~] T026: TraceabilityGenerator - **需要重构**
+  - 替换 `new Date()` 为 date-fns `parseISO`
+  - 替换 `getFullYear()`, `getMonth()`, `getDate()` 为 date-fns `format`
+  - 使用统一的日期工具函数
+
+**新增任务**:
+- [ ] T026a: Refactor EmlParser date extraction (替换 native Date 为 date-fns)
+- [ ] T026b: Refactor TraceabilityGenerator date formatting (替换 native Date 为 date-fns)
+- [ ] T026c: Create date utility module (创建 `shared/utils/dateUtils.ts`)
+- [ ] T026d: Unit test for date utilities (日期工具单元测试)
+
+**代码变更范围**:
+- 文件创建: `shared/utils/dateUtils.ts` (新日期工具模块)
+- 文件创建: `tests/unit/utils/dateUtils.test.ts` (单元测试)
+- 文件修改: `main/email/parsers/EmlParser.ts` (约 4 处 Date 调用)
+- 文件修改: `main/email/TraceabilityGenerator.ts` (约 20 处 Date 调用)
+- 文件修改: `package.json` (添加 date-fns 依赖)
+
+**兼容性**:
+- ✅ 无破坏性 API 变更（日期输出格式保持 ISO 8601）
+- ✅ 时区处理改善（date-fns 提供 IANA 支持）
+- ✅ 所有功能保持不变
+
+**重构步骤**:
+1. 安装 date-fns: `npm install date-fns@^4.0.0`
+2. 创建 `shared/utils/dateUtils.ts` (参考 plan.md R0-9)
+3. 更新 `EmlParser.ts` 中的日期处理（使用 date-fns）
+4. 更新 `TraceabilityGenerator.ts` 中的日期处理（使用 date-fns）
+5. 创建单元测试验证日期工具
+6. 运行测试验证: `npm test`
 
 ### v1.2.0 (2026-02-01)
 **Change Type**: refactoring - 替换自定义 StructuredLogger 为 electron-log v5
