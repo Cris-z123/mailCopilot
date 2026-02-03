@@ -13,12 +13,13 @@ import { z } from 'zod';
 
 /**
  * Individual action item schema
+ * Per plan.md FR-006 and Principle II: source_email_indices is REQUIRED for traceability
  */
 export const ItemSchema = z.object({
-  content: z.string(),
+  content: z.string().min(1),
   type: z.enum(['completed', 'pending']),
-  source_email_indices: z.array(z.number()).optional(),
-  evidence: z.string(),
+  source_email_indices: z.array(z.number()).min(1), // Required, must have at least one index
+  evidence: z.string().min(1),
   confidence: z.number().min(0).max(100),
   source_status: z.enum(['verified', 'unverified']).default('verified'),
 });
