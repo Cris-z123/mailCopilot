@@ -138,9 +138,9 @@
 
 ### Email Processing Pipeline for US1
 
-- [ ] T042 [US1] Implement EmailProcessor orchestrator in main/email/EmailProcessor.ts (parser → duplicate check → rule engine → LLM → validation → confidence calc → database storage)
-- [ ] T043 [US1] Implement IPC handler for llm:generate in main/ipc/handlers/llmHandler.ts (email batch processing, return items+batch_info per IPC schema in contracts/llm-api.yaml)
-- [ ] T044 [P] [US1] Unit test for email processing pipeline in tests/unit/email/pipeline.test.ts (end-to-end extraction with mock LLM, degraded item handling per FR-018)
+- [X] T042 [US1] Implement EmailProcessor orchestrator in main/email/EmailProcessor.ts (parser → duplicate check → rule engine → LLM → validation → confidence calc → database storage)
+- [X] T043 [US1] Implement IPC handler for llm:generate in main/ipc/handlers/llmHandler.ts (email batch processing, return items+batch_info per IPC schema in contracts/llm-api.yaml)
+- [X] T044 [P] [US1] Unit test for email processing pipeline in tests/unit/email/pipeline.test.ts (end-to-end extraction with mock LLM, degraded item handling per FR-018)
 
 ### Renderer UI for US1 (Traceability Display)
 
