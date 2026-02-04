@@ -9,10 +9,15 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import * as crypto from 'crypto';
 import { EmailProcessor } from '../../../main/email/EmailProcessor';
 import type { LLMAdapter, EmailBatch, LLMOutput } from '../../../main/llm/LLMAdapter';
 import type { ParsedEmail } from '../../../main/email/parsers/EmailParser';
 import DatabaseManager from '../../../main/database/Database.js';
+import ConfigManager from '../../../main/config/ConfigManager.js';
 
 /**
  * Mock LLM Adapter for testing
@@ -45,6 +50,18 @@ class MockLLMAdapter implements LLMAdapter {
       throw new Error('LLM service unavailable');
     }
 
+    // If no emails in batch, return empty result
+    if (batch.emails.length === 0) {
+      return {
+        items: [],
+        batch_info: {
+          total_emails: 0,
+          processed_emails: 0,
+          skipped_emails: 0,
+        },
+      };
+    }
+
     if (this.shouldReturnInvalidSchema) {
       // Return invalid schema (missing source_email_indices)
       return {
@@ -71,19 +88,19 @@ class MockLLMAdapter implements LLMAdapter {
       items: [
         {
           content: 'Complete project report by Friday',
-          type: 'pending',
+          type: 'pending' as const,
           source_email_indices: [0],
           evidence: 'Deadline keyword detected',
           confidence: 85,
-          source_status: 'verified',
+          source_status: 'verified' as const,
         },
         {
           content: 'Review team meeting notes',
-          type: 'completed',
+          type: 'completed' as const,
           source_email_indices: [0],
           evidence: 'Past tense action verb',
           confidence: 70,
-          source_status: 'verified',
+          source_status: 'verified' as const,
         },
       ],
       batch_info: {
@@ -138,18 +155,68 @@ function createMockParsedEmail(overrides?: Partial<ParsedEmail>): ParsedEmail {
   };
 }
 
+/**
+ * Create a test .eml file with valid content
+ */
+async function createTestEmailFile(tempDir: string, filename: string, content?: string): Promise<string> {
+  const emlContent = content || `Message-ID: <${filename}-${Date.now()}@example.com>
+From: sender@example.com
+To: recipient@example.com
+Subject: Test Email ${filename}
+Date: Mon, 27 Jan 2026 10:30:00 +0000
+
+This is a test email body with action items. Please complete the project report by Friday. We need to review the team meeting notes and ensure all deliverables are met on time.
+`;
+
+  const filePath = path.join(tempDir, filename);
+  await fs.writeFile(filePath, emlContent, 'utf-8');
+  return filePath;
+}
+
 describe('EmailProcessor', () => {
   let mockLLM: MockLLMAdapter;
   let processor: EmailProcessor;
+  let tempDir: string;
 
   beforeAll(async () => {
     // Initialize in-memory database for tests
     await DatabaseManager.initialize(':memory:');
+
+    // Load database schema
+    const db = DatabaseManager.getDatabase();
+    const schemaPath = path.join(__dirname, '../../../main/database/migrations/001_initial_schema.sql');
+    const schema = await fs.readFile(schemaPath, 'utf-8');
+    db.exec(schema);
+
+    // Initialize ConfigManager for tests with a generated key
+    const { generateKey } = await import('../../../main/config/encryption.js');
+    const testKey = await generateKey();
+    // Store the key directly in ConfigManager for testing
+    (ConfigManager as any).encryptionKey = testKey;
+    (ConfigManager as any).isInitialized = true;
+    (ConfigManager as any).hmacKey = testKey; // Reuse same key for HMAC in tests
+
+    // Create a test daily report (required by foreign key constraint)
+    const testContent = JSON.stringify({ completed_items: [], pending_items: [], summary: 'Test report' });
+    const testChecksum = crypto.createHash('sha256').update(testContent).digest('hex');
+    db.prepare(`
+      INSERT OR IGNORE INTO daily_reports (report_date, generation_mode, completed_count, pending_count, content_encrypted, content_checksum)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('2026-01-31', 'remote', 0, 0, Buffer.from(testContent, 'utf-8'), testChecksum);
+
+    // Also create report for other test dates
+    db.prepare(`
+      INSERT OR IGNORE INTO daily_reports (report_date, generation_mode, completed_count, pending_count, content_encrypted, content_checksum)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('2026-01-30', 'local', 0, 0, Buffer.from(testContent, 'utf-8'), testChecksum);
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks before each test
     vi.clearAllMocks();
+
+    // Create temp directory for test files
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'email-pipeline-test-'));
 
     // Create mock LLM adapter
     mockLLM = new MockLLMAdapter();
@@ -162,7 +229,13 @@ describe('EmailProcessor', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Cleanup temp files
+    try {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    } catch {
+      // Ignore cleanup errors
+    }
     // Cleanup
     vi.clearAllMocks();
   });
@@ -258,12 +331,12 @@ describe('EmailProcessor', () => {
         debug: false,
       });
 
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await degradedProcessor.processBatch(emailFiles, reportDate, mode);
+      const result = await degradedProcessor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
@@ -283,12 +356,12 @@ describe('EmailProcessor', () => {
         debug: false,
       });
 
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await degradedProcessor.processBatch(emailFiles, reportDate, mode);
+      const result = await degradedProcessor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
@@ -309,12 +382,12 @@ describe('EmailProcessor', () => {
         debug: false,
       });
 
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await degradedProcessor.processBatch(emailFiles, reportDate, mode);
+      const result = await degradedProcessor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
@@ -335,12 +408,12 @@ describe('EmailProcessor', () => {
         debug: false,
       });
 
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await failingProcessor.processBatch(emailFiles, reportDate, mode);
+      const result = await failingProcessor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(false);
@@ -357,12 +430,12 @@ describe('EmailProcessor', () => {
         debug: false,
       });
 
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await failingProcessor.processBatch(emailFiles, reportDate, mode);
+      const result = await failingProcessor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(false);
@@ -373,12 +446,12 @@ describe('EmailProcessor', () => {
   describe('Confidence Calculation', () => {
     it('should calculate confidence using dual-engine formula', async () => {
       // Arrange
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await processor.processBatch(emailFiles, reportDate, mode);
+      const result = await processor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
@@ -400,12 +473,12 @@ describe('EmailProcessor', () => {
         debug: false,
       });
 
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await degradedProcessor.processBatch(emailFiles, reportDate, mode);
+      const result = await degradedProcessor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
@@ -421,16 +494,14 @@ describe('EmailProcessor', () => {
   describe('Batch Info Statistics', () => {
     it('should provide accurate batch statistics', async () => {
       // Arrange
-      const emailFiles = [
-        '/path/to/email1.eml',
-        '/path/to/email2.eml',
-        '/path/to/email3.eml',
-      ];
+      const emailFile1 = await createTestEmailFile(tempDir, 'email1.eml');
+      const emailFile2 = await createTestEmailFile(tempDir, 'email2.eml');
+      const emailFile3 = await createTestEmailFile(tempDir, 'email3.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await processor.processBatch(emailFiles, reportDate, mode);
+      const result = await processor.processBatch([emailFile1, emailFile2, emailFile3], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
@@ -441,15 +512,13 @@ describe('EmailProcessor', () => {
 
     it('should track duplicate statistics', async () => {
       // Arrange
-      const emailFiles = [
-        '/path/to/email1.eml',
-        '/path/to/email2.eml',
-      ];
+      const emailFile1 = await createTestEmailFile(tempDir, 'email1.eml');
+      const emailFile2 = await createTestEmailFile(tempDir, 'email2.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await processor.processBatch(emailFiles, reportDate, mode);
+      const result = await processor.processBatch([emailFile1, emailFile2], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
@@ -513,12 +582,12 @@ describe('EmailProcessor', () => {
   describe('Item Structure', () => {
     it('should return items with all required fields', async () => {
       // Arrange
-      const emailFiles = ['/path/to/email1.eml'];
+      const emailFile = await createTestEmailFile(tempDir, 'email1.eml');
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
       // Act
-      const result = await processor.processBatch(emailFiles, reportDate, mode);
+      const result = await processor.processBatch([emailFile], reportDate, mode);
 
       // Assert
       expect(result.success).toBe(true);
