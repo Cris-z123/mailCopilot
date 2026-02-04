@@ -7,7 +7,9 @@
     "lib": ["ES2022"],
     "outDir": "./dist/main",
     "types": ["node"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": false,
+    "esModuleInterop": true
   },
   "include": [
     "main/**/*",

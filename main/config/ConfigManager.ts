@@ -263,6 +263,48 @@ export class ConfigManager {
   static async exportDebug(): Promise<Record<string, any>> {
     return await this.get();
   }
+
+  /**
+   * Get encryption key for field-level encryption
+   *
+   * Used by entities to encrypt/decrypt sensitive fields.
+   * Must be called after initialize().
+   *
+   * @returns CryptoKey for AES-256-GCM encryption
+   * @throws Error if ConfigManager not initialized
+   */
+  static getEncryptionKey(): CryptoKey {
+    if (!this.isInitialized || !this.encryptionKey) {
+      throw new Error('ConfigManager not initialized. Call ConfigManager.initialize() first.');
+    }
+    return this.encryptionKey;
+  }
+
+  /**
+   * Encrypt a field value using the encryption key
+   *
+   * Convenience method for entities to encrypt sensitive fields.
+   *
+   * @param value - Plain text value to encrypt
+   * @returns JSON string of encrypted data
+   */
+  static async encryptField(value: string): Promise<string> {
+    const key = this.getEncryptionKey();
+    return await encryption.encryptField(key, value);
+  }
+
+  /**
+   * Decrypt a field value using the encryption key
+   *
+   * Convenience method for entities to decrypt sensitive fields.
+   *
+   * @param blob - JSON string of encrypted data
+   * @returns Decrypted plain text value
+   */
+  static async decryptField(blob: string): Promise<string> {
+    const key = this.getEncryptionKey();
+    return await encryption.decryptField(key, blob);
+  }
 }
 
 export default ConfigManager;

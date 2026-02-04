@@ -19,12 +19,11 @@ import { DuplicateDetector } from './DuplicateDetector.js';
 import { EmlParser } from './parsers/EmlParser.js';
 import { TraceabilityGenerator } from './TraceabilityGenerator.js';
 import { RuleEngine } from '../rules/RuleEngine.js';
-import type { RuleEngineExecutionResult } from '../rules/RuleEngine.js';
-import type { LLMAdapter, EmailBatch, LLMOutput } from '../llm/LLMAdapter.js';
+import type { LLMAdapter, EmailBatch } from '../llm/LLMAdapter.js';
 import { OutputValidator } from '../llm/OutputValidator.js';
 import { ConfidenceCalculator } from '../llm/ConfidenceCalculator.js';
-import { ActionItemRepository } from '../database/entities/ActionItem.js';
-import { EmailSourceRepository } from '../database/entities/EmailSource.js';
+import { ActionItemRepository, ItemType, SourceStatus } from '../database/entities/ActionItem.js';
+import { EmailSourceRepository, ExtractStatus } from '../database/entities/EmailSource.js';
 import { ItemEmailRefRepository } from '../database/entities/ItemEmailRef.js';
 import type { ParsedEmail } from './parsers/EmailParser.js';
 
@@ -104,7 +103,7 @@ interface ProcessingContext {
   duplicateStats: ReturnType<DuplicateDetector['createStats']>;
 
   /** Emails that failed parsing */
-  parseErrors: Array<{ email: ParsedEmail; error: string }>;
+  parseErrors: Array<{ email: string; error: string }>;
 
   /** Whether schema validation failed (triggers degraded mode) */
   isDegraded: boolean;
@@ -304,6 +303,11 @@ export class EmailProcessor {
       context.isDegraded = validationResult.isDegraded;
 
       logger.info('EmailProcessor', 'Output validation complete', {
+        itemCount: validationResult.output.items.length,
+        firstItem: validationResult.output.items[0],
+      });
+
+      logger.info('EmailProcessor', 'Output validation complete', {
         isValid: validationResult.isValid,
         isDegraded: validationResult.isDegraded,
         retryCount: validationResult.retryCount,
@@ -313,7 +317,6 @@ export class EmailProcessor {
       // Step 6: Calculate confidence for each item
       const confidenceResults = this.calculateConfidenceForBatch(
         validationResult.output.items,
-        unique,
         ruleResults,
         context.isDegraded
       );
@@ -432,7 +435,8 @@ export class EmailProcessor {
         }
 
         // Generate search string for traceability
-        parsedEmail.search_string = this.traceabilityGenerator.generate(parsedEmail);
+        const traceabilityInfo = this.traceabilityGenerator.generateTraceability(parsedEmail);
+        parsedEmail.search_string = traceabilityInfo.search_string;
         parsedEmail.file_path = filePath;
 
         parsedEmails.push(parsedEmail);
@@ -507,13 +511,15 @@ export class EmailProcessor {
    */
   private calculateConfidenceForBatch(
     llmItems: Array<{ content: string; type: 'completed' | 'pending'; source_email_indices?: number[]; evidence: string; confidence: number; source_status: 'verified' | 'unverified' }>,
-    uniqueEmails: ParsedEmail[],
     ruleResults: Array<{ score: number; rulesTriggered: number; details: { hasDeadlineKeyword: boolean; hasPriorityKeyword: boolean; isWhitelistedSender: boolean; actionVerbCount: number } }>,
     isDegraded: boolean
   ): Array<{ confidence: number; ruleContribution: number; llmContribution: number; isDegraded: boolean; details: { ruleScore: number; llmScore: number; ruleWeight: number; llmWeight: number; capApplied: boolean } }> {
     // Calculate average rule score for fallback
+    // Default to 0 if no rule results (e.g., no emails parsed)
     const avgRuleScore =
-      ruleResults.reduce((sum, r) => sum + r.score, 0) / ruleResults.length;
+      ruleResults.length > 0
+        ? ruleResults.reduce((sum, r) => sum + r.score, 0) / ruleResults.length
+        : 0;
 
     return llmItems.map((llmItem) => {
       // Map LLM item to rule result based on source_email_indices
@@ -595,7 +601,7 @@ export class EmailProcessor {
           last_seen_at: Math.floor(Date.now() / 1000),
           report_date: context.reportDate,
           attachments_meta: JSON.stringify(email.attachments || []),
-          extract_status: 'success',
+          extract_status: ExtractStatus.SUCCESS,
           search_string: email.search_string || '',
           file_path: email.file_path || '',
         });
@@ -616,11 +622,11 @@ export class EmailProcessor {
 
       try {
         // Create action item
-        ActionItemRepository.create(item_id, {
+        await ActionItemRepository.create(item_id, {
           report_date: context.reportDate,
           content: llmItem.content,
-          item_type: llmItem.type,
-          source_status: context.isDegraded ? 'unverified' : llmItem.source_status,
+          item_type: llmItem.type === 'completed' ? ItemType.COMPLETED : ItemType.PENDING,
+          source_status: context.isDegraded ? SourceStatus.UNVERIFIED : (llmItem.source_status === 'verified' ? SourceStatus.VERIFIED : SourceStatus.UNVERIFIED),
           confidence_score: confidenceResult.confidence,
           tags: [],
           created_at: Math.floor(Date.now() / 1000),
@@ -634,10 +640,12 @@ export class EmailProcessor {
             const email = uniqueEmails[emailIndex];
 
             if (email) {
-              ItemEmailRefRepository.create({
+              const ref_id = uuidv4();
+              ItemEmailRefRepository.create(ref_id, {
                 item_id,
                 email_hash: email.email_hash,
-                email_index_in_batch: j,
+                evidence_text: llmItem.evidence || '',
+                confidence: Math.round(confidenceResult.confidence * 100),
               });
             }
           }
@@ -650,7 +658,7 @@ export class EmailProcessor {
           confidence: confidenceResult.confidence,
           source_status: context.isDegraded ? 'unverified' : llmItem.source_status,
           evidence: llmItem.evidence,
-        });
+        } as any);
 
         logger.debug('EmailProcessor', 'Action item stored', {
           item_id,
