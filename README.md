@@ -1,12 +1,14 @@
 # mailCopilot
 
-> 智能邮件处理助手
+> 智能邮件处理助手 - Email Item Traceability & Verification System
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/your-org/mailcopilot)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Electron](https://img.shields.io/badge/Electron-29.4.6-9FEAF5?logo=electron)](https://electronjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://reactjs.org/)
+[![Node](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js)](https://nodejs.org/)
+[![Vitest](https://img.shields.io/badge/Vitest-3.2.4-6E9F18?logo=vitest)](https://vitest.dev/)
 
 ## 📖 项目简介
 
@@ -15,12 +17,13 @@ mailCopilot 是一款面向隐私敏感场景的**本地邮件智能处理客户
 ### 核心特性
 
 - ✅ **100% 事项可溯源** - 每个事项均可追溯到原始邮件来源
-- 🔒 **隐私优先架构** - 默认本地处理，完全离线可选
+- 🔒 **隐私优先架构** - 字段级 AES-256-GCM 加密，WAL 模式保证数据安全
 - 🎯 **智能置信度系统** - 基于规则引擎和 LLM 的双引擎置信度计算
-- 🔍 **多格式支持** - 支持主流邮件格式
-- 🌓 **双模式运行** - 本地模式/ 远程模式热切换
-- 💾 **设备绑定存储** - SQLite 本地数据库 + 字段级加密
+- 🔍 **多格式支持** - 支持主流邮件格式（EML, MBOX, PST）
+- 🌓 **双模式运行** - 本地模式/远程模式热切换
+- 💾 **设备绑定存储** - SQLite 本地数据库，零知识架构
 - 📊 **日报生成** - 自动生成包含事项、进度、总结的日报
+- 🔄 **IPC 通信** - Electron IPC 处理管道，安全的主进程通信
 
 ## 🚀 快速开始
 
@@ -57,7 +60,6 @@ npm run start
 ## 🏗️ 技术栈
 
 ### 核心框架
-
 - **Electron** 29.4.6 - 跨平台桌面应用框架
 - **React** 18 - 用户界面
 - **TypeScript** 5.4 - 类型安全
@@ -134,10 +136,11 @@ npm run test:coverage
 ## 🙏 致谢
 
 - [Electron](https://electronjs.org/) - 跨平台桌面应用框架
-- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) - SQLite 数据库
+- [React](https://reactjs.org/) - 用户界面库
+- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) - SQLite 同步驱动
 - [Zustand](https://github.com/pmndrs/zustand) - 状态管理
-- [Ollama](https://ollama.com/) - 本地 LLM 运行时
-- [Vitest](https://vitest.dev/) - 测试框架
+- [Zod](https://zod.dev/) - TypeScript 优先的模式验证
+- [Vite](https://vitejs.dev/) - 下一代前端构建工具
 
 ## 📮 联系方式
 - 问题反馈: [GitHub Issues](https://github.com/your-org/mailcopilot/issues)
