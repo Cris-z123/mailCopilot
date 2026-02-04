@@ -6,17 +6,18 @@
     "moduleResolution": "node",
     "lib": ["ES2022"],
     "outDir": "./dist/main",
-    "rootDir": "./main",
     "types": ["node"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": false,
+    "esModuleInterop": true
   },
   "include": [
-    "main/**/*"
+    "main/**/*",
+    "shared/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "renderer",
-    "shared"
+    "renderer"
   ]
 }

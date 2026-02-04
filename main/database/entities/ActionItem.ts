@@ -1,6 +1,6 @@
 import DatabaseManager from '../Database.js';
 import { logger } from '../../config/logger.js';
-import { encryptField, decryptField } from '../../config/encryption.js';
+import ConfigManager from '../../config/ConfigManager.js';
 import crypto from 'crypto';
 
 /**
@@ -149,7 +149,8 @@ export class ActionItemRepository {
     const created_at = data.created_at ?? now;
 
     // Encrypt content
-    const content_encrypted = await encryptField(data.content);
+    const content_encrypted_json = await ConfigManager.encryptField(data.content);
+    const content_encrypted = Buffer.from(content_encrypted_json, 'utf-8');
     const content_checksum = crypto
       .createHash('sha256')
       .update(data.content)
@@ -159,7 +160,7 @@ export class ActionItemRepository {
     const tags_json = JSON.stringify(data.tags ?? []);
 
     // Convert boolean to integer (0 or 1)
-    const is_manually_edited = data.is_manually_edited ? 1 : 0;
+    const is_manually_edited = (data.is_manually_edited ?? false) ? 1 : 0;
 
     const stmt = db.prepare(`
       INSERT INTO ${this.TABLE_NAME} (
@@ -265,7 +266,7 @@ export class ActionItemRepository {
     }
 
     // Verify content checksum
-    const content = await decryptField(item.content_encrypted);
+    const content = await ConfigManager.decryptField(item.content_encrypted);
     const checksum = crypto.createHash('sha256').update(content).digest('hex');
 
     if (checksum !== item.content_checksum) {
@@ -368,7 +369,8 @@ export class ActionItemRepository {
     const db = DatabaseManager.getDatabase();
 
     // Encrypt new content
-    const content_encrypted = await encryptField(content);
+    const content_encrypted_json = await ConfigManager.encryptField(content);
+    const content_encrypted = Buffer.from(content_encrypted_json, 'utf-8');
     const content_checksum = crypto.createHash('sha256').update(content).digest('hex');
 
     const stmt = db.prepare(`
