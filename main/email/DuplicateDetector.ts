@@ -15,8 +15,8 @@
  */
 
 import { createHash } from 'crypto';
-import { logger } from '../config/logger';
-import { EmailSourceRepository } from '../database/entities/EmailSource';
+import { logger } from '@/config/logger';
+import { EmailSourceRepository } from '@/database/entities/EmailSource';
 import { ParsedEmail } from './parsers/EmailParser';
 
 /**

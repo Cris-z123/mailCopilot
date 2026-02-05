@@ -7,10 +7,10 @@
  * @module main/rules/RuleEngine
  */
 
-import { logger } from '../config/logger.js';
+import { logger } from '@/config/logger.js';
 import { executeAllRules, calculateRuleScore, buildRuleDetails } from './rules.js';
-import type { RuleEngineResult } from '../llm/ConfidenceCalculator.js';
-import type { ParsedEmail } from '../email/parsers/EmailParser.js';
+import type { RuleEngineResult } from '@/llm/ConfidenceCalculator.js';
+import type { ParsedEmail } from '@/email/parsers/EmailParser.js';
 
 /**
  * Rule engine configuration options

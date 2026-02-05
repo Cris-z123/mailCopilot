@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { EmlParser } from '../../../main/email/parsers/EmlParser';
+import { EmlParser } from '@/email/parsers/EmlParser';
 
 describe('EmlParser', () => {
   let parser: EmlParser;

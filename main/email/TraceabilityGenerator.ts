@@ -9,9 +9,9 @@
  * @module main/email/TraceabilityGenerator
  */
 
-import { logger } from '../config/logger';
+import { logger } from '@/config/logger';
 import { ParsedEmail } from './parsers/EmailParser';
-import { extractDateOnly as extractDateOnlyUtil, getCurrentDateYYYYMMDD } from '../../shared/utils/dateUtils';
+import { extractDateOnly as extractDateOnlyUtil, getCurrentDateYYYYMMDD } from '@shared/utils/dateUtils';
 
 /**
  * Traceability information for an email

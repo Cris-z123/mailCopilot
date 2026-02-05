@@ -14,8 +14,8 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { RemoteLLM } from '../../../main/llm/RemoteLLM.js';
-import type { EmailBatch, LLMOutput } from '../../../main/llm/LLMAdapter.js';
+import { RemoteLLM } from '@/llm/RemoteLLM.js';
+import type { EmailBatch, LLMOutput } from '@/llm/LLMAdapter.js';
 
 // Check if test key is available
 const hasTestKey = !!process.env.OPENAI_TEST_KEY;

@@ -1,5 +1,5 @@
 import { safeStorage } from 'electron';
-import DatabaseManager from '../database/Database.js';
+import DatabaseManager from '@/database/Database.js';
 import * as encryption from './encryption.js';
 import type { CryptoKey } from './encryption.js';
 

@@ -12,8 +12,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { RuleEngine } from '../../../main/rules/RuleEngine.js';
-import type { ParsedEmail } from '../../../main/email/parsers/EmailParser.js';
+import { RuleEngine } from '@/rules/RuleEngine.js';
+import type { ParsedEmail } from '@/email/parsers/EmailParser.js';
 
 describe('RuleEngine', () => {
   describe('Single Email Processing', () => {

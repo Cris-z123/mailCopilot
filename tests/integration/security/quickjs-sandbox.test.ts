@@ -30,9 +30,9 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { RuleEngine } from '../../../main/rules/RuleEngine.js';
-import { executeAllRules } from '../../../main/rules/rules.js';
-import type { ParsedEmail } from '../../../main/email/parsers/EmailParser.js';
+import { RuleEngine } from '@/rules/RuleEngine.js';
+import { executeAllRules } from '@/rules/rules.js';
+import type { ParsedEmail } from '@/email/parsers/EmailParser.js';
 
 describe('QuickJS Sandbox Security Tests', () => {
   /**

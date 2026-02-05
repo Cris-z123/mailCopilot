@@ -11,9 +11,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ConfidenceCalculator } from '../../../main/llm/ConfidenceCalculator';
-import type { RuleEngineResult } from '../../../main/llm/ConfidenceCalculator';
-import type { ExtractedItem } from '../../../main/llm/LLMAdapter';
+import { ConfidenceCalculator } from '@/llm/ConfidenceCalculator';
+import type { RuleEngineResult } from '@/llm/ConfidenceCalculator';
+import type { ExtractedItem } from '@/llm/LLMAdapter';
 
 describe('ConfidenceCalculator', () => {
   describe('Normal mode calculation (rules 50% + LLM 50%)', () => {

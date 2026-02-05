@@ -17,13 +17,13 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DuplicateDetector } from '../../../main/email/DuplicateDetector';
-import { ParsedEmail } from '../../../main/email/parsers/EmailParser';
-import { EmailSourceRepository, ExtractStatus } from '../../../main/database/entities/EmailSource';
-import { logger } from '../../../main/config/logger';
+import { DuplicateDetector } from '@/email/DuplicateDetector';
+import { ParsedEmail } from '@/email/parsers/EmailParser';
+import { EmailSourceRepository, ExtractStatus } from '@/database/entities/EmailSource';
+import { logger } from '@/config/logger';
 
 // Mock EmailSourceRepository
-vi.mock('../../../main/database/entities/EmailSource', () => ({
+vi.mock('@/database/entities/EmailSource', () => ({
   EmailSourceRepository: {
     findByHash: vi.fn(),
     updateLastSeen: vi.fn(),

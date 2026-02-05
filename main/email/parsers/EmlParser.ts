@@ -11,9 +11,9 @@ import { simpleParser, ParsedMail, Attachment } from 'mailparser';
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { logger } from '../../config/logger';
+import { logger } from '@/config/logger';
 import { EmailParser, ParsedEmail } from './EmailParser';
-import { formatISO8601 } from '../../../shared/utils/dateUtils';
+import { formatISO8601 } from '@shared/utils/dateUtils';
 
 /**
  * EmlParser implements EmailParser interface for .eml files
