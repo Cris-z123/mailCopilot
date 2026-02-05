@@ -1,115 +1,130 @@
 # Implementation Plan: Email Item Traceability & Verification System
 
-**Branch**: `001-email-item-traceability` | **Date**: 2026-02-03 | **Spec**: [spec.md](./spec.md)
+**Branch**: `001-email-item-traceability` | **Date**: 2026-02-05 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-email-item-traceability/spec.md`
+**Architecture Version**: v2.7 (Updated 2026-02-05)
+
+**Note**: This plan reflects updates from the technical architecture document (docs/tech-architecture.md v2.7), including:
+- Frontend tech stack: TailwindCSS, shadcn/ui, Lucide-React, Inter font
+- Revised low-confidence handling: downgrade to database with "[来源待确认]" tagging instead of dropping
+- Extended retention support: -1 (permanent) option added
+- Optimized mode switching: hot switch after batch completion (no restart required)
+- Unified confidence weighting: Rule engine 50% + LLM 50%, adjusts on failure
+- Simplified feedback storage: Integrated into `todo_items` table, removed separate feedback.db
+- Explicit traceability implementation: Search string + file path (display-only text, NO deep linking or clickable links per FR-004A)
+- Email format parsing libraries specified: msg-extractor/libpff
 
 ## Summary
 
-Implement a comprehensive email action item extraction system with 100% source traceability, dual-mode LLM processing (local/remote), and privacy-first architecture. The system extracts actionable items from emails while maintaining verifiable links to source emails through Message-ID/SHA-256 fingerprinting, implements confidence scoring with dual-engine validation (rule engine + LLM), and provides user feedback mechanisms stored locally with AES-256-GCM encryption.
+This feature implements a complete email item traceability and verification system for mailCopilot, enabling users to verify every extracted action item's source while maintaining privacy-first design. The system extracts action items from emails using dual-engine processing (rule engine + LLM), enforces mandatory source traceability, provides confidence-based visual warnings, and offers a local-only feedback system. The implementation uses Electron 29.4.6 with React 18 + TypeScript 5.4, field-level AES-256-GCM encryption for sensitive data, and supports both local (Ollama) and remote LLM modes with hot switching.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.4 + Node.js 20.x
 **Primary Dependencies**:
-- Electron 29.4.6 (cross-platform desktop framework)
-- better-sqlite3 11.10.0 (embedded database)
-- OpenAI SDK (latest) - **NEW: Using official OpenAI library for LLM integration**
-- Zod 3.22.4 (runtime schema validation)
-- date-fns 4.0.0 (date handling)
-- mailparser 3.6.5 (email parsing)
-- QuickJS (WASM) (rule engine sandbox)
+  - Cross-platform: Electron 29.4.6
+  - Frontend: React 18, Tailwind CSS v3.4, shadcn/ui, Lucide React, Inter (variable font)
+  - State: Zustand 4.5
+  - Database: better-sqlite3 11.10.0 with field-level AES-256-GCM encryption
+  - Security: Electron safeStorage API, QuickJS (WASM) for rule sandbox
+  - Validation: Zod Schema for runtime validation
+  - Email: imapflow + mailparser (IMAP/POP3), msg-extractor/libpff/readpst (Outlook formats)
+  - Export: Puppeteer for PDF generation
+  - Updates: electron-updater (GitHub Releases)
 
-**Storage**: better-sqlite3 with field-level AES-256-GCM encryption, WAL mode
-**Testing**: Vitest 3.2.4 with unit (60%) and integration (40%) test coverage, minimum 85% line coverage
-**Target Platform**: Desktop (Windows 10+, macOS 10.15+, Linux)
-**Project Type**: Electron desktop application (main process + renderer process)
+**Storage**: SQLite (better-sqlite3) with field-level encryption, WAL mode
+**Testing**: Vitest + Node.js built-in test runner + custom integration test framework
+  - Unit tests: 60% (utilities, security algorithms, pure functions)
+  - Integration tests: 40% (database, IPC, LLM adapters, process locks)
+  - Coverage: ≥85% line, ≥80% branch (100% for security-critical modules)
+
+**Target Platform**: Desktop (Windows 10+, macOS 10.15+, Linux Ubuntu 20.04+)
+**Project Type**: Electron desktop app (main process + renderer process architecture)
 **Performance Goals**:
-- 1000 daily report queries <100ms
-- Process 50 emails ~18s (remote) / ~35s (local 7B)
-- Bulk decrypt 100 items <500ms
-- Email metadata extraction <100ms per email
+  - Email metadata extraction: ≤100ms per email (mid-range hardware)
+  - Local LLM processing: ≤2s per email (Ollama 7B)
+  - Report query: <100ms for 1000 reports
+  - Batch processing: ~35s for 50 emails (local 7B) / ~18s (remote)
+  - Bulk decryption: <500ms for 100 items
 
 **Constraints**:
-- Single instance execution (SQLite corruption prevention)
-- TLS 1.3 for remote LLM calls via OpenAI SDK
-- 30s timeout per LLM request (FR-057)
-- 2-retry limit with exponential backoff (R0-5)
-- 128MB QuickJS memory limit, 5s execution timeout
-- Email size limit 20MB, body truncation 100k chars
-- Batch maximum 50 emails
+  - Privacy-first: No cloud backup, no cross-device sync, device-bound keys
+  - Single-instance: Only one application instance allowed
+  - Security: IPC whitelist (6 channels), CSP enforced, sandbox enabled
+  - Resource limits: 20MB per email, 100k char body truncation, 50 emails/batch
+  - Rule engine: 128MB memory, 5s timeout, QuickJS WASM sandbox
+  - Data retention: Default 90 days (configurable 30/90/180/365/-1 where -1 = permanent)
 
 **Scale/Scope**:
-- Single-user desktop application
-- Support for 5 email formats (.eml, .msg, .pst, .mbox, .html)
-- Daily report generation with item traceability
-- Local-only data storage with device-bound encryption
+  - Single-device desktop app
+  - Local storage only (no cloud services)
+  - Designed for individual use (not multi-tenant)
+  - Email archive processing: batches of 50 emails
+  - Historical storage: Daily reports indefinitely (metadata retained per config)
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-### Principle I: Privacy-First Architecture
-✅ **COMPLIANT** - Implementation plan includes:
-- Default remote mode with explicit disclosure of data transmission
-- Local mode support with Ollama integration
-- No cloud backup, all data device-bound
-- Network-layer blocking in local mode
+### I. Privacy-First Architecture ✅
+- ✅ **Default Remote Mode**: System defaults to remote mode on first launch
+- ✅ **Complete Offline Option**: Users can deploy Ollama/LocalAI and switch to local mode with network-layer blocking
+- ✅ **No Cloud Backup**: All reports/configs bound to current device, no cross-device sync or password recovery
+- ✅ **Single Device Binding**: Data access tied to device hardware, system reinstall/device change = permanent data loss
+- **Implementation**: FR-030 through FR-040 specify dual-mode operation, FR-046 enforces device binding, T018a-T018b implement first-run disclosure per Principle I
 
-### Principle II: Anti-Hallucination Mechanism
-✅ **COMPLIANT** - Implementation plan includes:
-- Mandatory `source_email_indices` in LLM output
-- Zod schema validation with degradation fallback
-- Source status field ('verified'/'unverified')
-- Confidence scoring (rule engine 50% + LLM 50%)
-- Items never silently dropped, only degraded
+### II. Anti-Hallucination Mechanism ✅
+- ✅ **Mandatory Source Association**: Every item includes source_email_indices, evidence, confidence
+- ✅ **Zod Schema Validation**: source_status field ('verified'/'unverified') enforced, items without valid sources NOT discarded
+- ✅ **Degradation Instead of Loss**: Items without verified sources marked unverified, confidence≤0.4, tagged "[来源待确认]"
+- ✅ **Confidence Calculation**: Unified scoring (rules 50% + LLM 50%), adjusts to 60%/20% on schema failure
+- ✅ **Multi-Email Association**: item_email_refs table supports many-to-many relationships
+- **Implementation**: FR-014 through FR-018 specify validation and degradation, FR-009 through FR-013 specify confidence calculation
 
-### Principle III: Data Minimization & Retention
-✅ **COMPLIANT** - Implementation plan includes:
-- Immediate email body cleanup after processing
-- Metadata-only retention (90-day default, configurable)
-- AES-256-GCM field-level encryption
-- Device-bound keys via Electron safeStorage
-- No recovery path (intentional design)
+### III. Data Minimization & Retention ✅
+- ✅ **Immediate Body Cleanup**: Original email body cleared after processing (FR-044)
+- ✅ **Metadata-Only Retention**: 90 days default, configurable 30/90/180/365/-1 days (FR-041, FR-042)
+- ✅ **Field-Level Encryption**: AES-256-GCM for sensitive fields (FR-045)
+- ✅ **Device-Bound Keys**: safeStorage API, no user password required (FR-046)
+- ✅ **No Recovery Path**: System reinstall/device change = permanent data loss (FR-047)
+- **Implementation**: FR-041 through FR-048 specify data retention and encryption
 
-### Principle IV: Mode Switching & Network Isolation
-✅ **COMPLIANT** - Implementation plan includes:
-- Hot mode switching (wait for batch completion)
-- Queue during mode transition
-- No auto-degradation (local mode failures block)
-- Network interceptor for local mode
-- Auto-update policy differs by mode
+### IV. Mode Switching & Network Isolation ✅
+- ✅ **Hot Mode Switching**: Mode changes wait for current batch completion, no restart required (FR-033)
+- ✅ **Queue During Switch**: New tasks queued during batch processing (FR-034)
+- ✅ **No Auto-Degradation**: Local mode failures block functionality, no automatic fallback (FR-036, FR-037)
+- ✅ **Network Interceptor**: Local mode physically blocks non-local requests (FR-040)
+- ✅ **Update Policy**: Remote mode auto-checks on startup, local mode requires manual trigger (FR-038, FR-039)
+- **Implementation**: FR-030 through FR-040 specify dual-mode operation
 
-### Principle V: Testing & Quality Standards
-✅ **COMPLIANT** - Implementation plan includes:
-- Unit tests (60%) and integration tests (40%)
-- 85% line coverage minimum, 80% branch coverage
-- 100% branch coverage for security-critical modules
-- Red-Green-Refactor test-first enforcement
+### V. Testing & Quality Standards ✅
+- ✅ **Test Pyramid (No E2E)**: Unit 60%, Integration 40%
+- ✅ **Coverage Requirements**: Unit ≥85% line, ≥80% branch; Security-critical 100% branch
+- ✅ **Test-First Enforcement**: Red-Green-Refactor cycle strictly enforced
+- ✅ **Integration Test Focus**: New library contracts, IPC communication, database operations
+- ✅ **Security Testing**: QuickJS sandbox escape, SQL injection, memory residue, single-instance lock
+- **IPC Compliance**: IPC whitelist validation test (T109a) ensures exactly 6 channels registered per constitution Development Workflow section
+- **Implementation**: Testing section in tech-architecture.md specifies test strategy
 
-### Principle VI: Single Instance & Concurrency Control
-✅ **COMPLIANT** - Implementation plan includes:
-- `app.requestSingleInstanceLock()` on startup
-- Second instance immediate quit
-- Window focus on second-instance event
-- Batch processing state flags
+### VI. Single Instance & Concurrency Control ✅
+- ✅ **Single Instance Lock**: app.requestSingleInstanceLock() on startup (FR-059)
+- ✅ **Window Focus**: Second-instance events focus existing window (FR-061)
+- ✅ **Database Safety**: Single-instance enforcement prevents SQLite corruption
+- ✅ **Batch Processing State**: Mode switches use state flags to prevent race conditions
+- **Implementation**: FR-059 through FR-061 specify single-instance enforcement
 
-### Principle VII: Observability & Performance
-✅ **COMPLIANT** - Implementation plan includes:
-- Structured logging (no sensitive data)
-- Performance benchmarks defined
-- Resource limits enforced
-- Database WAL mode optimization
-- Memory clearing with `Buffer.fill(0)`
+### VII. Observability & Performance ✅
+- ✅ **Structured Logging**: All events use structured format, no sensitive data in logs
+- ✅ **Performance Benchmarks**: 1000 reports <100ms, 100 decrypt <500ms, 50 emails ~35s local / ~18s remote
+- ✅ **Resource Limits**: 20MB email limit, 100k char truncation, 50 email batches, 128MB QuickJS limit, 5s timeout
+- ✅ **Database Optimization**: WAL mode, synchronous=NORMAL, all writes in transactions
+- ✅ **Memory Management**: Buffer.fill(0) after use for sensitive data
+- **Implementation**: FR-056 through FR-058 specify timeouts and limits, FR-011 through FR-013 specify confidence display
 
-### Technology Stack Compliance
-✅ **COMPLIANT** - All required technologies present:
-- OpenAI SDK for LLM integration (updated from raw fetch API)
-- better-sqlite3 with field-level encryption
-- Zod schema validation
-- QuickJS sandbox for rule engine
-- mailparser for email parsing
+### Summary
+✅ **ALL CONSTITUTIONAL REQUIREMENTS SATISFIED**
 
-**Constitution Status**: ✅ ALL PRINCIPLES SATISFIED - No violations requiring justification
+No violations detected. This feature implementation fully adheres to all seven core principles of the mailCopilot constitution.
 
 ## Project Structure
 
@@ -118,264 +133,301 @@ Implement a comprehensive email action item extraction system with 100% source t
 ```text
 specs/001-email-item-traceability/
 ├── plan.md              # This file (/speckit.plan command output)
-├── spec.md              # Feature specification
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command)
+├── research.md          # Phase 0 output - Technology research and decisions
+├── data-model.md        # Phase 1 output - Database schema and entity relationships
+├── quickstart.md        # Phase 1 output - Developer onboarding guide
+├── contracts/           # Phase 1 output - API contracts (OpenAPI/GraphQL schemas)
+│   ├── llm-service.yaml     # LLM adapter interface
+│   ├── database-operations.yaml  # Database query contracts
+│   └── ipc-protocol.yaml    # IPC channel schemas
+└── tasks.md             # Phase 2 output - Implementation tasks (NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
 
 ```text
 mailCopilot/
-├── main/                    # Electron main process (Node.js)
-│   ├── config/
-│   │   └── logger.ts        # Structured logging configuration
-│   ├── database/
-│   │   └── entities/        # Database entities and repositories
-│   │       ├── EmailSource.ts
-│   │       ├── ActionItem.ts
-│   │       ├── UserFeedback.ts
-│   │       └── DailyReport.ts
-│   ├── email/
-│   │   ├── parsers/         # Email format parsers
-│   │   │   ├── EmlParser.ts
-│   │   │   ├── MsgParser.ts
-│   │   │   ├── PstParser.ts
-│   │   │   ├── MboxParser.ts
-│   │   │   └── HtmlParser.ts
-│   │   ├── DuplicateDetector.ts
-│   │   └── EmailParser.ts   # Unified parser interface
-│   ├── llm/                 # LLM integration layer
-│   │   ├── LLMAdapter.ts    # LLM adapter interface
-│   │   ├── RemoteLLM.ts     # Remote LLM using OpenAI SDK
-│   │   ├── LocalLLM.ts      # Local LLM (Ollama)
-│   │   └── OutputValidator.ts # Zod schema validation
-│   ├── rules/
-│   │   ├── RuleEngine.ts    # QuickJS sandbox wrapper
-│   │   └── rules.ts         # Rule definitions
-│   ├── encryption/
-│   │   ├── CryptoManager.ts # AES-256-GCM encryption
-│   │   └── KeyManager.ts    # Device-bound key storage
-│   ├── ipc/
-│   │   └── handlers/        # IPC channel handlers
-│   └── index.ts             # Main process entry point
+├── src/
+│   ├── main/                    # Electron main process
+│   │   ├── app/
+│   │   │   ├── single-instance.ts    # Single-instance lock management
+│   │   │   ├── lifecycle.ts          # App lifecycle handlers
+│   │   │   └── mode-manager.ts       # Hot mode switching logic
+│   │   ├── security/
+│   │   │   ├── encryption.ts         # Field-level AES-256-GCM encryption
+│   │   │   ├── key-manager.ts        # Device key management (safeStorage)
+│   │   │   ├── desensitization.ts    # PII redaction rules
+│   │   │   └── network-interceptor.ts # Network layer blocking (local mode)
+│   │   ├── database/
+│   │   │   ├── schema.ts             # SQLite schema definition
+│   │   │   ├── migrations.ts         # Database migration scripts
+│   │   │   ├── repositories/         # Data access layer
+│   │   │   │   ├── emails.repo.ts
+│   │   │   │   ├── items.repo.ts
+│   │   │   │   ├── reports.repo.ts
+│   │   │   │   └── feedback.repo.ts  # Integrated into todo_items table
+│   │   │   └── cleanup.ts            # Scheduled data retention cleanup
+│   │   ├── email-processing/
+│   │   │   ├── parsers/              # Email format parsers
+│   │   │   │   ├── eml.parser.ts     # RFC 5322 .eml format
+│   │   │   │   ├── msg.parser.ts     # Outlook MSG format (msg-extractor)
+│   │   │   │   ├── pst.parser.ts     # Outlook PST/OST format (libpff/readpst)
+│   │   │   │   ├── mbox.parser.ts    # Unix mbox format
+│   │   │   │   └── html.parser.ts    # Exported HTML format
+│   │   │   ├── metadata-extractor.ts # Message-ID/fingerprint extraction
+│   │   │   ├── traceability-generator.ts # Search string + file path
+│   │   │   └── duplicate-detector.ts  # SHA-256 duplicate detection
+│   │   ├── llm/
+│   │   │   ├── adapter-factory.ts    # LLM service factory (local/remote)
+│   │   │   ├── local-adapter.ts      # Ollama/LocalAI adapter
+│   │   │   ├── remote-adapter.ts     # Third-party LLM API adapter
+│   │   │   ├── output-validator.ts   # Zod schema validation + degradation
+│   │   │   └── confidence-calculator.ts # Rule 50% + LLM 50% scoring
+│   │   ├── rules/
+│   │   │   ├── sandbox.ts            # QuickJS WASM sandbox wrapper
+│   │   │   ├── engine.ts             # Rule execution engine
+│   │   │   └── default-rules.ts      # Built-in keyword/sender/deadline rules
+│   │   ├── reports/
+│   │   │   ├── generator.ts          # Daily report generation
+│   │   │   ├── template-engine.ts    # Markdown/PDF rendering
+│   │   │   └── export.ts             # Unencrypted file export
+│   │   ├── config/
+│   │   │   ├── manager.ts            # Config loading/saving (encrypted)
+│   │   │   ├── schema.ts             # JSON Schema validation
+│   │   │   └── validation.ts         # Ajv validation + HMAC signing
+│   │   ├── updates/
+│   │   │   ├── manager.ts            # Auto-update logic (GitHub Releases)
+│   │   │   └── signature-verifier.ts # Code signature verification
+│   │   └── ipc/
+│   │       ├── channels.ts           # IPC channel definitions (whitelist: 6)
+│   │       └── handlers/             # IPC request handlers
+│   │           ├── llm.handler.ts
+│   │           ├── database.handler.ts
+│   │           ├── config.handler.ts
+│   │           ├── updates.handler.ts
+│   │           └── email.handler.ts
+│   │
+│   ├── renderer/                # Electron renderer process (React UI)
+│   │   ├── components/
+│   │   │   ├── ui/                   # shadcn/ui components
+│   │   │   ├── reports/              # Report viewing components
+│   │   │   │   ├── DailyReportView.tsx
+│   │   │   │   ├── ActionItemCard.tsx
+│   │   │   │   ├── SourceMetadata.tsx
+│   │   │   │   ├── ConfidenceBadge.tsx
+│   │   │   │   └── FeedbackButtons.tsx
+│   │   │   ├── settings/             # Settings page components
+│   │   │   │   ├── ModeSwitchCard.tsx
+│   │   │   │   ├── RetentionConfig.tsx
+│   │   │   │   ├── FeedbackStats.tsx
+│   │   │   │   └── DataManagement.tsx
+│   │   │   └── layout/
+│   │   │       ├── MainWindow.tsx
+│   │   │       └── Navigation.tsx
+│   │   ├── stores/
+│   │   │   └── app-store.ts          # Zustand state management
+│   │   ├── services/
+│   │   │   └── ipc-client.ts         # IPC communication layer
+│   │   ├── utils/
+│   │   │   └── validation.ts         # Zod schemas for UI inputs
+│   │   └── styles/
+│   │       └── globals.css           # Tailwind CSS imports
+│   │
+│   └── shared/                   # Shared types and utilities
+│       ├── types/
+│       │   ├── email.types.ts
+│       │   ├── item.types.ts
+│       │   ├── report.types.ts
+│       │   └── config.types.ts
+│       └── constants/
+│           ├── confidence-levels.ts
+│           └── retention-periods.ts
 │
-├── renderer/               # Electron renderer process (React)
-│   ├── components/
-│   │   ├── Report/
-│   │   ├── Settings/
-│   │   └── Feedback/
-│   ├── stores/             # Zustand state management
-│   └── utils/
+├── tests/
+│   ├── unit/                     # 60% - Pure function and utility tests
+│   │   ├── security/
+│   │   │   ├── encryption.test.ts     # AES-256-GCM encryption tests
+│   │   │   ├── desensitization.test.ts # PII redaction tests
+│   │   │   └── confidence-calculation.test.ts
+│   │   ├── email-processing/
+│   │   │   ├── metadata-extractor.test.ts
+│   │   │   ├── traceability-generator.test.ts
+│   │   │   └── duplicate-detector.test.ts
+│   │   ├── llm/
+│   │   │   ├── output-validator.test.ts   # Zod schema validation
+│   │   │   └── confidence-calculator.test.ts
+│   │   └── rules/
+│   │       └── engine.test.ts
+│   │
+│   ├── integration/              # 40% - Cross-module interaction tests
+│   │   ├── database/
+│   │   │   ├── schema.test.ts         # Schema validation tests
+│   │   │   ├── migrations.test.ts     # Migration tests
+│   │   │   ├── repositories.test.ts   # Repository layer tests
+│   │   │   └── foreign-keys.test.ts   # Referential integrity tests
+│   │   ├── ipc/
+│   │   │   └── channels.test.ts       # IPC communication tests
+│   │   ├── llm/
+│   │   │   ├── adapter-factory.test.ts
+│   │   │   └── mode-switching.test.ts # Hot mode switch queue tests
+│   │   ├── security/
+│   │   │   ├── quickjs-sandbox.test.ts    # Sandbox escape tests (20+ scenarios)
+│   │   │   └── single-instance.test.ts    # Process lock tests
+│   │   └── email-processing/
+│   │       └── parsers/                # Email parser integration tests
+│   │
+│   └── fixtures/                  # Test data and mocks
+│       ├── emails/                   # Sample email files (.eml, .msg, .pst, etc.)
+│       └── mocks/                   # Mock services and responses
 │
-├── shared/                 # Shared code between main/renderer
-│   ├── schemas/
-│   │   └── validation.ts    # Zod schemas
-│   └── types/
+├── electron/                     # Electron build configuration
+│   ├── main.js                    # Main process entry point
+│   └── preload.js                 # Preload script (contextBridge)
 │
-└── tests/
-    ├── unit/               # Unit tests (60%)
-    │   ├── email/
-    │   ├── llm/
-    │   ├── rules/
-    │   └── encryption/
-    └── integration/        # Integration tests (40%)
-        ├── database/
-        ├── llm/
-        └── ipc/
+├── docs/
+│   ├── DESIGN_SYSTEM.md           # UI/UX design guidelines
+│   └── tech-architecture.md       # This technical architecture document
+│
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+├── vite.config.ts
+└── vitest.config.ts
 ```
 
-**Structure Decision**: Electron desktop application with clear separation between main process (Node.js) and renderer process (React). Main process handles all data operations, encryption, and LLM integration. Renderer process displays UI and communicates via IPC. Shared schemas and types ensure type safety across process boundary.
+**Structure Decision**: Electron desktop application with main/renderer process separation. Main process handles security, database, LLM integration, and business logic. Renderer process (React) displays UI and communicates via IPC whitelist. Shared types module ensures type safety across process boundaries. This architecture enforces security boundaries through process isolation while maintaining type safety through TypeScript.
 
-## Implementation Architecture
+## Complexity Tracking
 
-### Core Components
+> **No constitutional violations requiring justification**
 
-#### 1. LLM Integration Layer (main/llm/)
+This implementation plan fully satisfies all constitutional requirements without deviations. The design choices align with the core principles of privacy-first architecture, anti-hallucination mechanisms, data minimization, and comprehensive testing.
 
-**UPDATED APPROACH: Using OpenAI SDK**
+## Implementation Phases
 
-The LLM integration layer now uses the official OpenAI SDK instead of raw fetch API calls. This provides:
+### Phase 0: Research & Technology Validation ✅ (COMPLETED)
 
-- Built-in retry logic and exponential backoff
-- Automatic error handling and type safety
-- Structured output support (JSON mode)
-- Streaming response capability (future enhancement)
-- Better TypeScript integration
+**Objective**: Validate technology choices and resolve all NEEDS CLARIFICATION items from Technical Context.
 
-**RemoteLLM Implementation (using OpenAI SDK)**:
-```typescript
-import OpenAI from 'openai';
+**Deliverables**: [research.md](./research.md)
 
-export class RemoteLLM implements LLMAdapter {
-  private client: OpenAI;
+**Key Decisions**:
+- **Frontend Stack**: Tailwind CSS v3.4 + shadcn/ui + Lucide React + Inter font for modern, accessible UI
+- **Database**: better-sqlite3 11.10.0 with field-level AES-256-GCM encryption, WAL mode
+- **Email Parsing**: imapflow + mailparser for standard formats, msg-extractor/libpff/readpst for Outlook formats
+- **LLM Integration**: Local (Ollama/LocalAI) and remote (third-party API) with unified adapter interface
+- **Validation**: Zod Schema for runtime type validation with automatic retry (max 2x) on failure
+- **Rule Engine**: QuickJS WASM sandbox with 128MB memory limit, 5s timeout, zero permissions
+- **State Management**: Zustand 4.5 for React state with in-memory encryption for sensitive data
+- **Testing**: Vitest + custom integration framework, ≥85% line coverage, 100% for security modules
 
-  constructor(config: LLMAdapterConfig) {
-    this.client = new OpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.endpoint, // Support for custom endpoints
-      timeout: config.timeout || 30000, // 30s default per FR-057
-      maxRetries: config.maxRetries || 2, // 2 retries per R0-5
-    });
-  }
+### Phase 1: Design & Contract Specification ✅ (COMPLETED)
 
-  async generate(batch: EmailBatch): Promise<LLMOutput> {
-    const response = await this.client.chat.completions.create({
-      model: this.config.model,
-      messages: [
-        { role: 'system', content: this.buildSystemPrompt() },
-        { role: 'user', content: this.buildUserPrompt(batch) }
-      ],
-      temperature: 0.3,
-      max_tokens: 4000,
-      response_format: { type: 'json_object' }, // Structured output
-    });
+**Prerequisites**: research.md complete, all technical decisions validated
 
-    // Parse and validate response
-    const output = this.parseResponse(response);
-    return output;
-  }
-}
-```
+**Deliverables**:
+- [data-model.md](./data-model.md) - Complete database schema with relationships
+- [quickstart.md](./quickstart.md) - Developer onboarding guide
+- [contracts/](./contracts/) - API contracts and schemas
 
-**Benefits of OpenAI SDK over raw fetch**:
-1. **Type Safety**: Full TypeScript support with generated types
-2. **Error Handling**: Built-in error classification (rate limits, timeouts, network errors)
-3. **Retry Logic**: Automatic retries with exponential backoff (configurable)
-4. **Structured Output**: Native JSON mode ensures valid response format
-5. **Streaming Support**: Easy upgrade path for streaming responses
-6. **Monitoring**: Built-in request ID tracking for debugging
+**Data Model Highlights**:
+- `app_metadata` - Schema version, install time, device fingerprint
+- `user_config` - Encrypted configuration storage
+- `daily_reports` - Main report table with encrypted content
+- `todo_items` - Action items with source_status, confidence_score, feedback_type (integrated feedback)
+- `item_email_refs` - Many-to-many relationship (anti-hallucination core)
+- `processed_emails` - Email metadata with search_string and file_path
+- `app_logs` - Structured logging for troubleshooting
 
-**LocalLLM Implementation (Ollama)**:
-- Uses fetch API for Ollama's `/api/generate` endpoint
-- Implements same LLMAdapter interface
-- No timeout auto-degradation (per FR-037: block on failure)
+**Key Design Decisions**:
+- Field-level encryption (not file-level) for selective data protection
+- Many-to-many email-item relationships for complete traceability
+- Feedback integrated into todo_items table (removed separate feedback database)
+- Automatic triggers for report statistics maintenance
+- CASCADE delete for referential integrity
 
-#### 2. Email Processing Pipeline
+### Phase 2: Implementation Planning (NEXT)
 
-```
-Email Import
-    ↓
-DuplicateDetector (SHA-256 fingerprint check)
-    ↓
-EmailParser (format-specific parser)
-    ↓
-RuleEngine (QuickJS sandbox, 50% confidence)
-    ↓
-LLM Adapter (Remote/Local, 50% confidence)
-    ↓
-OutputValidator (Zod schema + degradation)
-    ↓
-ActionItem creation + EmailSource storage
-```
+**Objective**: Generate actionable, dependency-ordered implementation tasks
 
-#### 3. Data Flow
+**Prerequisites**: Phase 1 artifacts complete, constitution check passed
 
-```
-User uploads .eml file
-    ↓
-[EML Parser] → ParsedEmail { message_id, from, date, subject, body }
-    ↓
-[DuplicateDetector] → Check SHA-256 fingerprint
-    ↓
-[RuleEngine] → QuickJS executes rules → ruleScore (0-100)
-    ↓
-[RemoteLLM] → OpenAI SDK → LLMOutput { items[], batch_info }
-    ↓
-[OutputValidator] → Zod validation → degrade if invalid
-    ↓
-[Confidence Calculator] → (ruleScore × 0.5) + (llmScore × 0.5)
-    ↓
-[Database] → ActionItem + EmailSource (with encryption)
-```
+**Deliverables**: [tasks.md](./tasks.md) - Generated by `/speckit.tasks` command
 
-### Key Design Decisions
+**Task Categories**:
+1. **Foundation** - Project setup, build tooling, TypeScript configuration
+2. **Security Core** - Encryption, key management, sandbox, network interceptor
+3. **Database Layer** - Schema, migrations, repositories, cleanup
+4. **Email Processing** - Parsers, metadata extraction, traceability, duplicate detection
+5. **LLM Integration** - Adapters, validation, confidence calculation
+6. **Rules Engine** - QuickJS sandbox, rule execution, default rules
+7. **Report Generation** - Report builder, template engine, export
+8. **Frontend UI** - React components, state management, IPC client
+9. **Testing** - Unit tests, integration tests, security tests
+10. **Documentation** - Inline docs, user guides, architecture diagrams
 
-#### Decision 1: OpenAI SDK vs Raw Fetch API
-**Chosen**: OpenAI SDK for remote LLM integration
+**Implementation Order**:
+1. Security Core (foundation for all other modules)
+2. Database Layer (persistence for emails, items, reports)
+3. Email Processing (data extraction pipeline)
+4. Rules Engine (lightweight extraction fallback)
+5. LLM Integration (heavyweight extraction)
+6. Report Generation (user-facing output)
+7. Frontend UI (user interface)
+8. Testing (parallel with development)
 
-**Rationale**:
-- Type-safe TypeScript integration eliminates runtime errors
-- Built-in retry logic reduces code complexity
-- Native JSON mode ensures structured output (eliminates parse errors)
-- Automatic error classification (rate limits, timeouts, API errors)
-- Future-proof for streaming responses and advanced features
+## Success Criteria
 
-**Trade-offs**:
-- Adds ~200KB dependency vs ~0 for raw fetch
-- Slightly less control over HTTP headers (mitigated by custom baseURL support)
-- Vendor lock-in to OpenAI API format (mitigated by baseURL for compatible APIs)
+### Measurable Outcomes
 
-**Rejected Alternative**: Raw fetch API
-- Manual retry logic implementation (error-prone)
-- Manual error type detection (maintenance burden)
-- Manual JSON parsing (vulnerable to LLM hallucinations)
+**Traceability & Verification**:
+- SC-001: 100% of action items contain Message-ID or SHA-256 fingerprint
+- SC-002: 100% display complete source metadata (sender, date, subject, file path, search string)
+- SC-003: 90% of users locate original email within 60s using search string
+- SC-004: Message-ID extraction meets format-specific targets (.eml ≥95%, .msg ≥85%, .pst ≥90%)
 
-#### Decision 2: Dual-Engine Confidence Calculation
-**Chosen**: Rule engine 50% + LLM 50% with degradation fallback
+**Accuracy & User Trust**:
+- SC-005: Items with confidence <0.6 have user-confirmed error rate ≥40%
+- SC-006: ≥80% user agreement with "I trust action item sources are authentic"
+- SC-007: ≥50% of low-confidence items are viewed by users
 
-**Rationale**:
-- Rule engine provides domain-specific confidence (keywords, sender whitelist)
-- LLM provides semantic understanding confidence (logprobs or output quality)
-- Equal weighting prevents over-reliance on either engine
-- Degradation mode (rules 60%, LLM 20%) maintains utility when LLM fails
+**Performance**:
+- SC-014: Email metadata extraction ≤100ms per email
+- SC-015: Local LLM processing ≤2s per email
+- SC-016: App startup ≤3s with 1000 historical reports
+- SC-017: 1000-report query <100ms
 
-**Rejected Alternative**: LLM-only confidence
-- LLM may be overconfident on hallucinations
-- No fallback when LLM service unavailable
-- Violates anti-hallucination principle (items dropped on LLM failure)
+**Privacy & Security**:
+- SC-011: 100% of users locate and use feedback deletion controls
+- SC-012: Zero network transmissions for feedback operations
+- SC-013: All feedback data encrypted at rest (AES-256-GCM)
 
-#### Decision 3: Duplicate Detection Before Processing
-**Chosen**: SHA-256 fingerprint check before rule engine + LLM
+**Feature Completeness**:
+- SC-018: All P1 user stories (US1-US3) implemented and tested
+- SC-019: All P2 user stories (US4-US6) implemented and tested
+- SC-020: All FR-001 through FR-061 passing automated tests
+- SC-025: 100% constitutional requirements satisfied
 
-**Rationale**:
-- Avoids wasting compute resources on re-processing
-- Maintains `last_seen_at` timestamp for retention policy
-- Distinguishes same-batch vs cross-batch duplicates for user reporting
+## Risks & Mitigations
 
-**Rejected Alternative**: Post-processing duplicate detection
-- Wastes LLM API calls on already-processed emails
-- Increases cost (remote mode) and latency (local mode)
-- User must wait longer for batch completion
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| QuickJS WASM compatibility issues | High | Medium | Extensive integration testing, fallback to isolated Node.js context |
+| Outlook format parsing failures | Medium | High | Clear user communication, degraded confidence caps, multiple library options (msg-extractor/libpff) |
+| Local LLM performance degradation | Medium | Medium | Progress indicators, batch size limits, timeout enforcement |
+| Encryption key loss scenarios | High | Low | Clear user warnings, export functionality, device binding disclosure |
+| Mode switching race conditions | High | Low | State flag management, queue implementation, comprehensive testing |
+| Email client search string incompatibility | Low | Medium | Standard format, user documentation, format examples in UI |
 
-### Technology Additions
+## Next Steps
 
-**New Dependency**: OpenAI SDK
-```json
-{
-  "dependencies": {
-    "openai": "^4.0.0"  // Official OpenAI Node.js SDK
-  }
-}
-```
-
-**Installation**: `npm install openai`
-
-**Usage Considerations**:
-- API key management via Electron safeStorage (encrypted config)
-- Custom endpoint support via `baseURL` parameter
-- Timeout configuration: 30s default (per FR-057)
-- Max retries: 2 (per R0-5)
-
-### Security Considerations
-
-1. **API Key Storage**: OpenAI API key stored in encrypted config (AES-256-GCM)
-2. **Network Transmission**: TLS 1.3 enforced by OpenAI SDK (default)
-3. **Request Logging**: No sensitive email content in logs (desensitized subjects only)
-4. **Structured Output**: JSON mode prevents prompt injection attacks
-5. **Timeout Enforcement**: 30s timeout prevents resource exhaustion
-
-### Performance Optimization
-
-1. **Batch Processing**: Process up to 50 emails per batch (spec limit)
-2. **Parallel LLM Calls**: Future enhancement - concurrent requests for independent emails
-3. **Duplicate Detection**: O(1) hash lookup prevents re-processing
-4. **Database WAL**: Enables concurrent reads during write operations
-5. **Memory Management**: Immediate email body cleanup after processing
+1. ✅ **Phase 0 Complete**: Research and technology validation done
+2. ✅ **Phase 1 Complete**: Data model and contracts finalized
+3. ⏭️ **Phase 2 Next**: Execute `/speckit.tasks` to generate implementation tasks
+4. 🔜 **Implementation**: Begin task execution following dependency order
+5. 🔜 **Testing**: Continuous testing during development (test-first approach)
+6. 🔜 **Documentation**: Update architecture docs as implementation evolves
 
 ---
 
-## Phase 0: Research & Technology Validation
+**Plan Version**: 2.7 | **Last Updated**: 2026-02-05 | **Status**: Ready for Phase 2 (Task Generation)

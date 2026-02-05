@@ -95,7 +95,8 @@ As a privacy-conscious user, I need to provide feedback on item accuracy without
 
 4. **Given** feedback data has been collected, **When** the user views the Settings page, **Then** the system MUST display:
    - "本月修正X处错误" (Corrected X errors this month)
-   - Data retention period selector: 30天 / 90天 / 180天 / 365天 / 永久
+   - Email metadata retention selector: 30天 / 90天 / 180天 / 365天 / 永久
+   - Feedback retention selector: 30天 / 90天 / 180天 / 365天 / 永久
    - "导出反馈数据" button
    - "立即销毁所有反馈数据" button
 
@@ -293,10 +294,11 @@ As a user concerned about data accumulation, I need to configure how long email 
   - Date and time (normalized to user's local timezone)
   - Subject line (first 30 characters, with Re:/Fwd: prefixes removed)
   - Message-ID or SHA-256 fingerprint
-  - File system path to original email file
+  - File system path to original email file (display as text only, NOT clickable link)
   - Search string in format: `from:email subject:"keyword snippet" date:YYYY-MM-DD`
 
 - **FR-004**: System MUST provide a "Copy Search Keywords" button for each action item that copies the search string to system clipboard
+- **FR-004A**: System MUST NOT provide deep links or clickable file paths to email files (users manually copy search string and paste into email client for manual verification)
 - **FR-005**: System MUST ensure 100% of extracted action items have either a valid Message-ID or a SHA-256 fingerprint (no items without source traceability)
 - **FR-006**: System MUST mark items with fingerprint-only index (no Message-ID) with "[来源待确认]" tag and cap confidence at ≤0.4
 - **FR-007**: System MUST support parsing of multiple email formats: .eml, .msg, .pst, .ost, .mbox, .html
@@ -337,7 +339,7 @@ As a user concerned about data accumulation, I need to configure how long email 
   - "⚠️ 需复核事项：Y条 (点击查看)"
   - "❓ 来源待确认：Z条"
 
-- **FR-013**: System MUST cap confidence score at 0.6 for items extracted from non-standard email formats (.html, .txt)
+- **FR-013**: System MUST cap confidence score at 0.6 for items extracted from non-standard email formats (.html exported emails)
 
 #### LLM Output Validation & Degradation
 
@@ -361,8 +363,8 @@ As a user concerned about data accumulation, I need to configure how long email 
 - **FR-023**: System MUST store all user feedback locally with field-level encryption (AES-256-GCM)
 - **FR-024**: System MUST NOT upload any feedback data to external servers under any circumstances
 - **FR-025**: System MUST display feedback statistics in Settings page: "本月修正X处错误"
-- **FR-026**: System MUST provide configurable feedback data retention periods: 30/90/180/365/永久 days (default: 90 days)
-- **FR-027**: System MUST automatically delete feedback records older than configured retention period (except when set to 永久/-1)
+- **FR-026**: System MUST provide configurable feedback data retention periods: 30/90/180/365/永久 days (default: 90 days, where 永久 = -1 permanent retention, matching email metadata retention options)
+- **FR-027**: System MUST automatically delete feedback records older than configured retention period (except when set to 永久/-1 for permanent retention)
 - **FR-028**: System MUST provide "导出反馈数据" button in Settings that exports feedback as unencrypted file (user-managed)
 - **FR-029**: System MUST provide "立即销毁所有反馈数据" button in Settings that permanently deletes all feedback records with confirmation dialog
 
