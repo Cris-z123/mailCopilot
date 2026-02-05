@@ -13,6 +13,9 @@
  */
 
 import React, { useState } from 'react';
+import { Copy, Check, Mail, Calendar, FileText, Hash } from 'lucide-react';
+import { Button } from '../ui/button.js';
+import { Badge } from '../ui/badge.js';
 import type { ItemSourceRef } from '../../../../shared/types/index.js';
 
 /**
@@ -20,12 +23,13 @@ import type { ItemSourceRef } from '../../../../shared/types/index.js';
  */
 interface TraceabilityInfoProps {
   source: ItemSourceRef;
+  sourceIndex?: number;
 }
 
 /**
  * TraceabilityInfo component
  */
-const TraceabilityInfo: React.FC<TraceabilityInfoProps> = ({ source }) => {
+const TraceabilityInfo: React.FC<TraceabilityInfoProps> = ({ source, sourceIndex = 0 }) => {
   const [copied, setCopied] = useState(false);
 
   /**
@@ -80,93 +84,124 @@ const TraceabilityInfo: React.FC<TraceabilityInfoProps> = ({ source }) => {
   const parsed = parseSearchString();
 
   return (
-    <div className="traceability-info">
-      <h4 className="traceability-title">Source Information</h4>
-
-      {/* Source metadata */}
-      <div className="traceability-details">
-        <div className="traceability-row">
-          <span className="traceability-label">From:</span>
-          <span className="traceability-value" title={parsed.sender}>
-            {parsed.sender}
-          </span>
-        </div>
-
-        <div className="traceability-row">
-          <span className="traceability-label">Date:</span>
-          <span className="traceability-value">{parsed.date}</span>
-        </div>
-
-        <div className="traceability-row">
-          <span className="traceability-label">Subject:</span>
-          <span className="traceability-value" title={parsed.subject}>
-            {parsed.subject.length > 30
-              ? `${parsed.subject.substring(0, 30)}...`
-              : parsed.subject}
-          </span>
-        </div>
-
-        <div className="traceability-row">
-          <span className="traceability-label">Identifier:</span>
-          <span
-            className="traceability-value traceability-hash"
-            title={source.email_hash}
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-foreground">
+          Source Information {sourceIndex > 0 && `#${sourceIndex + 1}`}
+        </h4>
+        {source.confidence !== undefined && (
+          <Badge
+            variant="outline"
+            className={
+              source.confidence >= 0.8
+                ? 'border-green-500 text-green-700 dark:text-green-400'
+                : source.confidence >= 0.6
+                  ? 'border-blue-500 text-blue-700 dark:text-blue-400'
+                  : 'border-orange-500 text-orange-700 dark:text-orange-400'
+            }
           >
-            {source.email_hash.substring(0, 16)}...
-          </span>
+            {Math.round(source.confidence * 100)}% confidence
+          </Badge>
+        )}
+      </div>
+
+      {/* Source metadata grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        {/* Sender */}
+        <div className="flex items-start gap-2">
+          <Mail className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-xs text-muted-foreground block mb-0.5">From</span>
+            <span className="text-foreground font-mono text-xs break-all" title={parsed.sender}>
+              {parsed.sender}
+            </span>
+          </div>
         </div>
 
-        <div className="traceability-row">
-          <span className="traceability-label">File:</span>
-          <span
-            className="traceability-value traceability-filepath"
-            title={source.file_path}
-          >
-            {source.file_path.length > 50
-              ? `...${source.file_path.substring(source.file_path.length - 50)}`
-              : source.file_path}
-          </span>
+        {/* Date */}
+        <div className="flex items-start gap-2">
+          <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-xs text-muted-foreground block mb-0.5">Date</span>
+            <span className="text-foreground">{parsed.date}</span>
+          </div>
         </div>
+
+        {/* Subject */}
+        <div className="flex items-start gap-2">
+          <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-xs text-muted-foreground block mb-0.5">Subject</span>
+            <span className="text-foreground text-xs break-words" title={parsed.subject}>
+              {parsed.subject.length > 30
+                ? `${parsed.subject.substring(0, 30)}...`
+                : parsed.subject}
+            </span>
+          </div>
+        </div>
+
+        {/* Email Hash (Message-ID or fingerprint) */}
+        <div className="flex items-start gap-2">
+          <Hash className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-xs text-muted-foreground block mb-0.5">Identifier</span>
+            <span
+              className="text-foreground font-mono text-xs break-all"
+              title={source.email_hash}
+            >
+              {source.email_hash.substring(0, 16)}...
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* File path */}
+      <div className="bg-muted/50 rounded-md p-3">
+        <span className="text-xs text-muted-foreground block mb-1">File Path</span>
+        <span
+          className="text-xs font-mono text-foreground break-all"
+          title={source.file_path}
+        >
+          {source.file_path.length > 60
+            ? `...${source.file_path.substring(source.file_path.length - 60)}`
+            : source.file_path}
+        </span>
       </div>
 
       {/* Search string section */}
-      <div className="search-string-section">
-        <div className="search-string-header">
-          <span className="search-string-label">Search Keywords:</span>
-          <button
-            className={`copy-button ${copied ? 'copied' : ''}`}
+      <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-foreground">Search Keywords</span>
+          <Button
+            size="sm"
+            variant={copied ? 'default' : 'outline'}
             onClick={handleCopySearchString}
-            title="Copy search keywords to clipboard"
-            type="button"
+            className="h-8"
           >
-            {copied ? '✓ Copied!' : '📋 Copy Search Keywords'}
-          </button>
+            {copied ? (
+              <>
+                <Check className="w-3 h-3 mr-1" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="w-3 h-3 mr-1" />
+                Copy
+              </>
+            )}
+          </Button>
         </div>
-        <code className="search-string-code" title={source.search_string}>
+        <code
+          className="block text-xs font-mono bg-background p-3 rounded border border-border break-all"
+          title={source.search_string}
+        >
           {source.search_string}
         </code>
-        <p className="search-string-hint">
-          Paste this into your email client search to locate the source email
+        <p className="text-xs text-muted-foreground mt-2">
+          💡 Paste this into your email client search to locate the source email
         </p>
       </div>
-
-      {/* Confidence indicator */}
-      {source.confidence !== undefined && (
-        <div className="traceability-confidence">
-          <span className="confidence-label">Source Confidence:</span>
-          <span
-            className={`confidence-indicator ${
-              source.confidence >= 0.8
-                ? 'high'
-                : source.confidence >= 0.6
-                  ? 'medium'
-                  : 'low'
-            }`}
-          >
-            {Math.round(source.confidence * 100)}%
-          </span>
-        </div>
-      )}
     </div>
   );
 };
