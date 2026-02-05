@@ -10,9 +10,13 @@
  */
 
 import React, { useEffect } from 'react';
+import { Loader2, AlertCircle, Inbox, RefreshCw } from 'lucide-react';
 import { useReportStore } from '../../stores/reportStore.js';
 import { selectItems, selectLoading, selectError } from '../../stores/reportStore.js';
 import TraceabilityInfo from './TraceabilityInfo.js';
+import { Button } from '../ui/button.js';
+import { Card, CardContent } from '../ui/card.js';
+import { Badge } from '../ui/badge.js';
 import type { DisplayItem } from '../../../../shared/types/index.js';
 
 /**
@@ -43,9 +47,10 @@ const ReportView: React.FC<ReportViewProps> = ({ reportDate }) => {
    */
   if (loading) {
     return (
-      <div className="report-view loading">
-        <div className="loading-spinner" />
-        <p>Processing emails...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground text-lg">Processing emails...</p>
+        <p className="text-sm text-muted-foreground mt-2">This may take a few moments</p>
       </div>
     );
   }
@@ -55,10 +60,14 @@ const ReportView: React.FC<ReportViewProps> = ({ reportDate }) => {
    */
   if (error) {
     return (
-      <div className="report-view error">
-        <h2>Error Loading Report</h2>
-        <p className="error-message">{error}</p>
-        <button onClick={() => window.location.reload()}>Retry</button>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <AlertCircle className="w-16 h-16 text-destructive mb-4" />
+        <h2 className="text-2xl font-semibold text-foreground mb-2">Error Loading Report</h2>
+        <p className="text-muted-foreground text-center mb-6 max-w-md">{error}</p>
+        <Button onClick={() => window.location.reload()} variant="default" size="lg">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Retry
+        </Button>
       </div>
     );
   }
@@ -68,9 +77,12 @@ const ReportView: React.FC<ReportViewProps> = ({ reportDate }) => {
    */
   if (items.length === 0) {
     return (
-      <div className="report-view empty">
-        <h2>No Action Items Found</h2>
-        <p>No action items were extracted from the emails.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <Inbox className="w-16 h-16 text-muted-foreground mb-4" />
+        <h2 className="text-2xl font-semibold text-foreground mb-2">No Action Items Found</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          No action items were extracted from the emails.
+        </p>
       </div>
     );
   }
@@ -79,14 +91,26 @@ const ReportView: React.FC<ReportViewProps> = ({ reportDate }) => {
    * Render report with items
    */
   return (
-    <div className="report-view">
-      <header className="report-header">
-        <h1>Daily Report</h1>
-        {reportDate && <p className="report-date">{reportDate}</p>}
-        <p className="item-count">{items.length} action items found</p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Daily Report</h1>
+              {reportDate && (
+                <p className="text-muted-foreground mt-1">{reportDate}</p>
+              )}
+            </div>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              {items.length} {items.length === 1 ? 'item' : 'items'}
+            </Badge>
+          </div>
+        </div>
       </header>
 
-      <div className="report-items">
+      {/* Report items */}
+      <div className="container mx-auto px-4 py-6 space-y-4">
         {items.map((item) => (
           <ReportItem key={item.id} item={item} />
         ))}
@@ -106,87 +130,123 @@ const ReportItem: React.FC<ReportItemProps> = ({ item }) => {
   const isVerified = item.source_status === 'verified';
   const confidenceLevel = getConfidenceLevel(item.confidence_score);
   const needsReview = item.confidence_score < 0.8;
+  const isLowConfidence = item.confidence_score < 0.6;
+
+  // Background color for low confidence items (per US2 requirement)
+  const cardBgClass = isLowConfidence ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800' : '';
 
   return (
-    <article
-      className={`report-item ${confidenceLevel} ${isVerified ? 'verified' : 'unverified'} ${needsReview ? 'needs-review' : ''}`}
-    >
-      {/* Item content */}
-      <div className="item-content">
-        <h3 className="item-text">{item.content}</h3>
+    <Card className={`overflow-hidden ${cardBgClass}`}>
+      <CardContent className="p-6">
+        {/* Item content */}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-3">{item.content}</h3>
 
-        {/* Confidence badge */}
-        <div className="item-meta">
-          <span className={`confidence-badge ${confidenceLevel}`}>
-            {Math.round(item.confidence_score * 100)}% confidence
-          </span>
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {/* Confidence badge */}
+            <Badge
+              variant={confidenceLevel === 'high' ? 'default' : confidenceLevel === 'medium' ? 'secondary' : 'destructive'}
+              className="font-medium"
+            >
+              {Math.round(item.confidence_score * 100)}% confidence
+            </Badge>
 
-          {/* Source status badge */}
-          {!isVerified && (
-            <span className="status-badge unverified">
-              [来源待确认]
-            </span>
+            {/* Source status badge */}
+            {!isVerified && (
+              <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-400">
+                [来源待确认]
+              </Badge>
+            )}
+
+            {/* Needs review badge */}
+            {needsReview && isVerified && (
+              <Badge variant="outline" className="border-blue-500 text-blue-700 dark:text-blue-400">
+                [建议复核]
+              </Badge>
+            )}
+
+            {/* Type badge */}
+            <Badge
+              variant={item.item_type === 'completed' ? 'default' : 'outline'}
+              className={item.item_type === 'completed' ? 'bg-green-600 hover:bg-green-700' : ''}
+            >
+              {item.item_type === 'completed' ? '✓ Completed' : '○ Pending'}
+            </Badge>
+          </div>
+
+          {/* Evidence */}
+          {item.sources.length > 0 && item.sources[0].evidence_text && (
+            <div className="bg-muted/50 rounded-md p-3 mt-3">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Evidence:</span> {item.sources[0].evidence_text}
+              </p>
+            </div>
           )}
-
-          {/* Needs review badge */}
-          {needsReview && isVerified && (
-            <span className="status-badge review">
-              [建议复核]
-            </span>
-          )}
-
-          {/* Type badge */}
-          <span className={`type-badge ${item.item_type}`}>
-            {item.item_type === 'completed' ? '✓ Completed' : '○ Pending'}
-          </span>
         </div>
 
-        {/* Evidence */}
-        {item.sources.length > 0 && item.sources[0].evidence_text && (
-          <p className="item-evidence">
-            <strong>Evidence:</strong> {item.sources[0].evidence_text}
-          </p>
-        )}
-      </div>
+        {/* Traceability info */}
+        <div className="space-y-4">
+          {item.sources.map((source, index) => (
+            <div key={`${item.id}-source-${source.email_hash}`} className={index > 0 ? 'pt-4 border-t' : ''}>
+              <TraceabilityInfo source={source} sourceIndex={index} />
+            </div>
+          ))}
+        </div>
 
-      {/* Traceability info */}
-      <div className="item-traceability">
-        {item.sources.map((source) => (
-          <TraceabilityInfo
-            key={`${item.id}-source-${source.email_hash}`}
-            source={source}
-          />
-        ))}
-      </div>
-
-      {/* Source details (expanded for low-confidence items) */}
-      {needsReview && (
-        <details className="source-details" open>
-          <summary>Source Details (Low Confidence)</summary>
-          <div className="source-details-content">
-            <p><strong>Confidence Score:</strong> {Math.round(item.confidence_score * 100)}%</p>
-            <p><strong>Source Status:</strong> {isVerified ? 'Verified' : 'Unverified'}</p>
-            <p><strong>Number of Source Emails:</strong> {item.sources.length}</p>
-            {item.sources.map((source, sourceIndex) => (
-              <div key={source.email_hash} className="source-detail-item">
-                <p><strong>Source {sourceIndex + 1}:</strong></p>
-                <ul>
-                  <li><strong>File Path:</strong> {source.file_path}</li>
-                  <li><strong>Email Hash:</strong> {source.email_hash}</li>
-                </ul>
+        {/* Source details (expanded for low-confidence items) */}
+        {needsReview && (
+          <details className="mt-4 group" open={isLowConfidence}>
+            <summary className="cursor-pointer list-none flex items-center justify-between p-3 bg-muted/50 rounded-md hover:bg-muted transition-colors">
+              <span className="font-medium text-foreground">
+                Source Details {isLowConfidence && '(Low Confidence)'}
+              </span>
+              <Badge variant="outline" className="text-xs">
+                {isLowConfidence ? 'Shown by default' : 'Click to expand'}
+              </Badge>
+            </summary>
+            <div className="mt-3 p-4 bg-muted/30 rounded-md space-y-2">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-foreground">Confidence Score:</span>{' '}
+                  <span className="text-muted-foreground">{Math.round(item.confidence_score * 100)}%</span>
+                </div>
+                <div>
+                  <span className="font-medium text-foreground">Source Status:</span>{' '}
+                  <span className={isVerified ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}>
+                    {isVerified ? 'Verified' : 'Unverified'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-foreground">Number of Sources:</span>{' '}
+                  <span className="text-muted-foreground">{item.sources.length}</span>
+                </div>
               </div>
-            ))}
-          </div>
-        </details>
-      )}
-    </article>
+              {item.sources.map((source, sourceIndex) => (
+                <div key={source.email_hash} className="mt-3 pt-3 border-t">
+                  <p className="font-medium text-foreground mb-1">Source {sourceIndex + 1}:</p>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li>
+                      <span className="font-medium text-foreground">File Path:</span> {source.file_path}
+                    </li>
+                    <li className="font-mono text-xs">
+                      <span className="font-medium text-foreground">Email Hash:</span> {source.email_hash}
+                    </li>
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
 /**
  * Get confidence level for styling
  */
-function getConfidenceLevel(confidence: number): string {
+function getConfidenceLevel(confidence: number): 'high' | 'medium' | 'low' {
   if (confidence >= 0.8) return 'high';
   if (confidence >= 0.6) return 'medium';
   return 'low';

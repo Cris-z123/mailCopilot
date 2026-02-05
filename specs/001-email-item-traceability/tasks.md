@@ -165,10 +165,10 @@
 
 ### Renderer UI for US1 (Traceability Display)
 
-- [X] T045 [P] [US1] Create ReportView component in src/renderer/src/components/reports/DailyReportView.tsx (display action items with source info: sender, date, subject, Message-ID/fingerprint, file path)
-- [X] T046 [US1] Create TraceabilityInfo component in src/renderer/src/components/reports/SourceMetadata.tsx (display search string, Copy Search Keywords button per FR-004, NO deep linking per plan v2.7)
-- [X] T047 [P] [US1] Create IPC client service in src/renderer/src/services/ipc-client.ts (llm:generate, db:query:history invokers)
-- [X] T048 [P] [US1] Create Zustand store for report state in src/renderer/src/stores/app-store.ts (items, loading state, error handling)
+- [X] T045 [P] [US1] Create ReportView component in src/renderer/src/components/reports/DailyReportView.tsx (display action items with source info: sender, date, subject, Message-ID/fingerprint, file path) **[REFACTORED 2026-02-05: Now uses TailwindCSS v3.4, shadcn/ui, Lucide React, Inter font]**
+- [X] T046 [US1] Create TraceabilityInfo component in src/renderer/src/components/reports/SourceMetadata.tsx (display search string, Copy Search Keywords button per FR-004, NO deep linking per plan v2.7) **[REFACTORED 2026-02-05: Now uses TailwindCSS v3.4, shadcn/ui, Lucide React icons]**
+- [X] T047 [P] [US1] Create IPC client service in src/renderer/src/services/ipc-client.ts (llm:generate, db:query:history invokers) **[DOCUMENTATION UPDATED 2026-02-05: Added references to new frontend stack]**
+- [X] T048 [P] [US1] Create Zustand store for report state in src/renderer/src/stores/app-store.ts (items, loading state, error handling) **[DOCUMENTATION UPDATED 2026-02-05: Added references to new frontend stack]**
 
 **Checkpoint**: User Story 1 complete - users can process emails, view action items with 100% traceability, copy search strings, verify sources manually
 
