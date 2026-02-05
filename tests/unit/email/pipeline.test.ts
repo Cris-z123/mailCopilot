@@ -13,11 +13,11 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as crypto from 'crypto';
-import { EmailProcessor } from '../../../main/email/EmailProcessor';
-import type { LLMAdapter, EmailBatch, LLMOutput } from '../../../main/llm/LLMAdapter';
-import type { ParsedEmail } from '../../../main/email/parsers/EmailParser';
-import DatabaseManager from '../../../main/database/Database.js';
-import ConfigManager from '../../../main/config/ConfigManager.js';
+import { EmailProcessor } from '@/email/EmailProcessor';
+import type { LLMAdapter, EmailBatch, LLMOutput } from '@/llm/LLMAdapter';
+import type { ParsedEmail } from '@/email/parsers/EmailParser';
+import DatabaseManager from '@/database/Database.js';
+import ConfigManager from '@/config/ConfigManager.js';
 
 /**
  * Mock LLM Adapter for testing

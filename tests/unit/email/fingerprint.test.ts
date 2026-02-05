@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sha256 } from '../../../main/config/encryption';
+import { sha256 } from '@/config/encryption';
 
 describe('T019: SHA-256 Fingerprint Generation', () => {
   describe('Email Fingerprint Generation', () => {

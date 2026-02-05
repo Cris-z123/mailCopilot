@@ -11,13 +11,13 @@
 
 import React, { useEffect } from 'react';
 import { Loader2, AlertCircle, Inbox, RefreshCw } from 'lucide-react';
-import { useReportStore } from '../../stores/reportStore.js';
-import { selectItems, selectLoading, selectError } from '../../stores/reportStore.js';
+import { useReportStore } from '@renderer/stores/reportStore.js';
+import { selectItems, selectLoading, selectError } from '@renderer/stores/reportStore.js';
 import TraceabilityInfo from './TraceabilityInfo.js';
-import { Button } from '../ui/button.js';
-import { Card, CardContent } from '../ui/card.js';
-import { Badge } from '../ui/badge.js';
-import type { DisplayItem } from '../../../../shared/types/index.js';
+import { Button } from '@renderer/components/ui/button.js';
+import { Card, CardContent } from '@renderer/components/ui/card.js';
+import { Badge } from '@renderer/components/ui/badge.js';
+import type { DisplayItem } from '@shared/types/index.js';
 
 /**
  * ReportView props

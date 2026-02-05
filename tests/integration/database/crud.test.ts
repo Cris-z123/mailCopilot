@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
-import { encryptField, decryptField, generateKey, sha256, type CryptoKey } from '../../../main/config/encryption';
+import { encryptField, decryptField, generateKey, sha256, type CryptoKey } from '@/config/encryption';
 import fs from 'fs';
 import path from 'path';
 

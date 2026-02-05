@@ -1,6 +1,6 @@
 import DatabaseManager from '../Database.js';
-import { logger } from '../../config/logger.js';
-import ConfigManager from '../../config/ConfigManager.js';
+import { logger } from '@/config/logger.js';
+import ConfigManager from '@/config/ConfigManager.js';
 import crypto from 'crypto';
 
 /**

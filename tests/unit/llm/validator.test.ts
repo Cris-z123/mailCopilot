@@ -11,8 +11,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { OutputValidator } from '../../../main/llm/OutputValidator.js';
-import type { LLMOutput } from '../../../main/llm/LLMAdapter.js';
+import { OutputValidator } from '@/llm/OutputValidator.js';
+import type { LLMOutput } from '@/llm/LLMAdapter.js';
 import { z } from 'zod';
 
 describe('OutputValidator', () => {

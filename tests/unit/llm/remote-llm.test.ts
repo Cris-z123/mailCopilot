@@ -12,8 +12,8 @@
  */
 
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { RemoteLLM } from '../../../main/llm/RemoteLLM.js';
-import type { EmailBatch, LLMOutput } from '../../../main/llm/LLMAdapter.js';
+import { RemoteLLM } from '@/llm/RemoteLLM.js';
+import type { EmailBatch, LLMOutput } from '@/llm/LLMAdapter.js';
 
 // Create mock functions that can be shared
 const mockChatCompletionsCreate = vi.fn();

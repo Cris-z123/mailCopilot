@@ -17,7 +17,7 @@ import {
   getCurrentDateYYYYMMDD,
   formatDateForDisplay,
   getAgeInDays,
-} from '../../../shared/utils/dateUtils';
+} from '@shared/utils/dateUtils';
 
 describe('formatYYYYMMDD', () => {
   it('should format ISO date string to YYYY-MM-DD', () => {

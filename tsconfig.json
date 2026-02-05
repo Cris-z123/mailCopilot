@@ -13,7 +13,7 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["renderer/src/*"],
+      "@/*": ["main/*"],
       "@renderer/*": ["renderer/src/*"],
       "@shared/*": ["shared/*"]
     },

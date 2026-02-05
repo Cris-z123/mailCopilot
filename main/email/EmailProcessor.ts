@@ -14,17 +14,17 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { logger } from '../config/logger.js';
+import { logger } from '@/config/logger.js';
 import { DuplicateDetector } from './DuplicateDetector.js';
 import { EmlParser } from './parsers/EmlParser.js';
 import { TraceabilityGenerator } from './TraceabilityGenerator.js';
-import { RuleEngine } from '../rules/RuleEngine.js';
-import type { LLMAdapter, EmailBatch } from '../llm/LLMAdapter.js';
-import { OutputValidator } from '../llm/OutputValidator.js';
-import { ConfidenceCalculator } from '../llm/ConfidenceCalculator.js';
-import { ActionItemRepository, ItemType, SourceStatus } from '../database/entities/ActionItem.js';
-import { EmailSourceRepository, ExtractStatus } from '../database/entities/EmailSource.js';
-import { ItemEmailRefRepository } from '../database/entities/ItemEmailRef.js';
+import { RuleEngine } from '@/rules/RuleEngine.js';
+import type { LLMAdapter, EmailBatch } from '@/llm/LLMAdapter.js';
+import { OutputValidator } from '@/llm/OutputValidator.js';
+import { ConfidenceCalculator } from '@/llm/ConfidenceCalculator.js';
+import { ActionItemRepository, ItemType, SourceStatus } from '@/database/entities/ActionItem.js';
+import { EmailSourceRepository, ExtractStatus } from '@/database/entities/EmailSource.js';
+import { ItemEmailRefRepository } from '@/database/entities/ItemEmailRef.js';
 import type { ParsedEmail } from './parsers/EmailParser.js';
 
 /**

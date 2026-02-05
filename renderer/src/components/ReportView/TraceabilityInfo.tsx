@@ -14,9 +14,9 @@
 
 import React, { useState } from 'react';
 import { Copy, Check, Mail, Calendar, FileText, Hash } from 'lucide-react';
-import { Button } from '../ui/button.js';
-import { Badge } from '../ui/badge.js';
-import type { ItemSourceRef } from '../../../../shared/types/index.js';
+import { Button } from '@renderer/components/ui/button.js';
+import { Badge } from '@renderer/components/ui/badge.js';
+import type { ItemSourceRef } from '@shared/types/index.js';
 
 /**
  * TraceabilityInfo component props

@@ -8,7 +8,7 @@
  * @module main/llm/LLMAdapter
  */
 
-import { ParsedEmail } from '../email/parsers/EmailParser.js';
+import { ParsedEmail } from '@/email/parsers/EmailParser.js';
 
 /**
  * Email batch input for LLM processing

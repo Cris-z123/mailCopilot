@@ -13,7 +13,7 @@ import {
   hmacSha256,
   type EncryptedData,
   type CryptoKey
-} from '../../../main/config/encryption';
+} from '@/config/encryption';
 
 describe('Field Encryption/Decryption', () => {
   let testKey: CryptoKey;

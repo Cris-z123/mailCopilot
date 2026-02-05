@@ -8,8 +8,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { TraceabilityGenerator } from '../../../main/email/TraceabilityGenerator';
-import type { ParsedEmail } from '../../../main/email/parsers/EmailParser';
+import { TraceabilityGenerator } from '@/email/TraceabilityGenerator';
+import type { ParsedEmail } from '@/email/parsers/EmailParser';
 
 describe('TraceabilityGenerator', () => {
   let generator: TraceabilityGenerator;
