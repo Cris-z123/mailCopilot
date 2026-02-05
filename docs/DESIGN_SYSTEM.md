@@ -1,13 +1,17 @@
 
 
 # mailCopilot 设计系统规范   
-**版本**：V1.0  
-**日期**：2026年1月28日  
-**核心理念**：信任可视化 · 轻量高效 · 用户主权优先  
+**版本**：V1.1 
+**日期**：2026年2月5日  
+**核心理念**：信任可视化 · 轻量高效 · 用户主权优先
 
 ---
 
 ## 一、设计原则（产品理念的视觉表达）
+
+**技术实现基础**  
+本设计系统基于 **Tailwind CSS + shadcn/ui + Lucide React + Inter 字体** 实现，所有组件均可通过 shadcn 命令一键添加并深度定制。
+
 | 原则 | 视觉诠释 | 应用场景示例 |  
 |------|----------|--------------|  
 | **信任可视化** | 用锁形图标、绿色验证标识、透明数据流图传递安全感 | 隐私看板、配置确认页、报告溯源标签 |  
@@ -43,19 +47,46 @@
 | **本地模式** | `#F6FFED` (浅绿) + 锁图标 | 系统托盘/设置页状态标识 |  
 | **云端模式** | `#E6F7FF` (浅蓝) + 云图标 | 系统托盘/设置页状态标识 |  
 
+
+### 2.3 Tailwind CSS 颜色配置参考（建议添加到 tailwind.config.js）
+
+```ts
+theme: {
+  extend: {
+    colors: {
+      primary: {
+        DEFAULT: '#1890FF',
+        foreground: '#FFFFFF',
+      },
+      privacy: '#52C41A',
+      warn: '#FAAD14',
+      danger: '#F5222D',
+      // 语义状态背景
+      'confidence-high': '#E6F7FF',
+      'confidence-medium': '#FFF7E6',
+      'confidence-low': '#FFF2E8',
+      'mode-local': '#F6FFED',
+    },
+  },
+}
+```
+
 > ✅ **无障碍要求**：所有色值对比度 ≥ 4.5:1（WCAG AA标准），关键状态辅以图标/文字  
 
 ---
 
 ## 三、排版系统（清晰传递准确性信息）
 ### 3.1 字体规范
-| 元素 | 字体栈 | 字号 | 行高 | 用途 |  
-|------|--------|------|------|------|  
-| **标题H1** | `-apple-system, BlinkMacSystemFont, 'Segoe UI'` | 24px | 32px | 产品名称、报告标题 |  
-| **标题H2** | 同上 | 20px | 28px | 模块标题（如“待办事项”） |  
-| **正文** | 同上 | 14px | 22px | 报告内容、说明文字 |  
-| **辅助文本** | 同上 | 12px | 20px | 溯源信息、置信度标签 |  
-| **代码/索引** | `Consolas, 'Courier New', monospace` | 13px | 20px | Message-ID、路径显示 |  
+| 元素       | 字体族                                 | 字号   | 行高   | 字重建议   | 备注                     |
+|------------|----------------------------------------|--------|--------|------------|--------------------------|
+| **标题H1** | Inter Variable, system-ui              | 24px   | 32px   | 600        | report-title             |
+| **标题H2** | Inter Variable, system-ui              | 20px   | 28px   | 600        | section-title            |
+| **正文**   | Inter Variable, system-ui              | 14px   | 22px   | 400~500    | body, description        |
+| **辅助文本** | Inter Variable, system-ui            | 12px   | 20px   | 400        | meta, source, caption    |
+| **代码/索引** | 'JetBrains Mono', 'Consolas', monospace | 13px | 20px   | 400        | Message-ID, file path    |
+
+**字体加载方式**：  
+使用 `next/font` 或 `self-host` Inter variable font，优先 `woff2` 格式，支持 `ital`、`wght@300..700`。
 
 ### 3.2 文本层次示例（报告事项区块）
 ```plaintext
@@ -119,6 +150,16 @@
 - 状态：默认可点击 / 无效时灰色+提示“邮件客户端未检测到”
 - 交互：点击后3秒内无响应 → 提示“尝试通用定位方案”
 ```
+
+### 5.5 图标系统
+
+- **图标库**：Lucide React（官方推荐与 shadcn/ui 搭配）
+- **尺寸规范**：
+  - 正文图标：16px / 20px
+  - 小型标签/按钮：12px / 14px
+  - 大操作按钮：20px / 24px
+- **颜色继承**：默认跟随当前文字颜色（currentColor）
+- **导入方式**：按需导入 `import { Mail, Check, X } from 'lucide-react'`
 
 ---
 
