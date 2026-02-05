@@ -1,0 +1,25 @@
+/**
+ * Inter Variable Font Configuration
+ *
+ * This file imports the Inter variable font family.
+ * For production Electron apps, consider downloading font files locally
+ * for offline capability.
+ *
+ * Local font installation (optional):
+ * 1. Download Inter font files from https://github.com/rsms/inter/releases
+ * 2. Place in src/renderer/assets/fonts/
+ * 3. Update import to use local files with @font-face
+ */
+
+/* CDN import - requires internet connection */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+/* Alternative: Local font installation (uncomment and configure paths) */
+/*
+@font-face {
+  font-family: 'Inter';
+  src: url('./assets/fonts/Inter-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+*/

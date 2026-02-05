@@ -342,10 +342,10 @@
 
 ### Frontend Stack Setup (NEW for plan v2.7)
 
-- [ ] T097 [P] Install and configure TailwindCSS v3.4 in package.json and tailwind.config.js (add tailwindcss@^3.4.0, autoprefixer, postcss per plan v2.7)
-- [ ] T098 [P] Install and configure shadcn/ui components (init shadcn-ui, setup component structure, install lucide-react icons per plan v2.7)
-- [ ] T099 [P] Install and configure Inter variable font (add @next/font/local or CSS import, configure font family per plan v2.7)
-- [ ] T100 [P] Create global styles in src/renderer/src/styles/globals.css (Tailwind CSS imports, base styles, font configuration per plan v2.7)
+- [X] T097 [P] Install and configure TailwindCSS v3.4 in package.json and tailwind.config.js (add tailwindcss@^3.4.0, autoprefixer, postcss per plan v2.7)
+- [X] T098 [P] Install and configure shadcn/ui components (init shadcn-ui, setup component structure, install lucide-react icons per plan v2.7)
+- [X] T099 [P] Install and configure Inter variable font (add @next/font/local or CSS import, configure font family per plan v2.7)
+- [X] T100 [P] Create global styles in src/renderer/src/styles/globals.css (Tailwind CSS imports, base styles, font configuration per plan v2.7)
 
 ### Performance Optimization
 
