@@ -18,7 +18,8 @@
       "Bash(then find:*)",
       "Bash(else echo \"No checklists directory found\")",
       "Bash(fi)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(for:*)"
     ]
   }
 }
