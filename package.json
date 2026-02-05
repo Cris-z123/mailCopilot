@@ -28,6 +28,7 @@
     "better-sqlite3": "^11.10.0",
     "date-fns": "^4.0.0",
     "electron-log": "^5.0.0",
+    "lucide-react": "^0.563.0",
     "mailparser": "^3.6.5",
     "openai": "^4.104.0",
     "zod": "^3.22.4"

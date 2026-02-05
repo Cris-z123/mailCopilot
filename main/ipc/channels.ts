@@ -31,6 +31,10 @@ export const IPC_CHANNELS = {
   FEEDBACK_SUBMIT: 'feedback:submit',
   FEEDBACK_STATS: 'feedback:stats',
   FEEDBACK_DESTROY: 'feedback:destroy',
+
+  // Onboarding / First-run disclosure
+  ONBOARDING_GET_STATUS: 'onboarding:get-status',
+  ONBOARDING_ACKNOWLEDGE: 'onboarding:acknowledge',
 } as const;
 
 export type IPCChannel = typeof IPC_CHANNELS[keyof typeof IPC_CHANNELS];

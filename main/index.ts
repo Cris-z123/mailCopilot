@@ -6,6 +6,7 @@ import { ConfigManager } from './config/ConfigManager.js';
 import { logger } from './config/logger.js';
 import { IPC_CHANNELS } from './ipc/channels.js';
 import { SingleInstanceManager, ApplicationManager } from './app.js';
+import { registerOnboardingHandlers } from './ipc/handlers/onboardingHandler.js';
 
 /**
  * Main Process Entry Point
@@ -146,7 +147,12 @@ class Application {
    * Setup IPC handlers
    */
   private setupIPCHandlers(): void {
-    // Placeholder handlers for all IPC channels
+    // Register onboarding handlers (T018b - Constitution Principle I)
+    const db = DatabaseManager.getDatabase();
+    registerOnboardingHandlers(db);
+    logger.info('IPC', 'Onboarding handlers registered');
+
+    // Placeholder handlers for remaining IPC channels
     // Full implementation will be in user stories
 
     // LLM generate
@@ -217,6 +223,20 @@ class Application {
       logger.debug('IPC', 'Feedback destroy request received');
       // TODO: Implement in US3
       return { success: false, error: 'NOT_IMPLEMENTED' };
+    });
+
+    // Onboarding get status (T018b)
+    ipcMain.handle(IPC_CHANNELS.ONBOARDING_GET_STATUS, async () => {
+      logger.debug('IPC', 'Onboarding status request received');
+      // Handled by registerOnboardingHandlers
+      return { hasAcknowledgedDisclosure: false, disclosureVersion: '1.0.0' };
+    });
+
+    // Onboarding acknowledge (T018b)
+    ipcMain.handle(IPC_CHANNELS.ONBOARDING_ACKNOWLEDGE, async () => {
+      logger.debug('IPC', 'Onboarding acknowledge request received');
+      // Handled by registerOnboardingHandlers
+      return { success: true };
     });
 
     logger.info('IPC', 'All IPC handlers registered');
