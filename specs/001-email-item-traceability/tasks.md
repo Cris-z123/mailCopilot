@@ -182,8 +182,8 @@
 
 ### Tests for US2
 
-- [ ] T049 [P] [US2] Unit test for confidence threshold classification in tests/unit/llm/thresholds.test.ts (≥0.8 normal, 0.6-0.79 "[建议复核]", <0.6 "[来源待确认]" per FR-011)
-- [ ] T050 [P] [US2] Integration test for confidence display in tests/integration/ui/confidence-display.test.ts (visual indicators, summary banner counts)
+- [X] T049 [P] [US2] Unit test for confidence threshold classification in tests/unit/llm/thresholds.test.ts (≥0.8 normal, 0.6-0.79 "[建议复核]", <0.6 "[来源待确认]" per FR-011)
+- [X] T050 [P] [US2] Integration test for confidence display in tests/integration/ui/confidence-display.test.ts (visual indicators, summary banner counts)
 
 ### UI Components for US2
 
