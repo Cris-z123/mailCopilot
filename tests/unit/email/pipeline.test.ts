@@ -17,7 +17,7 @@ import { EmailProcessor } from '@/email/EmailProcessor';
 import type { LLMAdapter, EmailBatch, LLMOutput } from '@/llm/LLMAdapter';
 import type { ParsedEmail } from '@/email/parsers/EmailParser';
 import DatabaseManager from '@/database/Database.js';
-import ConfigManager from '@/config/ConfigManager.js';
+import { ConfigManager } from '@/config/ConfigManager.js';
 
 /**
  * Mock LLM Adapter for testing

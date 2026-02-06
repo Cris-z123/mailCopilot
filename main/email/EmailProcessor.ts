@@ -732,5 +732,3 @@ export class EmailProcessor {
     }
   }
 }
-
-export default EmailProcessor;

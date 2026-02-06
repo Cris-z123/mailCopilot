@@ -7,8 +7,8 @@
 
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { DisplayItem, ReportViewState, TodoItemWithSources } from '@shared/types/index.js';
-import { ipcClient } from '@renderer/services/ipc.js';
+import type { DisplayItem, ReportViewState, TodoItemWithSources } from '@shared/types';
+import { ipcClient } from '@renderer/services/ipc';
 
 /**
  * Report store interface

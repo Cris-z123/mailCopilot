@@ -1,10 +1,11 @@
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 → 1.1.0
+- Version change: 1.1.0 → 1.2.0
 - Modified principles:
   - Principle V (Testing & Quality Standards): Relaxed coverage requirements (85%/80% → 80%/70%)
 - Added sections:
   - Technology Stack Constraints: Updated Electron version, added Tailwind CSS v3.4 and shadcn/ui
+  - Module Import/Export Standards: Unified import/export conventions for all code modules
 - Removed sections: None
 - Templates requiring updates:
   ✅ .specify/templates/plan-template.md (Constitution Check section aligned)
@@ -148,6 +149,96 @@ All pull requests MUST verify:
 | **Export** | Internal template + puppeteer | Plaintext export, security warning before export |
 | **Auto-Update** | electron-updater | GitHub Releases, mandatory code signature verification |
 
+### Module Import/Export Standards
+
+All code modules MUST follow unified import/export conventions to maintain code clarity and prevent circular dependencies:
+
+#### Component Export Rules (renderer/src/components)
+
+1. **Main Business Components** → Default Export
+   - Use `export default ComponentName` for primary page/view components
+   - Export Props interfaces as named exports: `export interface ComponentProps`
+   - Examples: `ReportView`, `FirstRunDisclosure`
+
+2. **Utility/Child Components** → Named Export
+   - Use `export const ComponentName` for reusable, smaller components
+   - Export Props interfaces as named exports
+   - Examples: `TraceabilityInfo`, `ConfidenceBadge`, `ConfidenceSummaryBanner`
+
+3. **UI Base Components** → Named Export Multiple
+   - Use `export { Component, variants }` for shadcn/ui style components
+   - Export Props interfaces as named exports
+   - Examples: `Badge`, `Button`, `Card`
+
+4. **Barrel Exports (index.ts)**
+   - Default exports: `export { default, default as ComponentName } from './Component'`
+   - Named exports: `export { ComponentName } from './Component'`
+   - Every component directory MUST provide index.ts for unified imports
+
+#### Import Path Rules
+
+1. **Cross-Directory Imports** → MUST use barrel imports
+   - ✅ `import ReportView from '@renderer/components/ReportView'`
+   - ✅ `import { ConfidenceBadge } from '@renderer/components/reports'`
+   - ❌ `import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge'`
+
+2. **Same-Directory Imports** → Use relative paths
+   - ✅ `import { TraceabilityInfo } from './TraceabilityInfo'`
+   - ✅ `import { TraceabilityInfo } from '@renderer/components/ReportView'`
+
+3. **Multiple Component Imports** → Single barrel import
+   - ✅ `import { Card, CardContent } from '@renderer/components/ui/card'`
+   - ✅ `import { ConfidenceBadge, ConfidenceSummaryBanner } from '@renderer/components/reports'`
+
+#### Main Process Module Rules (main/)
+
+1. **Service Classes** → Consistent export style per module
+   - Choose between default export OR named export, not both
+   - Examples:
+     - `ConfigManager`: Named export (`export class ConfigManager`)
+     - `DatabaseManager`: Default export (`export default DatabaseManager`)
+     - `EmailProcessor`: Named export (`export class EmailProcessor`)
+
+2. **Index Files** → Re-export consistently
+   - Follow same pattern as renderer components
+   - Named: `export { ServiceName } from './Service'`
+   - Default: `export { default, default as ServiceName } from './Service'`
+
+3. **Import Consistency** → Match export style
+   - If using named export: `import { ServiceName } from '@/modules/Service'`
+   - If using default export: `import ServiceName from '@/modules/Service'`
+   - Never mix: Don't use named import for default-exported module
+
+#### Type/Interface Export Rules
+
+1. **All interfaces** → MUST be named exports
+   - ✅ `export interface ComponentProps { ... }`
+   - ❌ Never bundle interfaces with default exports only
+
+2. **Type Re-exports** → Use `export type` for type-only imports
+   - ✅ `export type { DisplayItem } from '@shared/types'`
+   - Prevents runtime import overhead for pure types
+
+#### Prohibited Patterns
+
+1. **Mixed Export Styles**
+   - ❌ `export const Component = ...; export default Component;`
+   - Choose ONE style and stick to it
+
+2. **Deep Path Imports**
+   - ❌ `import { X } from '@renderer/components/reports/ConfidenceBadge'`
+   - ✅ `import { X } from '@renderer/components/reports'`
+
+3. **Circular Dependencies**
+   - Use barrel exports to prevent circular imports
+   - If A imports B, B should not import A (use shared types instead)
+
+4. **Wildcard Imports**
+   - ❌ `import * as Components from './components'`
+   - ✅ Named imports: `import { ComponentA, ComponentB } from './components'`
+
+**Rationale**: Consistent import/export patterns improve code readability, enable easier refactoring, prevent circular dependencies, and align with TypeScript/React community best practices. Barrel exports provide clean public APIs for module directories while hiding internal implementation details.
+
 ### Error Handling Standards
 
 | Error Scenario | Handling Strategy | User Message |
@@ -181,4 +272,4 @@ All pull requests MUST verify:
 
 For detailed implementation guidance, refer to technical architecture documentation: `docs/tech-architecture.md`
 
-**Version**: 1.1.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-02-06
+**Version**: 1.2.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-02-06

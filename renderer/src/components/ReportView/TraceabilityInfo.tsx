@@ -16,12 +16,12 @@ import React, { useState } from 'react';
 import { Copy, Check, Mail, Calendar, FileText, Hash } from 'lucide-react';
 import { Button } from '@renderer/components/ui/button';
 import { Badge } from '@renderer/components/ui/badge';
-import type { ItemSourceRef } from '@shared/types/index';
+import type { ItemSourceRef } from '@shared/types';
 
 /**
  * TraceabilityInfo component props
  */
-interface TraceabilityInfoProps {
+export interface TraceabilityInfoProps {
   source: ItemSourceRef;
   sourceIndex?: number;
 }
@@ -29,7 +29,7 @@ interface TraceabilityInfoProps {
 /**
  * TraceabilityInfo component
  */
-const TraceabilityInfo: React.FC<TraceabilityInfoProps> = ({ source, sourceIndex = 0 }) => {
+export const TraceabilityInfo: React.FC<TraceabilityInfoProps> = ({ source, sourceIndex = 0 }) => {
   const [copied, setCopied] = useState(false);
 
   /**
@@ -205,5 +205,3 @@ const TraceabilityInfo: React.FC<TraceabilityInfoProps> = ({ source, sourceIndex
     </div>
   );
 };
-
-export default TraceabilityInfo;

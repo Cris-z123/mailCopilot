@@ -23,7 +23,7 @@ interface FirstRunDisclosureProps {
   onAcknowledged: () => void;
 }
 
-export function FirstRunDisclosure({ onAcknowledged }: FirstRunDisclosureProps) {
+function FirstRunDisclosure({ onAcknowledged }: FirstRunDisclosureProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acknowledging, setAcknowledging] = useState(false);

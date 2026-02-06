@@ -306,5 +306,3 @@ export class ConfigManager {
     return await encryption.decryptField(key, blob);
   }
 }
-
-export default ConfigManager;

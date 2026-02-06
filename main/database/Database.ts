@@ -13,7 +13,7 @@ import fs from 'fs';
  * - Prepared statement caching
  * - Automatic schema migrations
  */
-export class DatabaseManager {
+class DatabaseManager {
   private static instance: Database.Database | null = null;
   private static dbPath: string;
 
