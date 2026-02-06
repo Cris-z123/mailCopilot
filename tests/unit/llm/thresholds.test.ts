@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ConfidenceThresholds } from '@/llm/ConfidenceThresholds';
+import { ConfidenceThresholds } from '@shared/utils/ConfidenceThresholds';
 
 describe('ConfidenceThresholds', () => {
   describe('High confidence classification (≥0.8)', () => {

@@ -4,7 +4,7 @@ import path from 'path';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'happy-dom', // Use happy-dom for React component testing
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/integration/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/', 'dist/', 'build/', 'tests/unit/'],
@@ -34,7 +34,12 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './main'),
       '@renderer': path.resolve(__dirname, './renderer/src'),
+      '@renderer/lib': path.resolve(__dirname, './renderer/src/lib'),
       '@shared': path.resolve(__dirname, './shared'),
     },
+  },
+  // Add tsconfig for type checking
+  tsconfig: {
+    configFile: path.resolve(__dirname, './tsconfig.renderer.json'),
   },
 });

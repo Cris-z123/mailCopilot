@@ -7,40 +7,60 @@
  * - Display action items with complete source info
  * - Show sender, date, subject, Message-ID/fingerprint, file path
  * - Integrate with TraceabilityInfo component for search strings
+ *
+ * Per US2 requirements (T053):
+ * - Apply light yellow background for <0.6 confidence items
+ * - Display expanded source info for low confidence items
+ * - Show ConfidenceSummaryBanner at top
+ * - Use ConfidenceBadge for confidence indicators
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Loader2, AlertCircle, Inbox, RefreshCw } from 'lucide-react';
-import { useReportStore } from '@renderer/stores/reportStore.js';
-import { selectItems, selectLoading, selectError } from '@renderer/stores/reportStore.js';
-import TraceabilityInfo from './TraceabilityInfo.js';
-import { Button } from '@renderer/components/ui/button.js';
-import { Card, CardContent } from '@renderer/components/ui/card.js';
-import { Badge } from '@renderer/components/ui/badge.js';
-import type { DisplayItem } from '@shared/types/index.js';
+import { useReportStore } from '@renderer/stores/reportStore';
+import { selectItems, selectLoading, selectError } from '@renderer/stores/reportStore';
+import TraceabilityInfo from './TraceabilityInfo';
+import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge';
+import { ConfidenceSummaryBanner } from '@renderer/components/reports/ConfidenceSummaryBanner';
+import { ConfidenceThresholds } from '@shared/utils/ConfidenceThresholds';
+import { Button } from '@renderer/components/ui/button';
+import { Card, CardContent } from '@renderer/components/ui/card';
+import { Badge } from '@renderer/components/ui/badge';
+import type { DisplayItem } from '@shared/types/index';
 
 /**
  * ReportView props
  */
-interface ReportViewProps {
+export interface ReportViewProps {
   reportDate?: string;
+  items?: DisplayItem[]; // For testing purposes
+  emails?: any[]; // For testing purposes
 }
 
 /**
  * ReportView component
  */
-const ReportView: React.FC<ReportViewProps> = ({ reportDate }) => {
-  const items = useReportStore(selectItems);
+const ReportView: React.FC<ReportViewProps> = ({ reportDate, items: itemsProp, emails: emailsProp }) => {
+  // Use items from props if provided (for testing), otherwise from store
+  const storeItems = useReportStore(selectItems);
   const loading = useReportStore(selectLoading);
   const error = useReportStore(selectError);
   const loadReport = useReportStore((state) => state.loadReport);
 
-  // Load report on mount if reportDate is provided
+  // Use prop items for testing, otherwise store items
+  const items = itemsProp ?? storeItems;
+
+  // Calculate confidence summary for the banner (T052)
+  const summary = useMemo(() => {
+    return ConfidenceThresholds.getSummary(items);
+  }, [items]);
+
+  // Load report on mount if reportDate is provided and items not from props
   useEffect(() => {
-    if (reportDate) {
+    if (reportDate && !itemsProp) {
       loadReport(reportDate);
     }
-  }, [reportDate, loadReport]);
+  }, [reportDate, loadReport, itemsProp]);
 
   /**
    * Render loading state
@@ -91,7 +111,7 @@ const ReportView: React.FC<ReportViewProps> = ({ reportDate }) => {
    * Render report with items
    */
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-testid="daily-report">
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">
@@ -109,8 +129,17 @@ const ReportView: React.FC<ReportViewProps> = ({ reportDate }) => {
         </div>
       </header>
 
+      {/* Confidence Summary Banner (T052) */}
+      <div className="container mx-auto px-4 pt-6">
+        <ConfidenceSummaryBanner
+          highCount={summary.highCount}
+          mediumCount={summary.mediumCount}
+          lowCount={summary.lowCount}
+        />
+      </div>
+
       {/* Report items */}
-      <div className="container mx-auto px-4 py-6 space-y-4">
+      <div className="container mx-auto px-4 pb-6 space-y-4">
         {items.map((item) => (
           <ReportItem key={item.id} item={item} />
         ))}
@@ -132,37 +161,25 @@ const ReportItem: React.FC<ReportItemProps> = ({ item }) => {
   const needsReview = item.confidence_score < 0.8;
   const isLowConfidence = item.confidence_score < 0.6;
 
-  // Background color for low confidence items (per US2 requirement)
+  // Background color for low confidence items (per US2 requirement - T053)
   const cardBgClass = isLowConfidence ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800' : '';
 
   return (
-    <Card className={`overflow-hidden ${cardBgClass}`}>
+    <Card className={`overflow-hidden ${cardBgClass}`} data-item-id={item.item_id}>
       <CardContent className="p-6">
         {/* Item content */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-foreground mb-3">{item.content}</h3>
 
-          {/* Badges */}
+          {/* Badges - updated to use ConfidenceBadge (T051) */}
           <div className="flex flex-wrap gap-2 mb-3">
-            {/* Confidence badge */}
-            <Badge
-              variant={confidenceLevel === 'high' ? 'default' : confidenceLevel === 'medium' ? 'secondary' : 'destructive'}
-              className="font-medium"
-            >
-              {Math.round(item.confidence_score * 100)}% confidence
-            </Badge>
+            {/* Confidence badge from new component */}
+            <ConfidenceBadge confidence={item.confidence_score} />
 
             {/* Source status badge */}
             {!isVerified && (
               <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-400">
                 [来源待确认]
-              </Badge>
-            )}
-
-            {/* Needs review badge */}
-            {needsReview && isVerified && (
-              <Badge variant="outline" className="border-blue-500 text-blue-700 dark:text-blue-400">
-                [建议复核]
               </Badge>
             )}
 
@@ -194,7 +211,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ item }) => {
           ))}
         </div>
 
-        {/* Source details (expanded for low-confidence items) */}
+        {/* Source details (expanded for low confidence items per T053) */}
         {needsReview && (
           <details className="mt-4 group" open={isLowConfidence}>
             <summary className="cursor-pointer list-none flex items-center justify-between p-3 bg-muted/50 rounded-md hover:bg-muted transition-colors">
@@ -252,4 +269,6 @@ function getConfidenceLevel(confidence: number): 'high' | 'medium' | 'low' {
   return 'low';
 }
 
+// Export as both default and named export for compatibility
 export default ReportView;
+export { ReportView as DailyReportView };

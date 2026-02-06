@@ -187,9 +187,9 @@
 
 ### UI Components for US2
 
-- [ ] T051 [P] [US2] Create ConfidenceBadge component in src/renderer/src/components/reports/ConfidenceBadge.tsx (gray "[建议复核]" for 0.6-0.79, prominent "[来源待确认]" for <0.6 per FR-011)
-- [ ] T052 [P] [US2] Create ConfidenceSummaryBanner component in src/renderer/src/components/reports/ConfidenceSummaryBanner.tsx ("✅ 高置信度：X条, ⚠️ 需复核：Y条, ❓ 来源待确认：Z条" per FR-012)
-- [ ] T053 [US2] Implement conditional styling in DailyReportView component (light yellow background for <0.6 items, expanded source info display per US2 acceptance scenario 3)
+- [X] T051 [P] [US2] Create ConfidenceBadge component in src/renderer/src/components/reports/ConfidenceBadge.tsx (gray "[建议复核]" for 0.6-0.79, prominent "[来源待确认]" for <0.6 per FR-011)
+- [X] T052 [P] [US2] Create ConfidenceSummaryBanner component in src/renderer/src/components/reports/ConfidenceSummaryBanner.tsx ("✅ 高置信度：X条, ⚠️ 需复核：Y条, ❓ 来源待确认：Z条" per FR-012)
+- [X] T053 [US2] Implement conditional styling in DailyReportView component (light yellow background for <0.6 items, expanded source info display per US2 acceptance scenario 3)
 
 ### Backend Logic for US2
 
