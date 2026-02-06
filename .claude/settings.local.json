@@ -19,7 +19,8 @@
       "Bash(else echo \"No checklists directory found\")",
       "Bash(fi)",
       "Bash(npm run dev:*)",
-      "Bash(for:*)"
+      "Bash(for:*)",
+      "mcp__github__get_me"
     ]
   }
 }

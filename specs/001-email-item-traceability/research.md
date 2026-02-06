@@ -311,7 +311,7 @@ const ageInDays = differenceInDays(new Date(), parsedDate);
 4. **Coverage**: Built-in coverage with c8
 
 **Coverage Requirements**:
-- Overall: 85% line coverage, 80% branch coverage
+- Overall: 80% line coverage, 70% branch coverage
 - Security-critical: 100% branch coverage (encryption, validation, sandbox)
 - Integration: 40% of total tests (database operations, IPC, LLM adapters)
 

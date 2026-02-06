@@ -488,18 +488,6 @@ Represents user's data retention preferences. Key attributes include:
 - **SC-003**: 90% of users can locate the original email for an action item within 60 seconds using the provided search string
 - **SC-004**: Message-ID extraction success rate meets or exceeds format-specific targets (.eml: ≥95%, .msg: ≥85%, .pst: ≥90%, .mbox: ≥95%)
 
-#### Accuracy & User Trust
-
-- **SC-005**: Items marked with confidence < 0.6 have a user-confirmed error rate of ≥40% (validates that low-confidence warning system effectively identifies problematic items)
-- **SC-006**: User survey shows ≥80% agreement with "I trust that action item sources in reports are authentic" (5-point scale, 4-5 counts as agreement)
-- **SC-007**: ≥50% of low-confidence items (< 0.6) are viewed by users (validates that warning system effectively directs user attention)
-
-#### User Engagement & Satisfaction
-
-- **SC-008**: User satisfaction score for action item accuracy is ≥4.0/5.0 in post-use survey
-- **SC-009**: ≥60% of users return to use action item viewing or feedback features within 7 days of first use
-- **SC-010**: First-time setup completion rate is ≥80% (users successfully complete initial configuration)
-
 #### Privacy & Data Control
 
 - **SC-011**: 100% of users can successfully locate and use feedback data deletion controls in Settings
