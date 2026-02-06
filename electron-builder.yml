@@ -5,13 +5,14 @@ directories:
   output: dist
 
 files:
+  - electron/**/*
   - dist/main/**/*
   - dist/renderer/**/*
   - dist/shared/**/*
   - package.json
 
 extraMetadata:
-  main: dist/main/index.js
+  main: electron/main.js
 
 asar: true
 asarUnpack:

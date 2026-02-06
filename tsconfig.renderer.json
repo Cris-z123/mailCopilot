@@ -11,12 +11,12 @@
     "allowImportingTsExtensions": false
   },
   "include": [
-    "renderer/src/**/*",
-    "shared/**/*"
+    "src/renderer/**/*",
+    "src/shared/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "main"
+    "src/main"
   ]
 }

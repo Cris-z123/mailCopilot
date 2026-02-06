@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Email Item Traceability & Verification System",
-  "main": "dist/main/index.js",
+  "main": "electron/main.js",
   "author": "Cris-z123",
   "license": "MIT",
   "scripts": {

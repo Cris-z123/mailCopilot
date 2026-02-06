@@ -10,16 +10,16 @@ out/
 *.tsbuildinfo
 
 # Compiled JavaScript in source directories (should only be in dist/)
-shared/**/*.js
-shared/**/*.js.map
-shared/**/*.d.ts
-!shared/**/*.ts
-main/**/*.js
-main/**/*.js.map
-!main/**/*.ts
-renderer/**/*.js
-renderer/**/*.js.map
-!renderer/**/*.ts
+src/shared/**/*.js
+src/shared/**/*.js.map
+src/shared/**/*.d.ts
+!src/shared/**/*.ts
+src/main/**/*.js
+src/main/**/*.js.map
+!src/main/**/*.ts
+src/renderer/**/*.js
+src/renderer/**/*.js.map
+!src/renderer/**/*.ts
 
 # Local environment files
 .env

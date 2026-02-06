@@ -5,19 +5,20 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "lib": ["ES2022"],
-    "outDir": "./dist/main",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "types": ["node"],
     "skipLibCheck": true,
     "verbatimModuleSyntax": false,
     "esModuleInterop": true
   },
   "include": [
-    "main/**/*",
-    "shared/**/*"
+    "src/main/**/*",
+    "src/shared/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "renderer"
+    "src/renderer"
   ]
 }
