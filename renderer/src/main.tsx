@@ -4,7 +4,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import ReportView from '@renderer/components/ReportView/ReportView';
+import ReportView from '@renderer/components/ReportView';
 
 const reportDate = new Date().toISOString().split('T')[0];
 

@@ -10,8 +10,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge';
-import { ConfidenceSummaryBanner } from '@renderer/components/reports/ConfidenceSummaryBanner';
+import { ConfidenceBadge, ConfidenceSummaryBanner } from '@renderer/components/reports';
 import { ConfidenceThresholds } from '@shared/utils/ConfidenceThresholds';
 
 // Simplified mock item type for testing

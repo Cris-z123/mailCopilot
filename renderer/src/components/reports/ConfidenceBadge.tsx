@@ -68,5 +68,3 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
     </Badge>
   );
 };
-
-export default ConfidenceBadge;

@@ -11,7 +11,7 @@ import type {
   ElectronAPI,
   Item,
   TodoItemWithSources,
-} from '@shared/types/index.js';
+} from '@shared/types';
 
 /**
  * IPC Client class

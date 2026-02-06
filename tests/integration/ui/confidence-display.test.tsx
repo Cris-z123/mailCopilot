@@ -13,9 +13,8 @@
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import { DailyReportView } from '@renderer/components/ReportView';
-import { ConfidenceSummaryBanner } from '@renderer/components/reports/ConfidenceSummaryBanner';
-import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge';
+import ReportView from '@renderer/components/ReportView';
+import { ConfidenceSummaryBanner, ConfidenceBadge } from '@renderer/components/reports';
 import { ConfidenceThresholds } from '@shared/utils/ConfidenceThresholds';
 import type { Item, ItemSourceRef } from '@shared/schemas/validation';
 
@@ -245,10 +244,10 @@ describe('Confidence Display Integration Tests', () => {
     });
   });
 
-  describe('DailyReportView - conditional styling', () => {
+  describe('ReportView - conditional styling', () => {
     it('should apply light yellow background for low confidence items', () => {
       const { container } = render(
-        <DailyReportView
+        <ReportView
           items={mockItems}
           emails={mockEmails}
           reportDate="2026-02-06"
@@ -265,7 +264,7 @@ describe('Confidence Display Integration Tests', () => {
 
     it('should NOT apply yellow background for high confidence items', () => {
       const { container } = render(
-        <DailyReportView
+        <ReportView
           items={mockItems}
           emails={mockEmails}
           reportDate="2026-02-06"
@@ -281,7 +280,7 @@ describe('Confidence Display Integration Tests', () => {
 
     it('should NOT apply yellow background for medium confidence items', () => {
       const { container } = render(
-        <DailyReportView
+        <ReportView
           items={mockItems}
           emails={mockEmails}
           reportDate="2026-02-06"
@@ -299,7 +298,7 @@ describe('Confidence Display Integration Tests', () => {
 
     it('should display expanded source info for low confidence items', () => {
       const { container } = render(
-        <DailyReportView
+        <ReportView
           items={mockItems}
           emails={mockEmails}
           reportDate="2026-02-06"
@@ -322,7 +321,7 @@ describe('Confidence Display Integration Tests', () => {
 
     it('should display summary banner at top of report', () => {
       const { container } = render(
-        <DailyReportView
+        <ReportView
           items={mockItems}
           emails={mockEmails}
           reportDate="2026-02-06"
@@ -386,7 +385,7 @@ describe('Confidence Display Integration Tests', () => {
       const startTime = performance.now();
 
       render(
-        <DailyReportView
+        <ReportView
           items={largeItemList}
           emails={[]}
           reportDate="2026-02-06"
@@ -422,7 +421,7 @@ describe('Confidence Display Integration Tests', () => {
       const filteredItems = ConfidenceThresholds.filterByLevel(mockItems, 'low');
 
       const { container } = render(
-        <DailyReportView
+        <ReportView
           items={filteredItems}
           emails={mockEmails}
           reportDate="2026-02-06"
@@ -440,7 +439,7 @@ describe('Confidence Display Integration Tests', () => {
       const sortedItems = ConfidenceThresholds.sortByConfidence(mockItems);
 
       const { container } = render(
-        <DailyReportView
+        <ReportView
           items={sortedItems}
           emails={mockEmails}
           reportDate="2026-02-06"

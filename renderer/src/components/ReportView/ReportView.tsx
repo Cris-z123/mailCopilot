@@ -19,14 +19,13 @@ import React, { useEffect, useMemo } from 'react';
 import { Loader2, AlertCircle, Inbox, RefreshCw } from 'lucide-react';
 import { useReportStore } from '@renderer/stores/reportStore';
 import { selectItems, selectLoading, selectError } from '@renderer/stores/reportStore';
-import TraceabilityInfo from './TraceabilityInfo';
-import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge';
-import { ConfidenceSummaryBanner } from '@renderer/components/reports/ConfidenceSummaryBanner';
+import { TraceabilityInfo } from './TraceabilityInfo';
+import { ConfidenceBadge, ConfidenceSummaryBanner } from '@renderer/components/reports';
 import { ConfidenceThresholds } from '@shared/utils/ConfidenceThresholds';
 import { Button } from '@renderer/components/ui/button';
 import { Card, CardContent } from '@renderer/components/ui/card';
 import { Badge } from '@renderer/components/ui/badge';
-import type { DisplayItem } from '@shared/types/index';
+import type { DisplayItem } from '@shared/types';
 
 /**
  * ReportView props
@@ -269,6 +268,4 @@ function getConfidenceLevel(confidence: number): 'high' | 'medium' | 'low' {
   return 'low';
 }
 
-// Export as both default and named export for compatibility
 export default ReportView;
-export { ReportView as DailyReportView };

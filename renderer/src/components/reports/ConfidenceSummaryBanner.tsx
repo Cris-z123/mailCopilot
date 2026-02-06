@@ -70,5 +70,3 @@ export const ConfidenceSummaryBanner: React.FC<ConfidenceSummaryBannerProps> = (
     </div>
   );
 };
-
-export default ConfidenceSummaryBanner;
