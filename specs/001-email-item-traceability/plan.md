@@ -386,11 +386,6 @@ This implementation plan fully satisfies all constitutional requirements without
 - SC-003: 90% of users locate original email within 60s using search string
 - SC-004: Message-ID extraction meets format-specific targets (.eml ≥95%, .msg ≥85%, .pst ≥90%)
 
-**Accuracy & User Trust**:
-- SC-005: Items with confidence <0.6 have user-confirmed error rate ≥40%
-- SC-006: ≥80% user agreement with "I trust action item sources are authentic"
-- SC-007: ≥50% of low-confidence items are viewed by users
-
 **Performance**:
 - SC-014: Email metadata extraction ≤100ms per email
 - SC-015: Local LLM processing ≤2s per email

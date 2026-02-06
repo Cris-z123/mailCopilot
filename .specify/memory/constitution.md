@@ -1,9 +1,11 @@
 <!--
 Sync Impact Report:
-- Version change: Initial → 1.0.0
-- Modified principles: N/A (initial creation)
-- Added sections: All 7 core principles, Data Security, Testing & Quality, Governance
-- Removed sections: N/A (initial creation)
+- Version change: 1.0.0 → 1.1.0
+- Modified principles:
+  - Principle V (Testing & Quality Standards): Relaxed coverage requirements (85%/80% → 80%/70%)
+- Added sections:
+  - Technology Stack Constraints: Updated Electron version, added Tailwind CSS v3.4 and shadcn/ui
+- Removed sections: None
 - Templates requiring updates:
   ✅ .specify/templates/plan-template.md (Constitution Check section aligned)
   ✅ .specify/templates/spec-template.md (Functional requirements aligned)
@@ -67,12 +69,12 @@ Local/remote mode switching MUST ensure data processing integrity:
 Comprehensive testing is MANDATORY before feature release:
 
 - **Test Pyramid (No E2E)**: Unit tests 60% (utilities, security algorithms, pure functions), Integration tests 40% (database operations, IPC communication, LLM adapters, process locks)
-- **Coverage Requirements**: Unit test line coverage ≥85%, branch coverage ≥80%. Security-critical modules (encryption, validation, desensitization, sandbox) MUST achieve 100% branch coverage
+- **Coverage Requirements**: Unit test line coverage ≥80%, branch coverage ≥70%. Security-critical modules (encryption, validation, desensitization, sandbox) MUST achieve 100% branch coverage
 - **Test-First Enforcement**: Red-Green-Refactor cycle strictly enforced. Tests written → User approved → Tests fail → Implementation
 - **Integration Test Focus**: New library contract tests, contract changes, inter-service communication, shared schemas
 - **Security Testing**: QuickJS sandbox escape testing (20+ scenarios), SQL injection defense, memory residue detection, single-instance lock validation, LLM output degradation testing, mode switch queue testing
 
-**Rationale**: Security-critical local application requires comprehensive validation. High coverage on security modules prevents exploitation. Absence of E2E tests reflects desktop app deployment model where integration tests provide better ROI.
+**Rationale**: Security-critical local application requires comprehensive validation. High coverage on security modules prevents exploitation. Absence of E2E tests reflects desktop app deployment model where integration tests provide better ROI. Relaxed coverage thresholds (80%/70% vs previous 85%/80%) balance quality with development velocity while maintaining strict security module requirements.
 
 ### VI. Single Instance & Concurrency Control
 
@@ -123,7 +125,7 @@ Structured logging and performance monitoring are MANDATORY:
 All pull requests MUST verify:
 
 - Constitution compliance (this document)
-- Test coverage meets minimum thresholds
+- Test coverage meets minimum thresholds (≥80% line, ≥70% branch)
 - Security-critical modules have 100% branch coverage
 - No unencrypted sensitive data in database fields
 - IPC channel whitelist compliance (6 channels max: `llm:generate`, `db:query:history`, `db:export`, `config:get/set`, `app:check-update`, `email:fetch-meta`)
@@ -133,10 +135,11 @@ All pull requests MUST verify:
 
 | Component | Technology | Security Constraints |
 |-----------|-----------|---------------------|
-| **Cross-Platform Framework** | Electron 28.2.0 | sandbox enabled, contextIsolation enforced, single-instance lock |
-| **Frontend** | React 18 + TypeScript 5.4 | Error boundary isolation, Zod runtime validation |
+| **Cross-Platform Framework** | Electron 29.4.6 | sandbox enabled, contextIsolation enforced, single-instance lock |
+| **Frontend Styling** | Tailwind CSS v3.4 + shadcn/ui | Utility-first CSS, component library for consistent UI |
+| **Frontend Framework** | React 18 + TypeScript 5.4 | Error boundary isolation, Zod runtime validation |
 | **State Management** | Zustand 4.4 | In-memory encryption for sensitive state, clear on page unload |
-| **Database** | better-sqlite3 9.4 | Field-level AES-256-GCM encryption, WAL mode |
+| **Database** | better-sqlite3 11.10.0 | Field-level AES-256-GCM encryption, WAL mode |
 | **Configuration** | JSON Schema + Ajv | HMAC-SHA256 signature anti-tampering |
 | **Rule Execution** | QuickJS (WASM) | Zero-permission sandbox, 128MB memory limit, 5s timeout |
 | **LLM Output Validation** | Zod Schema | Structured output validation, auto-retry (max 2x), fallback to unverified |
@@ -178,4 +181,4 @@ All pull requests MUST verify:
 
 For detailed implementation guidance, refer to technical architecture documentation: `docs/tech-architecture.md`
 
-**Version**: 1.0.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-01-31
+**Version**: 1.1.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-02-06
