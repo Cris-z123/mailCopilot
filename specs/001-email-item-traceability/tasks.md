@@ -56,7 +56,7 @@
 - [X] T001 Initialize package.json with dependencies (Electron 29.4.6, React 18, TypeScript 5.4, better-sqlite3 11.10.0, Zustand 4.5, Zod 3.22.4, QuickJS WASM, electron-log 5.0.0)
 - [X] T002 [P] Configure TypeScript (tsconfig.json for main, renderer, shared)
 - [X] T003 [P] Setup ESLint and Prettier with TypeScript support
-- [X] T004 [P] Configure Vitest 3.x for unit testing (85%+ coverage target, 100% for security modules per plan.md)
+- [X] T004 [P] Configure Vitest 3.x for unit testing (≥80% line, ≥70% branch coverage per constitution v1.1.0, 100% for security-critical modules)
 - [X] T005 [P] Create project directory structure (src/main/, src/renderer/, src/shared/, tests/)
 - [X] T006 [P] Setup Electron build configuration (electron-builder for packaging)
 - [X] T007 [P] Configure environment variable management (.env.local support)

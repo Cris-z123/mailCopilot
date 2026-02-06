@@ -23,18 +23,19 @@ export default defineConfig({
         '**/*.d.ts',
         '**/types/**',
       ],
-      // 85%+ coverage target per plan.md R0-10 (security modules require 100%)
+      // Coverage targets per constitution v1.1.0: ≥80% line, ≥70% branch
+      // Security-critical modules (encryption, validation, desensitization, sandbox) require 100% branch coverage
       // Note: perFile: false allows unimplemented files (0% coverage) without blocking
       // Security modules must still reach 100% (enforced manually)
       thresholds: {
-        lines: 85,
-        functions: 85,
-        branches: 85,
-        statements: 85,
+        lines: 80,
+        functions: 80,
+        branches: 70,
+        statements: 80,
         perFile: false, // Overall threshold, not per-file (work-in-progress friendly)
       },
       // Security modules require 100% coverage (Constitution Principle V)
-      // Manually verify: main/config/encryption.ts, main/rule-engine/QuickJSSandbox.ts
+      // Manually verify: main/security/encryption.ts, main/rules/sandbox.ts, main/security/validation.ts, main/security/desensitization.ts
     },
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/', 'dist/', 'build/'],
