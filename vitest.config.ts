@@ -9,7 +9,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
-      include: ['main/**/*', 'shared/**/*', 'renderer/src/**/*'],
+      include: ['src/main/**/*', 'src/shared/**/*', 'src/renderer/**/*'],
       exclude: [
         'node_modules/',
         'dist/',
@@ -42,9 +42,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './main'),
-      '@renderer': path.resolve(__dirname, './renderer/src'),
-      '@shared': path.resolve(__dirname, './shared'),
+      '@': path.resolve(__dirname, './src/main'),
+      '@renderer': path.resolve(__dirname, './src/renderer'),
+      '@shared': path.resolve(__dirname, './src/shared'),
     },
   },
 });

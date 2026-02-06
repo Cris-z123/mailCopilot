@@ -13,9 +13,9 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["main/*"],
-      "@renderer/*": ["renderer/src/*"],
-      "@shared/*": ["shared/*"]
+      "@/*": ["src/main/*"],
+      "@renderer/*": ["src/renderer/*"],
+      "@shared/*": ["src/shared/*"]
     },
     "strict": true,
     "noImplicitAny": true,
@@ -36,5 +36,5 @@
     "allowSyntheticDefaultImports": true
   },
   "exclude": ["node_modules", "dist", "build"],
-  "include": ["main/**/*", "renderer/**/*", "shared/**/*", "tests/**/*"]
+  "include": ["src/main/**/*", "src/renderer/**/*", "src/shared/**/*", "tests/**/*"]
 }

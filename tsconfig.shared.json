@@ -6,16 +6,16 @@
     "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "outDir": "./dist/shared",
-    "rootDir": "./shared",
+    "rootDir": "./src/shared",
     "types": ["node"]
   },
   "include": [
-    "shared/**/*"
+    "src/shared/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "main",
-    "renderer"
+    "src/main",
+    "src/renderer"
   ]
 }
