@@ -11,100 +11,118 @@
  * @module tests/integration/ui/confidence-display.test
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import { DailyReportView } from '@/renderer/components/reports/DailyReportView';
-import { ConfidenceSummaryBanner } from '@/renderer/components/reports/ConfidenceSummaryBanner';
-import { ConfidenceBadge } from '@/renderer/components/reports/ConfidenceBadge';
-import { ConfidenceThresholds } from '@/llm/ConfidenceThresholds';
-import type { ActionItem, EmailSource } from '@/shared/types';
+import { DailyReportView } from '@renderer/components/ReportView';
+import { ConfidenceSummaryBanner } from '@renderer/components/reports/ConfidenceSummaryBanner';
+import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge';
+import { ConfidenceThresholds } from '@shared/utils/ConfidenceThresholds';
+import type { Item, ItemSourceRef } from '@shared/schemas/validation';
+
+// Mock the reportStore
+vi.mock('@renderer/stores/reportStore', () => ({
+  useReportStore: vi.fn((selector) => {
+    // Return default empty state for tests
+    const state = {
+      items: [],
+      loading: false,
+      error: null,
+      loadReport: vi.fn(),
+      clearError: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  }),
+  selectItems: vi.fn((state) => state.items),
+  selectLoading: vi.fn((state) => state.loading),
+  selectError: vi.fn((state) => state.error),
+}));
 
 describe('Confidence Display Integration Tests', () => {
   // Mock data setup
-  const mockEmails: EmailSource[] = [
+  const mockEmails: ItemSourceRef[] = [
     {
-      id: 1,
       email_hash: 'abc123',
       message_id: '<msg1@example.com>',
-      sender_hash: 'sender1',
       sender_original: 'alice@example.com',
       subject_desensitized: 'Project Update',
       date: '2026-02-06T10:00:00Z',
-      attachment_count: 0,
       file_path: '/emails/001.eml',
       search_string: 'from:alice@example.com subject:"Project Update"',
-      processed_at: Date.now(),
-      last_seen_at: Date.now(),
-      extraction_status: 'success',
-      report_date: '2026-02-06',
+      evidence_text: 'Clear deadline and action verb',
     },
     {
-      id: 2,
       email_hash: 'def456',
       message_id: '<msg2@example.com>',
-      sender_hash: 'sender2',
       sender_original: 'bob@example.com',
       subject_desensitized: 'Task Assignment',
       date: '2026-02-06T11:00:00Z',
-      attachment_count: 0,
       file_path: '/emails/002.eml',
       search_string: 'from:bob@example.com subject:"Task Assignment"',
-      processed_at: Date.now(),
-      last_seen_at: Date.now(),
-      extraction_status: 'success',
-      report_date: '2026-02-06',
+      evidence_text: 'Some action keywords but ambiguous context',
     },
     {
-      id: 3,
       email_hash: 'ghi789',
       message_id: '<msg3@example.com>',
-      sender_hash: 'sender3',
       sender_original: 'charlie@example.com',
       subject_desensitized: 'Follow up',
       date: '2026-02-06T12:00:00Z',
-      attachment_count: 0,
       file_path: '/emails/003.eml',
       search_string: 'from:charlie@example.com subject:"Follow up"',
-      processed_at: Date.now(),
-      last_seen_at: Date.now(),
-      extraction_status: 'success',
-      report_date: '2026-02-06',
+      evidence_text: 'Missing Message-ID, unclear context',
     },
   ];
 
-  const mockItems: ActionItem[] = [
+  const mockItems: Array<{
+    id: string;
+    item_id: string;
+    report_date: string;
+    content: string;
+    item_type: 'completed' | 'pending';
+    source_status: 'verified' | 'unverified';
+    confidence: number; // Changed from confidence_score to confidence for ConfidenceThresholds
+    confidence_score: number; // Keep for DisplayItem compatibility
+    tags: string[];
+    sources: ItemSourceRef[];
+    created_at: number;
+  }> = [
     {
-      id: 1,
-      content_encrypted: 'encrypted_content_1',
-      item_type: 'pending',
-      confidence: 0.9, // High confidence
-      source_status: 'verified',
-      evidence: 'Clear deadline and action verb',
+      id: '1',
+      item_id: '1',
       report_date: '2026-02-06',
+      content: 'Complete project report by Friday',
+      item_type: 'pending',
+      source_status: 'verified',
+      confidence: 0.9, // For ConfidenceThresholds
+      confidence_score: 0.9, // For DisplayItem
+      tags: ['deadline'],
+      sources: [mockEmails[0]],
       created_at: Date.now(),
-      updated_at: Date.now(),
     },
     {
-      id: 2,
-      content_encrypted: 'encrypted_content_2',
-      item_type: 'pending',
-      confidence: 0.7, // Medium confidence
-      source_status: 'verified',
-      evidence: 'Some action keywords but ambiguous context',
+      id: '2',
+      item_id: '2',
       report_date: '2026-02-06',
+      content: 'Review documentation',
+      item_type: 'pending',
+      source_status: 'verified',
+      confidence: 0.7, // For ConfidenceThresholds
+      confidence_score: 0.7, // For DisplayItem
+      tags: [],
+      sources: [mockEmails[1]],
       created_at: Date.now(),
-      updated_at: Date.now(),
     },
     {
-      id: 3,
-      content_encrypted: 'encrypted_content_3',
+      id: '3',
+      item_id: '3',
+      report_date: '2026-02-06',
+      content: 'Maybe follow up on meeting',
       item_type: 'pending',
-      confidence: 0.5, // Low confidence
       source_status: 'unverified',
-      evidence: 'Missing Message-ID, unclear context',
-      report_date: '2026-02-06',
+      confidence: 0.5, // For ConfidenceThresholds
+      confidence_score: 0.5, // For DisplayItem
+      tags: [],
+      sources: [mockEmails[2]],
       created_at: Date.now(),
-      updated_at: Date.now(),
     },
   ];
 
@@ -352,15 +370,17 @@ describe('Confidence Display Integration Tests', () => {
   describe('Performance and rendering', () => {
     it('should render large item lists efficiently', () => {
       const largeItemList = Array.from({ length: 1000 }, (_, i) => ({
-        id: i + 1,
-        content_encrypted: `encrypted_${i}`,
-        item_type: 'pending' as const,
-        confidence: i % 3 === 0 ? 0.5 : i % 3 === 1 ? 0.7 : 0.9,
-        source_status: 'verified' as const,
-        evidence: 'Test evidence',
+        id: String(i + 1),
+        item_id: String(i + 1),
         report_date: '2026-02-06',
+        content: `Test item ${i}`,
+        item_type: 'pending' as const,
+        source_status: 'verified' as const,
+        confidence: i % 3 === 0 ? 0.5 : i % 3 === 1 ? 0.7 : 0.9,
+        confidence_score: i % 3 === 0 ? 0.5 : i % 3 === 1 ? 0.7 : 0.9,
+        tags: [],
+        sources: [],
         created_at: Date.now(),
-        updated_at: Date.now(),
       }));
 
       const startTime = performance.now();
