@@ -10,10 +10,9 @@
  * - Degradation fallback
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { OutputValidator } from '@/llm/OutputValidator.js';
 import type { LLMOutput } from '@/llm/LLMAdapter.js';
-import { z } from 'zod';
 
 describe('OutputValidator', () => {
   describe('validate', () => {

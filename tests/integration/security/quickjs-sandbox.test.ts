@@ -29,9 +29,8 @@
  * @module tests/integration/security/quickjs-sandbox
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { RuleEngine } from '@/rules/RuleEngine.js';
-import { executeAllRules } from '@/rules/rules.js';
 import type { ParsedEmail } from '@/email/parsers/EmailParser.js';
 
 describe('QuickJS Sandbox Security Tests', () => {

@@ -26,6 +26,7 @@ import { Button } from '@renderer/components/ui/button';
 import { Card, CardContent } from '@renderer/components/ui/card';
 import { Badge } from '@renderer/components/ui/badge';
 import type { DisplayItem } from '@shared/types';
+import type { ItemSourceRef } from '@shared/schemas/validation';
 
 /**
  * ReportView props
@@ -33,13 +34,13 @@ import type { DisplayItem } from '@shared/types';
 export interface ReportViewProps {
   reportDate?: string;
   items?: DisplayItem[]; // For testing purposes
-  emails?: any[]; // For testing purposes
+  emails?: ItemSourceRef[]; // For testing purposes (source refs for traceability)
 }
 
 /**
  * ReportView component
  */
-const ReportView: React.FC<ReportViewProps> = ({ reportDate, items: itemsProp, emails: emailsProp }) => {
+const ReportView: React.FC<ReportViewProps> = ({ reportDate, items: itemsProp, emails: _emailsProp }) => {
   // Use items from props if provided (for testing), otherwise from store
   const storeItems = useReportStore(selectItems);
   const loading = useReportStore(selectLoading);
@@ -156,7 +157,6 @@ interface ReportItemProps {
 
 const ReportItem: React.FC<ReportItemProps> = ({ item }) => {
   const isVerified = item.source_status === 'verified';
-  const confidenceLevel = getConfidenceLevel(item.confidence_score);
   const needsReview = item.confidence_score < 0.8;
   const isLowConfidence = item.confidence_score < 0.6;
 
@@ -164,7 +164,11 @@ const ReportItem: React.FC<ReportItemProps> = ({ item }) => {
   const cardBgClass = isLowConfidence ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800' : '';
 
   return (
-    <Card className={`overflow-hidden ${cardBgClass}`} data-item-id={item.item_id}>
+    <Card
+      className={`overflow-hidden ${cardBgClass}`}
+      data-item-id={item.item_id}
+      data-confidence-level={getConfidenceLevel(item.confidence_score)}
+    >
       <CardContent className="p-6">
         {/* Item content */}
         <div className="mb-4">

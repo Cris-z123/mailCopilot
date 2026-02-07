@@ -8,7 +8,6 @@
  * @module main/email/parsers/MsgParser
  */
 
-import { extractMsg } from 'msg-extractor';
 import { createHash } from 'crypto';
 import * as path from 'path';
 import { logger } from '@/config/logger';
@@ -37,6 +36,10 @@ export class MsgParser implements EmailParser {
   async parse(filePath: string): Promise<ParsedEmail> {
     try {
       logger.debug('MsgParser', `Starting parse for file: ${filePath}`);
+
+      // Dynamically import msg-extractor (optional dependency)
+      const msgExtractor = await import('msg-extractor');
+      const extractMsg = msgExtractor.extractMsg;
 
       // Extract using msg-extractor
       const msg = await extractMsg(filePath);

@@ -13,18 +13,19 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PstParser } from '@/email/parsers/PstParser';
+import { logger } from '@/config/logger';
 import * as crypto from 'crypto';
 
-// Create mock function references
-const mockExec = vi.fn();
-const mockMkdir = vi.fn();
-const mockReadFile = vi.fn();
-const mockReaddir = vi.fn();
-const mockRm = vi.fn();
-const mockLoggerDebug = vi.fn();
-const mockLoggerInfo = vi.fn();
-const mockLoggerWarn = vi.fn();
-const mockLoggerError = vi.fn();
+// Hoist mock refs so vi.mock factories see them (vitest hoists vi.mock before variable init)
+const mockExec = vi.hoisted(() => vi.fn());
+const mockMkdir = vi.hoisted(() => vi.fn());
+const mockReadFile = vi.hoisted(() => vi.fn());
+const mockReaddir = vi.hoisted(() => vi.fn());
+const mockRm = vi.hoisted(() => vi.fn());
+const mockLoggerDebug = vi.hoisted(() => vi.fn());
+const mockLoggerInfo = vi.hoisted(() => vi.fn());
+const mockLoggerWarn = vi.hoisted(() => vi.fn());
+const mockLoggerError = vi.hoisted(() => vi.fn());
 
 // Mock child_process exec
 vi.mock('child_process', () => ({
@@ -84,12 +85,19 @@ describe('PstParser', () => {
     it('should pass when readpst is available', async () => {
       mockExec.mockImplementation((cmd: string, callback: any) => {
         if (cmd.startsWith('which readpst')) {
-          callback(null, { stdout: '/usr/bin/readpst', stderr: '' });
+          callback(null, '/usr/bin/readpst', '');
+        } else if (cmd.startsWith('readpst')) {
+          callback(null, '', '');
         }
       });
+      mockMkdir.mockResolvedValue(undefined);
+      mockReaddir.mockResolvedValue(['one.eml']);
+      mockReadFile.mockResolvedValue(`Message-ID: <x@y>\nFrom: a@b\nSubject: S\nDate: Mon, 05 Feb 2024 10:00:00 +0000\n\n${'A'.repeat(300)}`);
+      mockRm.mockResolvedValue(undefined);
 
-      // Should not throw
-      await expect(parser.parse('/test/archive.pst')).rejects.toThrow(); // Will fail for different reason
+      const result = await parser.parse('/test/archive.pst');
+      expect(result).toBeDefined();
+      expect(result.message_id).toBeDefined();
     });
 
     it('should throw error when readpst not found', async () => {
@@ -115,46 +123,49 @@ describe('PstParser', () => {
 
   describe('Archive Extraction', () => {
     beforeEach(() => {
-      // Mock readpst extraction
-      mockExec.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.startsWith('readpst')) {
-          callback(null, { stdout: '', stderr: '' });
+      // exec(cmd, callback) or exec(cmd, options, callback); callback is (err, stdout, stderr)
+      mockExec.mockImplementation((...args: any[]) => {
+        const cmd = args[0];
+        const cb = args[args.length - 1];
+        if (typeof cb !== 'function') return;
+        if (cmd.startsWith('which readpst')) {
+          cb(null, '/usr/bin/readpst', '');
+        } else if (cmd.startsWith('readpst')) {
+          cb(null, '', '');
         }
       });
 
-      // Mock temp directory creation
       mockMkdir.mockResolvedValue(undefined);
-
-      // Mock extracted directory listing
       mockReaddir.mockResolvedValue(['email1.eml', 'email2.eml', 'email3.eml']);
-
-      // Mock .eml file content
       const emlContent = `Message-ID: <test@example.com>
 From: sender@example.com
 Subject: Test Email from PST
 Date: Mon, 05 Feb 2024 10:00:00 +0000
 
 ${'A'.repeat(300)}`;
-
       mockReadFile.mockResolvedValue(emlContent);
+      mockRm.mockResolvedValue(undefined);
     });
 
     it('should extract PST archive to temp directory', async () => {
-      await expect(parser.parse('/test/archive.pst')).rejects.toThrow(); // May fail due to mocks
+      const result = await parser.parse('/test/archive.pst');
+      expect(result).toBeDefined();
 
-      // Verify readpst was called with correct arguments
-      const readpstCall = mockExec.mock.calls.find((call: any[]) => call[0].startsWith('readpst'));
+      const readpstCall = mockExec.mock.calls.find(
+        (call: unknown[]): call is [string, ...unknown[]] =>
+          typeof call[0] === 'string' && call[0].startsWith('readpst')
+      );
       expect(readpstCall).toBeDefined();
-      expect(readpstCall[0]).toContain('-r'); // Recursive
-      expect(readpstCall[0]).toContain('-o'); // Output directory
-      expect(readpstCall[0]).toContain('/test/archive.pst');
+      expect(readpstCall![0]).toContain('-r');
+      expect(readpstCall![0]).toContain('-o');
+      expect(readpstCall![0]).toContain('/test/archive.pst');
     });
 
     it('should list extracted .eml files', async () => {
       mockReaddir.mockResolvedValue(['message001.eml', 'message002.eml']);
 
-      await expect(parser.parse('/test/archive.pst')).rejects.toThrow();
-
+      const result = await parser.parse('/test/archive.pst');
+      expect(result).toBeDefined();
       expect(mockReaddir).toHaveBeenCalled();
     });
 
@@ -165,9 +176,7 @@ ${'A'.repeat(300)}`;
     });
 
     it('should create temp directory if not exists', async () => {
-      mockMkdir.mockResolvedValue(undefined);
-
-      await expect(parser.parse('/test/archive.pst')).rejects.toThrow();
+      await parser.parse('/test/archive.pst');
 
       expect(mockMkdir).toHaveBeenCalledWith(
         expect.stringContaining('mailcopilot-pst'),
@@ -178,17 +187,16 @@ ${'A'.repeat(300)}`;
 
   describe('.eml Content Parsing', () => {
     beforeEach(() => {
-      mockExec.mockImplementation((cmd: string, callback: any) => {
-        if (cmd.startsWith('which readpst')) {
-          callback(null, { stdout: '/usr/bin/readpst', stderr: '' });
-        }
-        if (cmd.startsWith('readpst')) {
-          callback(null, { stdout: '', stderr: '' });
-        }
+      mockExec.mockImplementation((...args: any[]) => {
+        const cmd = args[0];
+        const cb = args[args.length - 1];
+        if (typeof cb !== 'function') return;
+        if (cmd.startsWith('which readpst')) cb(null, '/usr/bin/readpst', '');
+        else if (cmd.startsWith('readpst')) cb(null, '', '');
       });
-
       mockMkdir.mockResolvedValue(undefined);
       mockReaddir.mockResolvedValue(['test.eml']);
+      mockRm.mockResolvedValue(undefined);
     });
 
     it('should parse Message-ID from extracted .eml', async () => {
@@ -281,7 +289,8 @@ ${'G'.repeat(300)}`;
     });
 
     it('should extract body content after headers', async () => {
-      const bodyText = 'This is the email body content from the PST archive.';
+      // Body must be ≥200 chars per FR-013
+      const bodyText = 'This is the email body content from the PST archive.' + 'x'.repeat(200);
       const emlContent = `Message-ID: <test@example.com>
 From: sender@example.com
 Subject: Body Test
@@ -293,6 +302,7 @@ ${bodyText}`;
 
       const result = await parser.parse('/test/archive.pst');
 
+      expect(result.body).toBeDefined();
       expect(result.body).toContain(bodyText);
     });
   });
@@ -513,9 +523,10 @@ ${'L'.repeat(300)}`;
     });
 
     it('should log error on parsing failure', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { logger } = require('@/config/logger');
-      mockExec.mockRejectedValue(new Error('Parse error'));
+      mockExec.mockImplementation((...args: any[]) => {
+        const cb = args[args.length - 1];
+        if (typeof cb === 'function') cb(new Error('Parse error'), '', '');
+      });
 
       try {
         await parser.parse('/test/fail.pst');

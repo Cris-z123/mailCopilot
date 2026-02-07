@@ -29,7 +29,7 @@ describe('T020: Database CRUD Integration Tests', () => {
     testDb.pragma('foreign_keys = ON');
 
     // Load schema
-    const schemaPath = path.join(__dirname, '../../../main/database/migrations/001_initial_schema.sql');
+    const schemaPath = path.join(__dirname, '../../../src/main/database/migrations/001_initial_schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
     testDb.exec(schema);
   });
@@ -429,7 +429,7 @@ describe('T020: Database CRUD Integration Tests', () => {
       });
     });
 
-    it('should enforce CHECK constraint on feedback_type enum', () => {
+    it('should enforce CHECK constraint on feedback_type enum', async () => {
       const reportDate = '2024-01-26';
 
       // Insert report
@@ -444,22 +444,23 @@ describe('T020: Database CRUD Integration Tests', () => {
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `).run('item-1', reportDate, blobify('encrypted'), 'checksum', 'pending', 'verified', 0.8);
 
-      // Try invalid feedback_type
+      // feedback_type is BLOB (encrypted); passing TEXT throws
       expect(() => {
         testDb.prepare(`
           UPDATE todo_items SET feedback_type = ? WHERE item_id = ?
         `).run('invalid_feedback', 'item-1');
       }).toThrow();
 
-      // Valid values should work
+      // Valid values: store as encrypted BLOB
       const validFeedbackTypes = ['content_error', 'priority_error', 'not_actionable', 'source_error'];
-      validFeedbackTypes.forEach(feedbackType => {
+      for (const feedbackType of validFeedbackTypes) {
+        const encrypted = await encryptField(encryptionKey, feedbackType);
         const result = testDb.prepare(`
           UPDATE todo_items SET feedback_type = ? WHERE item_id = ?
-        `).run(feedbackType, 'item-1');
+        `).run(Buffer.from(encrypted, 'utf-8'), 'item-1');
 
         expect(result.changes).toBe(1);
-      });
+      }
     });
   });
 

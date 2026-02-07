@@ -33,7 +33,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@types/cheerio": "^0.22.35",
     "better-sqlite3": "^11.10.0",
-    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.0.0",
@@ -84,6 +83,7 @@
     "zustand": "^4.5.0"
   },
   "optionalDependencies": {
+    "cheerio": "^1.2.0",
     "libpff": "^0.1.0",
     "msg-extractor": "^0.22.0",
     "puppeteer": "^24.0.0"
