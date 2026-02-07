@@ -36,5 +36,5 @@
     "allowSyntheticDefaultImports": true
   },
   "exclude": ["node_modules", "dist", "build"],
-  "include": ["src/main/**/*", "src/renderer/**/*", "src/shared/**/*", "tests/**/*"]
+  "include": ["src/main/**/*", "src/renderer/**/*", "src/shared/**/*", "src/types/**/*", "tests/**/*"]
 }
