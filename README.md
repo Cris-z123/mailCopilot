@@ -7,7 +7,6 @@
 [![Electron](https://img.shields.io/badge/Electron-29.4.6-9FEAF5?logo=electron)](https://electronjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://reactjs.org/)
-[![Node](https://img.shields.io/badge/Node.js-20.x-339933?logo=node.js)](https://nodejs.org/)
 [![Vitest](https://img.shields.io/badge/Vitest-3.2.4-6E9F18?logo=vitest)](https://vitest.dev/)
 
 ## 📖 项目简介
@@ -139,7 +138,6 @@ npm run test:coverage
 - [React](https://reactjs.org/) - 用户界面库
 - [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) - SQLite 同步驱动
 - [Zustand](https://github.com/pmndrs/zustand) - 状态管理
-- [Zod](https://zod.dev/) - TypeScript 优先的模式验证
 - [Vite](https://vitejs.dev/) - 下一代前端构建工具
 
 ## 📮 联系方式
