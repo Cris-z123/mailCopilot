@@ -135,6 +135,7 @@ export class ActionItemRepository {
    * Create a new action item record
    *
    * Content is encrypted using AES-256-GCM before storage.
+   * Feedback type is also encrypted per plan v2.7.
    * SHA-256 checksum is computed for tamper detection.
    *
    * @param item_id - UUID for the item
@@ -155,6 +156,13 @@ export class ActionItemRepository {
       .createHash('sha256')
       .update(data.content)
       .digest('hex');
+
+    // Encrypt feedback_type if provided (per plan v2.7)
+    let feedback_encrypted: Buffer | null = null;
+    if (data.feedback_type) {
+      const feedback_encrypted_json = await ConfigManager.encryptField(data.feedback_type);
+      feedback_encrypted = Buffer.from(feedback_encrypted_json, 'utf-8');
+    }
 
     // Convert tags array to JSON string
     const tags_json = JSON.stringify(data.tags ?? []);
@@ -190,7 +198,7 @@ export class ActionItemRepository {
         is_manually_edited,
         data.source_status ?? SourceStatus.VERIFIED,
         data.confidence_score ?? 0.0,
-        data.feedback_type ?? null
+        feedback_encrypted
       );
 
       logger.info('ActionItem', `Created action item: ${item_id}`, {
@@ -199,6 +207,7 @@ export class ActionItemRepository {
         item_type: data.item_type,
         source_status: data.source_status ?? SourceStatus.VERIFIED,
         confidence_score: data.confidence_score ?? 0.0,
+        has_feedback: !!data.feedback_type,
       });
     } catch (error) {
       logger.error('ActionItem', `Failed to create action item: ${item_id}`, {
@@ -278,6 +287,20 @@ export class ActionItemRepository {
       throw new Error(`Content checksum mismatch for item ${item_id}`);
     }
 
+    // Decrypt feedback_type if present (per plan v2.7)
+    let feedback_type: FeedbackType | undefined = undefined;
+    if (item.feedback_type) {
+      try {
+        const decrypted_feedback = await ConfigManager.decryptField(item.feedback_type);
+        feedback_type = decrypted_feedback as FeedbackType;
+      } catch (error) {
+        logger.error('ActionItem', `Failed to decrypt feedback_type for item: ${item_id}`, {
+          item_id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
     return {
       item_id: item.item_id,
       report_date: item.report_date,
@@ -286,7 +309,7 @@ export class ActionItemRepository {
       source_status: item.source_status,
       confidence_score: item.confidence_score,
       tags: item.tags,
-      feedback_type: item.feedback_type,
+      feedback_type,
       created_at: item.created_at,
     };
   }
@@ -464,35 +487,41 @@ export class ActionItemRepository {
    * Submit user feedback for an action item
    *
    * Per plan.md FR-022: 4 error categories for user feedback
+   * Per plan v2.7: feedback_type is encrypted at rest
    *
    * @param item_id - UUID of the item
    * @param is_correct - Whether user marked item as correct (✓) or incorrect (✗)
    * @param feedback_type - Error type if marked incorrect
    * @returns Updated action item or null if not found
    */
-  static submitFeedback(
+  static async submitFeedback(
     item_id: string,
     is_correct: boolean,
     feedback_type?: FeedbackType
-  ): ActionItem | null {
+  ): Promise<ActionItem | null> {
     const db = DatabaseManager.getDatabase();
 
     // If marked correct, clear feedback_type
-    // If marked incorrect, set feedback_type
+    // If marked incorrect, encrypt and set feedback_type
+    let feedback_encrypted: Buffer | null = null;
+    if (!is_correct && feedback_type) {
+      const feedback_encrypted_json = await ConfigManager.encryptField(feedback_type);
+      feedback_encrypted = Buffer.from(feedback_encrypted_json, 'utf-8');
+    }
+
     const stmt = db.prepare(`
       UPDATE ${this.TABLE_NAME}
       SET feedback_type = ?
       WHERE item_id = ?
     `);
 
-    const feedback_value = is_correct ? null : feedback_type;
-    const result = stmt.run(feedback_value, item_id);
+    const result = stmt.run(feedback_encrypted, item_id);
 
     if (result.changes > 0) {
       logger.info('ActionItem', `Submitted feedback for item: ${item_id}`, {
         item_id,
         is_correct,
-        feedback_type: feedback_value,
+        feedback_type: !is_correct ? feedback_type : null,
       });
       return this.findById(item_id);
     }

@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS todo_items (
     is_manually_edited INTEGER NOT NULL DEFAULT 0 CHECK(is_manually_edited IN (0, 1)),
     source_status TEXT NOT NULL DEFAULT 'verified' CHECK(source_status IN ('verified', 'unverified')),
     confidence_score REAL CHECK(confidence_score >= 0 AND confidence_score <= 1),
-    feedback_type TEXT CHECK(feedback_type IN ('content_error', 'priority_error', 'not_actionable', 'source_error'))
+    feedback_type BLOB  -- AES-256-GCM encrypted feedback_type value (per plan v2.7)
 ) STRICT;
 
 CREATE INDEX IF NOT EXISTS idx_items_report_date ON todo_items(report_date);
