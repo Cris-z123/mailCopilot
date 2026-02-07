@@ -220,9 +220,9 @@
 
 ### Feedback UI Components for US3
 
-- [ ] T060 [P] [US3] Create FeedbackButtons component in src/renderer/src/components/reports/FeedbackButtons.tsx (✓ and ✗ buttons with tooltips "✓ 标记准确" and "✗ 标记错误")
-- [ ] T061 [US3] Create FeedbackDialog component in src/renderer/src/components/FeedbackDialog.tsx (privacy notice, 4 error reason options: content_error/priority_error/not_actionable/source_error)
-- [ ] T062 [P] [US3] Create FeedbackSettings component in src/renderer/src/components/settings/FeedbackSettings.tsx ("本月修正X处错误", retention selector: 30/90/180/365/永久, export/destroy buttons)
+- [X] T060 [P] [US3] Create FeedbackButtons component in src/renderer/src/components/reports/FeedbackButtons.tsx (✓ and ✗ buttons with tooltips "✓ 标记准确" and "✗ 标记错误")
+- [X] T061 [US3] Create FeedbackDialog component in src/renderer/src/components/FeedbackDialog.tsx (privacy notice, 4 error reason options: content_error/priority_error/not_actionable/source_error)
+- [X] T062 [P] [US3] Create FeedbackSettings component in src/renderer/src/components/settings/FeedbackSettings.tsx ("本月修正X处错误", retention selector: 30/90/180/365/永久, export/destroy buttons)
 
 ### Feedback IPC Handlers for US3 (UPDATED for plan v2.7)
 

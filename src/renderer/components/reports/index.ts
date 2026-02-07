@@ -6,3 +6,4 @@
 
 export { ConfidenceBadge } from './ConfidenceBadge';
 export { ConfidenceSummaryBanner } from './ConfidenceSummaryBanner';
+export { FeedbackButtons } from './FeedbackButtons';
