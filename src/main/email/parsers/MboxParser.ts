@@ -13,9 +13,9 @@
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { logger } from '@/config/logger';
-import type { EmailParser, ParsedEmail } from './EmailParser';
-import { formatISO8601 } from '@shared/utils/dateUtils';
+import { logger } from '../../config/logger.js';
+import type { EmailParser, ParsedEmail } from './EmailParser.js';
+import { formatISO8601 } from '../../../shared/utils/dateUtils.js';
 
 /**
  * MboxParser implements EmailParser interface for Unix mbox files

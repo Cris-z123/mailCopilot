@@ -8,12 +8,14 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
-    "dev:main": "tsc -p tsconfig.main.json && electron .",
+    "dev:main": "tsc -p tsconfig.main.json && cross-env NODE_ENV=development electron .",
     "dev:renderer": "vite",
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "vite build",
-    "build:main": "tsc -p tsconfig.main.json",
+    "build:main": "tsc -p tsconfig.main.json && node scripts/copy-migrations.mjs",
     "start": "electron .",
+    "postinstall": "electron-rebuild",
+    "rebuild": "electron-rebuild",
     "test": "vitest",
     "test:unit": "vitest --config vitest.unit.config.ts",
     "test:integration": "vitest --config vitest.integration.config.ts",
@@ -44,6 +46,8 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "cross-env": "^7.0.3",
     "@eslint/js": "^9.18.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

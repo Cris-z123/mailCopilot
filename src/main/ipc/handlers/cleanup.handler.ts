@@ -8,13 +8,13 @@
  */
 
 import { ipcMain } from 'electron';
-import { logger } from '@/config/logger.js';
+import { logger } from '../../config/logger.js';
 import { IPC_CHANNELS } from '../channels.js';
-import DatabaseManager from '@/database/Database.js';
+import DatabaseManager from '../../database/Database.js';
 import {
   FeedbackDestroyRequestSchema,
   type FeedbackDestroyResponse,
-} from '@shared/schemas/validation.js';
+} from '../../../shared/schemas/validation.js';
 
 /**
  * Generate unique request ID for tracking

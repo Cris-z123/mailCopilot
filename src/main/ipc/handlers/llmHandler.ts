@@ -8,12 +8,12 @@
  */
 
 import { ipcMain } from 'electron';
-import { logger } from '@/config/logger.js';
+import { logger } from '../../config/logger.js';
 import { IPC_CHANNELS } from '../channels.js';
-import { EmailProcessor } from '@/email/EmailProcessor.js';
-import type { LLMAdapter } from '@/llm/LLMAdapter.js';
-import { safeValidateData, LLMGenerateRequestSchema } from '@shared/schemas/validation.js';
-import type { LLMGenerateResponse, ProcessedEmail } from '@shared/schemas/validation.js';
+import { EmailProcessor } from '../../email/EmailProcessor.js';
+import type { LLMAdapter } from '../../llm/LLMAdapter.js';
+import { safeValidateData, LLMGenerateRequestSchema } from '../../../shared/schemas/validation.js';
+import type { LLMGenerateResponse, ProcessedEmail } from '../../../shared/schemas/validation.js';
 
 /**
  * LLM handler state

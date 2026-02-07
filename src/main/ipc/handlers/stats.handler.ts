@@ -8,15 +8,15 @@
  */
 
 import { ipcMain } from 'electron';
-import { logger } from '@/config/logger.js';
+import { logger } from '../../config/logger.js';
 import { IPC_CHANNELS } from '../channels.js';
-import { FeedbackType } from '@/database/entities/ActionItem.js';
-import DatabaseManager from '@/database/Database.js';
-import { ConfigManager } from '@/config/ConfigManager.js';
+import { FeedbackType } from '../../database/entities/ActionItem.js';
+import DatabaseManager from '../../database/Database.js';
+import { ConfigManager } from '../../config/ConfigManager.js';
 import {
   FeedbackStatsRequestSchema,
   type FeedbackStatsResponse,
-} from '@shared/schemas/validation.js';
+} from '../../../shared/schemas/validation.js';
 import { format } from 'date-fns';
 
 /**

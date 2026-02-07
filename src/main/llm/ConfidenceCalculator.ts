@@ -7,7 +7,7 @@
  * @module main/llm/ConfidenceCalculator
  */
 
-import { logger } from '@/config/logger.js';
+import { logger } from '../config/logger.js';
 import type { ExtractedItem } from './LLMAdapter.js';
 
 /**

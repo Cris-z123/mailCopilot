@@ -16,13 +16,13 @@
  */
 
 import * as path from 'path';
-import { logger } from '@/config/logger';
-import type { EmailParser, ParsedEmail } from './EmailParser';
-import { EmlParser } from './EmlParser';
-import { MsgParser } from './MsgParser';
-import { PstParser } from './PstParser';
-import { MboxParser } from './MboxParser';
-import { HtmlParser } from './HtmlParser';
+import { logger } from '../../config/logger.js';
+import type { EmailParser, ParsedEmail } from './EmailParser.js';
+import { EmlParser } from './EmlParser.js';
+import { MsgParser } from './MsgParser.js';
+import { PstParser } from './PstParser.js';
+import { MboxParser } from './MboxParser.js';
+import { HtmlParser } from './HtmlParser.js';
 
 /**
  * Supported email formats with their extensions

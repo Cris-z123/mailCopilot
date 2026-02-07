@@ -8,13 +8,13 @@
  */
 
 import { ipcMain, dialog, BrowserWindow } from 'electron';
-import { logger } from '@/config/logger.js';
-import DatabaseManager from '@/database/Database.js';
-import { ConfigManager } from '@/config/ConfigManager.js';
+import { logger } from '../../config/logger.js';
+import DatabaseManager from '../../database/Database.js';
+import { ConfigManager } from '../../config/ConfigManager.js';
 import {
   FeedbackExportRequestSchema,
   type FeedbackExportResponse,
-} from '@shared/schemas/validation.js';
+} from '../../../shared/schemas/validation.js';
 import { promises as fs } from 'fs';
 
 /**

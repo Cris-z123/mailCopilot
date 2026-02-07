@@ -14,17 +14,17 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { logger } from '@/config/logger.js';
+import { logger } from '../config/logger.js';
 import { DuplicateDetector } from './DuplicateDetector.js';
 import { EmlParser } from './parsers/EmlParser.js';
 import { TraceabilityGenerator } from './TraceabilityGenerator.js';
-import { RuleEngine } from '@/rules/RuleEngine.js';
-import type { LLMAdapter, EmailBatch } from '@/llm/LLMAdapter.js';
-import { OutputValidator } from '@/llm/OutputValidator.js';
-import { ConfidenceCalculator } from '@/llm/ConfidenceCalculator.js';
-import { ActionItemRepository, ItemType, SourceStatus } from '@/database/entities/ActionItem.js';
-import { EmailSourceRepository, ExtractStatus } from '@/database/entities/EmailSource.js';
-import { ItemEmailRefRepository } from '@/database/entities/ItemEmailRef.js';
+import { RuleEngine, type RuleEngineExecutionResult } from '../rules/RuleEngine.js';
+import type { LLMAdapter, EmailBatch } from '../llm/LLMAdapter.js';
+import { OutputValidator } from '../llm/OutputValidator.js';
+import { ConfidenceCalculator, type ConfidenceResult } from '../llm/ConfidenceCalculator.js';
+import { ActionItemRepository, ItemType, SourceStatus } from '../database/entities/ActionItem.js';
+import { EmailSourceRepository, ExtractStatus } from '../database/entities/EmailSource.js';
+import { ItemEmailRefRepository } from '../database/entities/ItemEmailRef.js';
 import type { ParsedEmail } from './parsers/EmailParser.js';
 
 /**
@@ -278,7 +278,8 @@ export class EmailProcessor {
       logger.info('EmailProcessor', 'Rule engine execution complete', {
         ruleResultsCount: ruleResults.length,
         avgRuleScore: (
-          ruleResults.reduce((sum, r) => sum + r.score, 0) / ruleResults.length
+          ruleResults.reduce((sum: number, r: RuleEngineExecutionResult) => sum + r.score, 0) /
+          ruleResults.length
         ).toFixed(2),
       });
 
@@ -325,7 +326,8 @@ export class EmailProcessor {
         itemCount: confidenceResults.length,
         isDegraded: context.isDegraded,
         avgConfidence: (
-          confidenceResults.reduce((sum, r) => sum + r.confidence, 0) / confidenceResults.length
+          confidenceResults.reduce((sum: number, r: ConfidenceResult) => sum + r.confidence, 0) /
+          confidenceResults.length
         ).toFixed(3),
       });
 
@@ -518,7 +520,7 @@ export class EmailProcessor {
     // Default to 0 if no rule results (e.g., no emails parsed)
     const avgRuleScore =
       ruleResults.length > 0
-        ? ruleResults.reduce((sum, r) => sum + r.score, 0) / ruleResults.length
+        ? ruleResults.reduce((sum: number, r) => sum + r.score, 0) / ruleResults.length
         : 0;
 
     return llmItems.map((llmItem) => {

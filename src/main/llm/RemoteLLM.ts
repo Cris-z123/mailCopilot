@@ -9,7 +9,7 @@
  */
 
 import OpenAI from 'openai';
-import { logger } from '@/config/logger.js';
+import { logger } from '../config/logger.js';
 import type {
   LLMAdapter,
   EmailBatch,

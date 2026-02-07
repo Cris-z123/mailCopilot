@@ -8,7 +8,7 @@
  * @module main/rules/rules
  */
 
-import type { ParsedEmail } from '@/email/parsers/EmailParser.js';
+import type { ParsedEmail } from '../email/parsers/EmailParser.js';
 
 /**
  * Rule execution result

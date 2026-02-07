@@ -1,6 +1,28 @@
 import DatabaseManager from './Database.js';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Initial migration filename used to detect valid migrations dir */
+const INITIAL_MIGRATION = '001_initial_schema.sql';
+
+/**
+ * Resolve migrations directory: prefer src (when running from project root),
+ * fall back to dist (e.g. when packaged).
+ */
+function getMigrationsDir(): string {
+  const srcDir = path.join(process.cwd(), 'src', 'main', 'database', 'migrations');
+  if (fs.existsSync(path.join(srcDir, INITIAL_MIGRATION))) {
+    return srcDir;
+  }
+  const distDir = path.join(__dirname, 'migrations');
+  if (fs.existsSync(path.join(distDir, INITIAL_MIGRATION))) {
+    return distDir;
+  }
+  return distDir; // Let runInitialSchema throw with a clear path
+}
 
 /**
  * Database schema manager
@@ -9,9 +31,9 @@ import path from 'path';
  * - Migration execution with versioning
  * - Schema initialization from SQL files
  * - Version tracking in app_metadata table
+ * - Resolves migrations from dist (build) or src (dev) automatically
  */
 export class SchemaManager {
-  private static readonly MIGRATIONS_DIR = path.join(__dirname, 'migrations');
   private static readonly CURRENT_SCHEMA_VERSION = '1.0';
 
   /**
@@ -22,18 +44,26 @@ export class SchemaManager {
   static async initialize(): Promise<void> {
     const db = DatabaseManager.getDatabase();
 
-    // Check if schema needs initialization
+    // Check if app_metadata table exists (created by initial migration)
+    const tableExists = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='app_metadata'")
+      .get() as { name: string } | undefined;
+
+    if (!tableExists) {
+      // First run - execute initial schema (creates app_metadata and all tables)
+      await this.runInitialSchema();
+      return;
+    }
+
+    // Schema already exists - check version
     const schemaVersion = db
       .prepare('SELECT value FROM app_metadata WHERE key = ?')
       .get('schema_version') as { value: string } | undefined;
 
-    if (!schemaVersion) {
-      // First run - execute initial schema
-      await this.runInitialSchema();
-    } else if (schemaVersion.value !== this.CURRENT_SCHEMA_VERSION) {
+    if (schemaVersion?.value !== this.CURRENT_SCHEMA_VERSION) {
       // Schema version mismatch - would run migrations here
       // For now, we'll just log a warning
-      console.warn(`Schema version mismatch: expected ${this.CURRENT_SCHEMA_VERSION}, got ${schemaVersion.value}`);
+      console.warn(`Schema version mismatch: expected ${this.CURRENT_SCHEMA_VERSION}, got ${schemaVersion?.value ?? 'unknown'}`);
     }
   }
 
@@ -41,7 +71,8 @@ export class SchemaManager {
    * Run initial schema creation
    */
   private static async runInitialSchema(): Promise<void> {
-    const migrationPath = path.join(this.MIGRATIONS_DIR, '001_initial_schema.sql');
+    const migrationsDir = getMigrationsDir();
+    const migrationPath = path.join(migrationsDir, INITIAL_MIGRATION);
 
     if (!fs.existsSync(migrationPath)) {
       throw new Error(`Migration file not found: ${migrationPath}`);

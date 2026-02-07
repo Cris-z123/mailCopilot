@@ -1,5 +1,5 @@
 import DatabaseManager from '../Database.js';
-import { logger } from '@/config/logger.js';
+import { logger } from '../../config/logger.js';
 
 /**
  * Item-Email Reference Entity (Many-to-Many Relationship)

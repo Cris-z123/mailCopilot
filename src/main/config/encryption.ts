@@ -214,7 +214,7 @@ export async function exportKey(key: CryptoKey): Promise<string> {
 }
 
 /**
- * Import CryptoKey from raw bytes
+ * Import CryptoKey from raw bytes (AES-GCM encryption key)
  */
 export async function importKey(keyData: string): Promise<CryptoKey> {
   const buffer = base64ToBuffer(keyData);
@@ -230,6 +230,23 @@ export async function importKey(keyData: string): Promise<CryptoKey> {
   );
 }
 
+/**
+ * Import HMAC key from raw bytes (for config integrity signing)
+ */
+export async function importHMACKey(keyData: string): Promise<CryptoKey> {
+  const buffer = base64ToBuffer(keyData);
+  return await webcrypto.subtle.importKey(
+    'raw',
+    buffer,
+    {
+      name: 'HMAC',
+      hash: 'SHA-256',
+    },
+    true,
+    ['sign', 'verify']
+  );
+}
+
 export default {
   generateKey,
   encrypt,
@@ -241,5 +258,6 @@ export default {
   generateHMACKey,
   exportKey,
   importKey,
+  importHMACKey,
   clearBuffer,
 };

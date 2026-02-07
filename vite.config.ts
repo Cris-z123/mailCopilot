@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  base: './', // Required for Electron loadFile() so assets resolve relative to index.html
   root: 'src/renderer',
   build: {
     outDir: '../../dist/renderer',
