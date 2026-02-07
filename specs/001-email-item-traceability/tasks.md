@@ -193,8 +193,8 @@
 
 ### Backend Logic for US2
 
-- [ ] T054 [US2] Implement confidence-based filtering in app-store.ts (filter items by confidence thresholds, sort by confidence ascending)
-- [ ] T055 [P] [US2] Unit test for confidence aggregation in tests/unit/llm/aggregation.test.ts (count high/medium/low confidence items, summary statistics)
+- [X] T054 [US2] Implement confidence-based filtering in reportStore.ts (filter items by confidence thresholds, sort by confidence ascending) **[IMPLEMENTED 2026-02-06: filterByConfidence(), sortByConfidence(), selectors in src/renderer/stores/reportStore.ts lines 164-216]**
+- [X] T055 [P] [US2] Unit test for confidence aggregation in tests/unit/llm/thresholds.test.ts (count high/medium/low confidence items, summary statistics) **[IMPLEMENTED 2026-02-06: Aggregation tests countByLevel(), getSummary() in tests/unit/llm/thresholds.test.ts lines 187-237, all 26 tests passing ✅]**
 
 **Checkpoint**: User Story 2 complete - low-confidence items are visually distinguished and aggregated in summary
 
@@ -210,19 +210,19 @@
 
 ### Tests for US3
 
-- [ ] T056 [P] [US3] Unit test for feedback encryption in tests/unit/security/feedback.test.ts (AES-256-GCM encryption of feedback_type field per plan v2.7)
-- [ ] T057 [P] [US3] Integration test for local-only feedback storage in tests/integration/feedback/local-only.test.ts (verify no network traffic during feedback operations)
+- [X] T056 [P] [US3] Unit test for feedback encryption in tests/unit/security/feedback.test.ts (AES-256-GCM encryption of feedback_type field per plan v2.7) **[COMPLETED 2026-02-06: All 13 tests passing ✅]**
+- [X] T057 [P] [US3] Integration test for local-only feedback storage in tests/integration/feedback/local-only.test.ts (verify no network traffic during feedback operations) **[COMPLETED 2026-02-06: All 8 tests passing ✅]**
 
 ### Data Layer for US3 (UPDATED for plan v2.7)
 
-- [~] T058 [US3] **[AFFECTED BY v2.7]** Refactor ActionItem entity to include feedback fields in src/main/database/entities/ActionItem.ts (add feedback_type ENUM field, remove separate UserFeedback table per plan v2.7)
-- [ ] T059 [P] [US3] Update DataRetentionConfig entity in src/main/database/entities/DataRetentionConfig.ts (feedback_retention_days with 30/90/180/365/-1 options where -1 = permanent, same as email metadata per plan v2.7)
+- [X] T058 [US3] **[COMPLETED 2026-02-06]** Refactor ActionItem entity to include feedback fields in src/main/database/entities/ActionItem.ts (add feedback_type ENUM field, remove separate UserFeedback table per plan v2.7) **[IMPLEMENTED: feedback_type encrypted with AES-256-GCM, integrated into todo_items table]**
+- [X] T059 [P] [US3] **[COMPLETED 2026-02-06]** Update DataRetentionConfig entity in src/main/database/entities/DataRetentionConfig.ts (feedback_retention_days with 30/90/180/365/-1 options where -1 = permanent, same as email metadata per plan v2.7) **[IMPLEMENTED: Complete DataRetentionConfigRepository with retention validation, UI helpers, and export functionality]**
 
 ### Feedback UI Components for US3
 
-- [ ] T060 [P] [US3] Create FeedbackButtons component in src/renderer/src/components/reports/FeedbackButtons.tsx (✓ and ✗ buttons with tooltips "✓ 标记准确" and "✗ 标记错误")
-- [ ] T061 [US3] Create FeedbackDialog component in src/renderer/src/components/FeedbackDialog.tsx (privacy notice, 4 error reason options: content_error/priority_error/not_actionable/source_error)
-- [ ] T062 [P] [US3] Create FeedbackSettings component in src/renderer/src/components/settings/FeedbackSettings.tsx ("本月修正X处错误", retention selector: 30/90/180/365/永久, export/destroy buttons)
+- [X] T060 [P] [US3] Create FeedbackButtons component in src/renderer/src/components/reports/FeedbackButtons.tsx (✓ and ✗ buttons with tooltips "✓ 标记准确" and "✗ 标记错误")
+- [X] T061 [US3] Create FeedbackDialog component in src/renderer/src/components/FeedbackDialog.tsx (privacy notice, 4 error reason options: content_error/priority_error/not_actionable/source_error)
+- [X] T062 [P] [US3] Create FeedbackSettings component in src/renderer/src/components/settings/FeedbackSettings.tsx ("本月修正X处错误", retention selector: 30/90/180/365/永久, export/destroy buttons)
 
 ### Feedback IPC Handlers for US3 (UPDATED for plan v2.7)
 
