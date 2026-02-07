@@ -144,13 +144,14 @@ function createMockParsedEmail(overrides?: Partial<ParsedEmail>): ParsedEmail {
     email_hash: 'abc123def4567890123456789012345678901234567890123456789012345678',
     message_id: 'test-message-id@example.com',
     from: 'sender@example.com',
-    to: ['recipient@example.com'],
     subject: 'Test Email Subject',
     date: '2026-01-31T10:00:00Z',
     body: 'This is a test email body with action items. Please complete the project report by Friday.',
     attachments: [],
-    search_string: 'from:sender@example.com subject:"Test Email" date:2026-01-31',
     file_path: '/path/to/email.eml',
+    format: 'eml',
+    extract_status: 'success',
+    search_string: 'from:sender@example.com subject:"Test Email" date:2026-01-31',
     ...overrides,
   };
 }
@@ -179,22 +180,23 @@ describe('EmailProcessor', () => {
   let tempDir: string;
 
   beforeAll(async () => {
-    // Initialize in-memory database for tests
-    await DatabaseManager.initialize(':memory:');
+    // Initialize database for tests (uses default path; app.getPath is from Electron)
+    DatabaseManager.initialize();
 
     // Load database schema
     const db = DatabaseManager.getDatabase();
-    const schemaPath = path.join(__dirname, '../../../main/database/migrations/001_initial_schema.sql');
+    const schemaPath = path.join(__dirname, '../../../src/main/database/migrations/001_initial_schema.sql');
     const schema = await fs.readFile(schemaPath, 'utf-8');
     db.exec(schema);
 
     // Initialize ConfigManager for tests with a generated key
-    const { generateKey } = await import('../../../main/config/encryption.js');
+    const { generateKey } = await import('../../../src/main/config/encryption.js');
     const testKey = await generateKey();
     // Store the key directly in ConfigManager for testing
-    (ConfigManager as any).encryptionKey = testKey;
-    (ConfigManager as any).isInitialized = true;
-    (ConfigManager as any).hmacKey = testKey; // Reuse same key for HMAC in tests
+    const config = ConfigManager as unknown as { encryptionKey: unknown; isInitialized: boolean; hmacKey: unknown };
+    config.encryptionKey = testKey;
+    config.isInitialized = true;
+    config.hmacKey = testKey; // Reuse same key for HMAC in tests
 
     // Create a test daily report (required by foreign key constraint)
     const testContent = JSON.stringify({ completed_items: [], pending_items: [], summary: 'Test report' });
@@ -243,11 +245,6 @@ describe('EmailProcessor', () => {
   describe('Batch Processing', () => {
     it('should process a batch of emails successfully', async () => {
       // Arrange
-      const emailFiles = [
-        'tests/fixtures/email1.eml',
-        'tests/fixtures/email2.eml',
-        'tests/fixtures/email3.eml',
-      ];
       const reportDate = '2026-01-31';
       const mode = 'remote';
 
@@ -295,7 +292,7 @@ describe('EmailProcessor', () => {
 
     it('should skip duplicate emails in same batch', async () => {
       // Arrange
-      const duplicateEmail = createMockParsedEmail({
+      createMockParsedEmail({
         file_path: '/path/to/duplicate.eml',
         email_hash: 'duplicate-hash-123456789012345678901234567890123456789012345678901234',
       });

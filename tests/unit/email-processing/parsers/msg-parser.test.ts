@@ -13,11 +13,15 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MsgParser } from '@/email/parsers/MsgParser';
+import { logger } from '@/config/logger';
 import * as crypto from 'crypto';
 
-// Mock msg-extractor
+// Hoist mock so we never require the optional dependency (may be not installed)
+const mockExtractMsg = vi.hoisted(() => vi.fn());
+
+// Mock msg-extractor so tests run without optional dependency
 vi.mock('msg-extractor', () => ({
-  extractMsg: vi.fn(),
+  extractMsg: mockExtractMsg,
 }));
 
 // Mock logger
@@ -32,14 +36,9 @@ vi.mock('@/config/logger', () => ({
 
 describe('MsgParser', () => {
   let parser: MsgParser;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mockExtractMsg: any;
 
   beforeEach(() => {
     parser = new MsgParser();
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { extractMsg } = require('msg-extractor');
-    mockExtractMsg = extractMsg;
     vi.clearAllMocks();
   });
 
@@ -60,7 +59,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -78,7 +77,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -97,7 +96,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -113,7 +112,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -129,7 +128,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -156,7 +155,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -182,7 +181,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result1 = await parser.parse('/test/email1.msg');
       const result2 = await parser.parse('/test/email2.msg');
@@ -204,7 +203,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -223,7 +222,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -242,7 +241,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -260,7 +259,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -282,7 +281,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -302,7 +301,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -320,7 +319,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const beforeTime = new Date().toISOString();
       const result = await parser.parse('/test/email.msg');
@@ -344,7 +343,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -362,7 +361,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -396,7 +395,7 @@ describe('MsgParser', () => {
         attachments: mockAttachments,
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -433,7 +432,7 @@ describe('MsgParser', () => {
         attachments: mockAttachments,
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -456,7 +455,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -477,7 +476,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -486,6 +485,8 @@ describe('MsgParser', () => {
     });
 
     it('should prefer text body over HTML', async () => {
+      // Body must be ≥200 chars per FR-013 for parser to return it
+      const plainBody = 'Plain text content.' + 'x'.repeat(200);
       const mockMsg = {
         headers: {
           'message-id': '<test@example.com>',
@@ -493,19 +494,21 @@ describe('MsgParser', () => {
         date: '2024-02-05T10:00:00Z',
         sender: 'sender@example.com',
         subject: 'Body Test',
-        body: 'Plain text content',
+        body: plainBody,
         htmlBody: '<html><body>HTML content</body></html>',
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
-      expect(result.body).toBe('Plain text content');
+      expect(result.body).toBe(plainBody);
     });
 
     it('should strip HTML tags when only HTML body available', async () => {
+      // Stripped body must be ≥200 chars per FR-013
+      const htmlBodyContent = '<div><p>Hello <strong>world</strong></p></div>' + 'y'.repeat(200);
       const mockMsg = {
         headers: {
           'message-id': '<test@example.com>',
@@ -513,18 +516,19 @@ describe('MsgParser', () => {
         date: '2024-02-05T10:00:00Z',
         sender: 'sender@example.com',
         subject: 'HTML Test',
-        htmlBody: '<div><p>Hello <strong>world</strong></p></div>',
+        htmlBody: htmlBodyContent,
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
-      expect(result.body).not.toContain('<');
-      expect(result.body).not.toContain('>');
-      expect(result.body).toContain('Hello');
-      expect(result.body).toContain('world');
+      expect(result.body).toBeDefined();
+      expect(result.body!).not.toContain('<');
+      expect(result.body!).not.toContain('>');
+      expect(result.body!).toContain('Hello');
+      expect(result.body!).toContain('world');
     });
 
     it('should truncate body to 100k characters', async () => {
@@ -540,7 +544,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -561,7 +565,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -582,7 +586,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -601,7 +605,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 
@@ -639,8 +643,6 @@ describe('MsgParser', () => {
     });
 
     it('should log error on extraction failure', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { logger } = require('@/config/logger');
       mockExtractMsg.mockRejectedValue(new Error('Extraction failed'));
 
       try {
@@ -673,7 +675,7 @@ describe('MsgParser', () => {
         ],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/complete.msg');
 
@@ -725,7 +727,7 @@ describe('MsgParser', () => {
           attachments: [],
         };
 
-        mockExtractMsg.mockResolvedValue(mockMsg);
+        mockExtractMsg!.mockResolvedValue(mockMsg);
         const result = await parser.parse('/test/email.msg');
 
         if (result.message_id) {
@@ -746,7 +748,7 @@ describe('MsgParser', () => {
         attachments: [],
       };
 
-      mockExtractMsg.mockResolvedValue(mockMsg);
+      mockExtractMsg!.mockResolvedValue(mockMsg);
 
       const result = await parser.parse('/test/email.msg');
 

@@ -13,34 +13,27 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { HtmlParser } from '@/email/parsers/HtmlParser';
+import { logger } from '@/config/logger';
 import * as crypto from 'crypto';
 
-// Module-level containers for mock references (defined before mocks to avoid hoisting issues)
-const mockRefs = {
-  cheerioLoad: null as any,
-  readFile: null as any,
-};
+// Hoist mock refs so vi.mock factories can use them (vitest hoists vi.mock before variable init)
+const mockRefs = vi.hoisted(() => ({
+  cheerioLoad: vi.fn(),
+  readFile: vi.fn(),
+}));
 
-// Mock cheerio - define inline to avoid hoisting issues
-vi.mock('cheerio', () => {
-  const mockLoad = vi.fn();
-  mockRefs.cheerioLoad = mockLoad;
-  return {
-    default: mockLoad,
-    load: mockLoad,
-  };
-});
+// Mock cheerio
+vi.mock('cheerio', () => ({
+  default: mockRefs.cheerioLoad,
+  load: mockRefs.cheerioLoad,
+}));
 
 // Mock fs with promises - matching the import pattern used in HtmlParser
-vi.mock('fs', () => {
-  const mockReadFile = vi.fn();
-  mockRefs.readFile = mockReadFile;
-  return {
-    promises: {
-      readFile: mockReadFile,
-    },
-  };
-});
+vi.mock('fs', () => ({
+  promises: {
+    readFile: mockRefs.readFile,
+  },
+}));
 
 // Mock logger
 vi.mock('@/config/logger', () => ({
@@ -58,19 +51,18 @@ describe('HtmlParser', () => {
   beforeEach(() => {
     parser = new HtmlParser();
 
-    // Set default mock behaviors
+    // Set default mock behaviors: load() must return a callable $ (selector) => element
     mockRefs.readFile.mockResolvedValue('');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockRefs.cheerioLoad.mockImplementation(() => ({} as any));
+    const empty = { attr: () => undefined, text: () => '', first: () => ({ attr: () => undefined, text: () => '' }) };
+    mockRefs.cheerioLoad.mockImplementation(() => ((_selector: string) => empty));
   });
 
   afterEach(() => {
-    // Reset mocks
     mockRefs.readFile.mockReset();
     mockRefs.readFile.mockResolvedValue('');
     mockRefs.cheerioLoad.mockReset();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockRefs.cheerioLoad.mockImplementation(() => ({} as any));
+    const empty = { attr: () => undefined, text: () => '', first: () => ({ attr: () => undefined, text: () => '' }) };
+    mockRefs.cheerioLoad.mockImplementation(() => ((_selector: string) => empty));
   });
 
   describe('Message-ID Extraction', () => {
@@ -565,17 +557,13 @@ describe('HtmlParser', () => {
 
       mockRefs.readFile.mockResolvedValue(html);
 
+      const el0 = { text: () => 'document.pdf', attr: (name: string) => (name === 'href' ? 'attachment/document.pdf' : undefined) };
+      const el1 = { text: () => 'image.png', attr: (name: string) => (name === 'href' ? 'attach/image.png' : undefined) };
       const $ = mockCheerioInstance({
         'a[href*="attachment"], a[href*="attach"]': {
-          each: (callback: any) => {
-            callback.call(
-              { text: (text: string) => text, attr: (name: string) => (name === 'href' ? 'attachment/document.pdf' : undefined) },
-              0
-            );
-            callback.call(
-              { text: (text: string) => text, attr: (name: string) => (name === 'href' ? 'attach/image.png' : undefined) },
-              1
-            );
+          each: (callback: (i: number, el: unknown) => void) => {
+            callback(0, el0);
+            callback(1, el1);
           },
         },
         'body': { text: () => 'V'.repeat(300), length: 1 },
@@ -666,8 +654,6 @@ describe('HtmlParser', () => {
     });
 
     it('should log error on parsing failure', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { logger } = require('@/config/logger');
       mockRefs.readFile.mockRejectedValue(new Error('Parse error'));
 
       try {
@@ -811,13 +797,20 @@ describe('HtmlParser', () => {
   });
 });
 
-// Helper function to create a mock cheerio instance
-function mockCheerioInstance(selectors: Record<string, any>): any {
-  return {
-    ...Object.entries(selectors).reduce((acc, [selector, impl]) => {
-      acc[selector] = impl;
-      return acc;
-    }, {} as Record<string, any>),
-    length: 1,
+// Helper: cheerio.load() returns $ where $(selector) returns a collection with .each(). Support $(element) for callbacks.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock accepts partial cheerio-like objects
+function mockCheerioInstance(selectors: Record<string, any>): (selector: string | any) => any {
+  const empty = { attr: () => undefined, text: () => '', first: () => empty };
+  return (sel: string | unknown) => {
+    if (typeof sel !== 'string') return sel;
+    const impl = selectors[sel] ?? empty;
+    const out = {
+      ...impl,
+      each: typeof impl.each === 'function' ? impl.each : (fn: (i: number, el: unknown) => void) => {
+        fn(0, impl);
+        return out;
+      },
+    };
+    return out;
   };
 }

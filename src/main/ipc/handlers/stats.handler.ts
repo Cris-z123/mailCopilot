@@ -211,7 +211,10 @@ async function getFeedbackStats(month: string): Promise<{
     // Decrypt feedback_type
     if (row.feedback_type) {
       try {
-        const decryptedFeedback = await ConfigManager.decryptField(row.feedback_type);
+        const feedbackTypeEncrypted = Buffer.isBuffer(row.feedback_type)
+          ? row.feedback_type.toString('utf-8')
+          : row.feedback_type;
+        const decryptedFeedback = await ConfigManager.decryptField(feedbackTypeEncrypted);
 
         // If feedback_type is decrypted successfully, it was marked incorrect
         if (decryptedFeedback) {

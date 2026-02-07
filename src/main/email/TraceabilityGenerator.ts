@@ -10,7 +10,7 @@
  */
 
 import { logger } from '@/config/logger';
-import { ParsedEmail } from './parsers/EmailParser';
+import type { ParsedEmail } from './parsers/EmailParser';
 import { extractDateOnly as extractDateOnlyUtil, getCurrentDateYYYYMMDD } from '@shared/utils/dateUtils';
 
 /**

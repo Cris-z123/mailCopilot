@@ -234,6 +234,10 @@ export const ItemSourceRefSchema = z.object({
   file_path: z.string(),
   evidence_text: z.string(),
   confidence: z.number(),
+  message_id: z.string().optional(),
+  sender_original: z.string().optional(),
+  subject_desensitized: z.string().optional(),
+  date: z.string().optional(),
 });
 
 export type ItemSourceRef = z.infer<typeof ItemSourceRefSchema>;

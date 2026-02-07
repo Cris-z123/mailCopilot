@@ -17,7 +17,7 @@
 import { createHash } from 'crypto';
 import { logger } from '@/config/logger';
 import { EmailSourceRepository } from '@/database/entities/EmailSource';
-import { ParsedEmail } from './parsers/EmailParser';
+import type { ParsedEmail } from './parsers/EmailParser';
 
 /**
  * Result of duplicate check
@@ -144,8 +144,8 @@ export class DuplicateDetector {
           is_cross_batch: true,
           existing_record: {
             email_hash: existing.email_hash,
-            processed_at: existing.processed_at,
-            last_seen_at: existing.last_seen_at,
+            processed_at: existing.processed_at ?? 0,
+            last_seen_at: existing.last_seen_at ?? 0,
           },
         };
       }

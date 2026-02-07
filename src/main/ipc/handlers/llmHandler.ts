@@ -12,8 +12,8 @@ import { logger } from '@/config/logger.js';
 import { IPC_CHANNELS } from '../channels.js';
 import { EmailProcessor } from '@/email/EmailProcessor.js';
 import type { LLMAdapter } from '@/llm/LLMAdapter.js';
-import { validateData, safeValidateData } from '@shared/schemas/validation.js';
-import type { LLMGenerateRequest, LLMGenerateResponse, ProcessedEmail } from '@shared/schemas/validation.js';
+import { safeValidateData, LLMGenerateRequestSchema } from '@shared/schemas/validation.js';
+import type { LLMGenerateResponse, ProcessedEmail } from '@shared/schemas/validation.js';
 
 /**
  * LLM handler state
@@ -85,7 +85,7 @@ export function registerLLMHandlers(llmAdapter: LLMAdapter): void {
     try {
       // Validate request schema
       const validationResult = safeValidateData(
-        LLMGenerateRequestSchemaInternal,
+        LLMGenerateRequestSchema,
         request
       );
 
@@ -131,7 +131,7 @@ export function registerLLMHandlers(llmAdapter: LLMAdapter): void {
       }
 
       // Extract file paths from email inputs
-      const emailFiles = emails.map((e) => e.filePath);
+      const emailFiles = emails.map((e: { filePath: string }) => e.filePath);
 
       // Process batch
       const result = await state.processor.processBatch(emailFiles, reportDate, mode);
@@ -233,7 +233,7 @@ function mapProcessorResultToResponse(
     success: boolean;
     error?: string;
   },
-  requestId: string
+  _requestId: string
 ): LLMGenerateResponse {
   // Map items to ItemSchema format
   const items = result.items.map((item) => ({
@@ -259,7 +259,6 @@ function mapProcessorResultToResponse(
     processed_emails,
     skipped_emails: result.batch_info.skipped_emails,
     reprocessed_emails,
-    error: result.error,
   };
 }
 
@@ -272,81 +271,8 @@ function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
-/**
- * Internal LLM generate request schema
- *
- * Matches IPC schema from shared/schemas/validation.ts
- */
-const LLMGenerateRequestSchemaInternal = {
-  emails: [
-    {
-      filePath: 'string',
-      format: 'eml|msg|pst|ost|mbox|html',
-      content: 'string?',
-    },
-  ],
-  mode: 'local|remote',
-  reportDate: '\\d{4}-\\d{2}-\\d{2}',
-} as const;
-
-/**
- * Validate LLM generate request
- *
- * @param request - Request to validate
- * @returns Validation result
- */
-export function validateLLMGenerateRequest(request: unknown): {
-  valid: boolean;
-  error?: string;
-  data?: LLMGenerateRequest;
-} {
-  try {
-    // Basic validation (Zod schema would be better)
-    if (typeof request !== 'object' || request === null) {
-      return {
-        valid: false,
-        error: 'Request must be an object',
-      };
-    }
-
-    const req = request as Record<string, unknown>;
-
-    if (!Array.isArray(req.emails)) {
-      return {
-        valid: false,
-        error: 'emails field must be an array',
-      };
-    }
-
-    if (req.mode !== 'local' && req.mode !== 'remote') {
-      return {
-        valid: false,
-        error: 'mode must be "local" or "remote"',
-      };
-    }
-
-    if (typeof req.reportDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(req.reportDate)) {
-      return {
-        valid: false,
-        error: 'reportDate must be in YYYY-MM-DD format',
-      };
-    }
-
-    return {
-      valid: true,
-      data: req as unknown as LLMGenerateRequest,
-    };
-  } catch (error) {
-    return {
-      valid: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
 export default {
   registerLLMHandlers,
   unregisterLLMHandlers,
   getLLMHandlerState,
-  validateLLMGenerateRequest,
 };

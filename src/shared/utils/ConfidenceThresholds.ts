@@ -50,7 +50,7 @@ export interface ConfidenceSummary {
  * Item with confidence score
  */
 export interface ConfidenceItem {
-  id?: number;
+  id?: number | string;
   confidence: number;
   [key: string]: unknown;
 }

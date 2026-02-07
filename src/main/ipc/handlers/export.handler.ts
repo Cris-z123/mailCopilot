@@ -7,7 +7,7 @@
  * @module main/ipc/handlers/export.handler
  */
 
-import { ipcMain, dialog } from 'electron';
+import { ipcMain, dialog, BrowserWindow } from 'electron';
 import { logger } from '@/config/logger.js';
 import DatabaseManager from '@/database/Database.js';
 import { ConfigManager } from '@/config/ConfigManager.js';
@@ -90,7 +90,7 @@ export function registerExportHandlers(): void {
       });
 
       // Show save dialog for user to choose export location
-      const window = event.sender.getOwnerWindow();
+      const window = BrowserWindow.fromWebContents(event.sender);
 
       if (!window) {
         throw new Error('Unable to access window for save dialog');
@@ -261,14 +261,20 @@ async function queryFeedbackData(
   const feedbackData = await Promise.all(
     rows.map(async (row) => {
       try {
-        // Decrypt content
-        const content = await ConfigManager.decryptField(row.content_encrypted);
+        // Decrypt content (convert Buffer to string if needed)
+        const contentEncrypted = Buffer.isBuffer(row.content_encrypted)
+          ? row.content_encrypted.toString('utf-8')
+          : row.content_encrypted;
+        const content = await ConfigManager.decryptField(contentEncrypted);
 
         // Decrypt feedback_type
         let feedback_type: string | null = null;
         if (row.feedback_type) {
           try {
-            const decryptedFeedback = await ConfigManager.decryptField(row.feedback_type);
+            const feedbackTypeEncrypted = Buffer.isBuffer(row.feedback_type)
+              ? row.feedback_type.toString('utf-8')
+              : row.feedback_type;
+            const decryptedFeedback = await ConfigManager.decryptField(feedbackTypeEncrypted);
             // If decryption succeeds and returns a value, it's incorrect feedback
             // If decryption returns null/empty, it was marked as correct
             feedback_type = decryptedFeedback || null;

@@ -14,7 +14,8 @@
   },
   "include": [
     "src/main/**/*",
-    "src/shared/**/*"
+    "src/shared/**/*",
+    "src/types/**/*",
   ],
   "exclude": [
     "node_modules",

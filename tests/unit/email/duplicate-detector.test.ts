@@ -18,7 +18,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DuplicateDetector } from '@/email/DuplicateDetector';
-import { ParsedEmail } from '@/email/parsers/EmailParser';
+import type { ParsedEmail } from '@/email/parsers/EmailParser';
 import { EmailSourceRepository, ExtractStatus } from '@/database/entities/EmailSource';
 import { logger } from '@/config/logger';
 
@@ -35,8 +35,8 @@ vi.mock('@/database/entities/EmailSource', () => ({
   },
 }));
 
-// Mock logger
-vi.mock('../../../main/config/logger', () => ({
+// Mock logger (use same path as source @/config/logger so DuplicateDetector gets the mock)
+vi.mock('@/config/logger', () => ({
   logger: {
     debug: vi.fn(),
     info: vi.fn(),

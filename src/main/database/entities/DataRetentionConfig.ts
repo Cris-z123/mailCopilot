@@ -58,7 +58,6 @@ const VALID_RETENTION_DAYS = [-1, 30, 90, 180, 365];
  * Configuration is stored in user_config table with field-level encryption.
  */
 export class DataRetentionConfigRepository {
-  private static readonly TABLE_NAME = 'user_config';
   private static readonly KEY_EMAIL_RETENTION = 'email_metadata_retention_days';
   private static readonly KEY_FEEDBACK_RETENTION = 'feedback_retention_days';
   private static readonly KEY_LAST_CLEANUP = 'last_cleanup_at';

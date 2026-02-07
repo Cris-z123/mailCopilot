@@ -100,7 +100,7 @@ describe('Local-Only Feedback Storage (T057)', () => {
 
       try {
         await encryption.encrypt(testKey, feedbackType);
-      } catch (e) {
+      } catch {
         // Encryption might fail due to mocking, but we're only checking for network requests
       }
 
@@ -137,7 +137,7 @@ describe('Local-Only Feedback Storage (T057)', () => {
 
       try {
         await encryption.decrypt(testKey, encryptedData);
-      } catch (e) {
+      } catch {
         // Decryption might fail due to mocking
       }
 
@@ -189,7 +189,7 @@ describe('Local-Only Feedback Storage (T057)', () => {
       ];
 
       // Simulate each operation
-      feedbackOperations.forEach((operation) => {
+      feedbackOperations.forEach((_operation) => {
         // In real implementation, these would be ActionItem operations
         // For this test, we just verify no network calls are made
         networkRequests = [];
@@ -229,11 +229,11 @@ describe('Local-Only Feedback Storage (T057)', () => {
       networkRequests = [];
 
       // Test all encryption functions
-      const testKey = {} as any;
-
       try {
         encryption.clearBuffer(new Uint8Array(10));
-      } catch (e) {}
+      } catch {
+        // clearBuffer may throw under mocks
+      }
 
       // Buffer operations should not trigger network requests
       expect(networkRequests.length).toBe(0);
