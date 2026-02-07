@@ -256,7 +256,7 @@ export class PstParser implements EmailParser {
       if (!isNaN(date.getTime())) {
         return formatISO8601(date);
       }
-    } catch (error) {
+    } catch {
       logger.debug('PstParser', 'Failed to parse date, using current time');
     }
     return formatISO8601(new Date());

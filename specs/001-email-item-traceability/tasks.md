@@ -252,15 +252,15 @@
 
 ### Parser Tests for US4
 
-- [ ] T071 [P] [US4] Unit test for MsgParser in tests/unit/email-processing/parsers/msg-parser.test.ts (Message-ID extraction rate ≥85%, SHA-256 fallback)
-- [ ] T072 [P] [US4] Unit test for PstParser in tests/unit/email-processing/parsers/pst-parser.test.ts (archive extraction, Message-ID extraction rate ≥90%)
-- [ ] T073 [P] [US4] Unit test for MboxParser in tests/unit/email-processing/parsers/mbox-parser.test.ts (From_ delimiter separation, offset recording, Message-ID extraction rate ≥95%)
-- [ ] T074 [P] [US4] Unit test for HtmlParser in tests/unit/email-processing/parsers/html-parser.test.ts (metadata extraction, low Message-ID rate ~30%, confidence cap at 0.6)
+- [X] T071 [P] [US4] Unit test for MsgParser in tests/unit/email-processing/parsers/msg-parser.test.ts (Message-ID extraction rate ≥85%, SHA-256 fallback) **[COMPLETED 2026-02-07: 34 test cases covering Message-ID extraction, SHA-256 fallback, metadata extraction, body truncation, error handling, and SC-004 compliance]**
+- [X] T072 [P] [US4] Unit test for PstParser in tests/unit/email-processing/parsers/pst-parser.test.ts (archive extraction, Message-ID extraction rate ≥90%) **[COMPLETED 2026-02-07: 27 test cases covering readpst extraction, .eml parsing from archive, metadata extraction, cleanup, and SC-004 compliance]**
+- [X] T073 [P] [US4] Unit test for MboxParser in tests/unit/email-processing/parsers/mbox-parser.test.ts (From_ delimiter separation, offset recording, Message-ID extraction rate ≥95%) **[COMPLETED 2026-02-07: 32 test cases covering From_ delimiter splitting, header parsing, body extraction, edge cases, and SC-004 compliance]**
+- [X] T074 [P] [US4] Unit test for HtmlParser in tests/unit/email-processing/parsers/html-parser.test.ts (metadata extraction, low Message-ID rate ~30%, confidence cap at 0.6) **[COMPLETED 2026-02-07: 27 test cases covering meta tag extraction, body extraction from HTML, attachment detection, low Message-ID rate compliance, and FR-011 confidence cap]**
 
 ### Format Detection for US4
 
 - [X] T075 [US4] Implement format detection in src/main/email/parsers/ParserFactory.ts (detect format from file extension, delegate to appropriate parser) **[COMPLETED 2026-02-07: Factory pattern with automatic format detection and parser selection]**
-- [ ] T076 [P] [US4] Unit test for format detection in tests/unit/email-processing/parser-dispatch.test.ts (correct parser selection for .eml/.msg/.pst/.mbox/.html files)
+- [X] T076 [P] [US4] Unit test for format detection in tests/unit/email-processing/parser-dispatch.test.ts (correct parser selection for .eml/.msg/.pst/.mbox/.html files) **[COMPLETED 2026-02-07: 38 test cases covering format detection, parser selection, extraction rate targets, max confidence (FR-011), and edge cases]**
 
 **Checkpoint**: User Story 4 complete - all 5 email formats supported with specified extraction rates
 
@@ -390,15 +390,16 @@
 - **User Story 1 (MVP)**: 30 tasks (30 completed ✅)
 - **User Story 2**: 7 tasks (7 completed ✅)
 - **User Story 3**: 11 tasks (11 completed ✅)
-- **User Story 4**: 10 tasks (0 completed, 10 pending)
+- **User Story 4**: 10 tasks (10 completed ✅) **[COMPLETED 2026-02-07: T067-T076 all parsers and tests implemented]**
 - **User Story 5**: 13 tasks (0 completed, 13 pending, 2 updated for v2.7)
 - **User Story 6**: 7 tasks (0 completed, 7 pending, 3 updated for v2.7)
 - **Polish**: 20 tasks (4 completed, 16 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 62/118 tasks (52.5%)
-**Remaining**: 56/118 tasks (47.5%)
+**Completed**: 72/118 tasks (61.0%)
+**Remaining**: 46/118 tasks (39.0%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
+**User Story 4**: ✅ COMPLETE - All 10 tasks finished (T067-T076)
 
 ### Plan v2.7 Impact Summary
 

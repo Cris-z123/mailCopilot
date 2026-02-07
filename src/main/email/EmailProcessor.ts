@@ -605,7 +605,7 @@ export class EmailProcessor {
           search_string: email.search_string || '',
           file_path: email.file_path || '',
         });
-      } catch (error) {
+      } catch {
         // Email source might already exist (cross-batch duplicate)
         logger.debug('EmailProcessor', 'Email source already exists, skipping', {
           emailHash: email.email_hash.substring(0, 16) + '...',

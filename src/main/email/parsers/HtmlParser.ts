@@ -262,7 +262,7 @@ export class HtmlParser implements EmailParser {
           if (!isNaN(date.getTime())) {
             return formatISO8601(date);
           }
-        } catch (error) {
+        } catch {
           // Continue to next attempt
         }
       }
@@ -277,7 +277,7 @@ export class HtmlParser implements EmailParser {
         if (!isNaN(date.getTime())) {
           return formatISO8601(date);
         }
-      } catch (error) {
+      } catch {
         // Fall through to fallback
       }
     }
