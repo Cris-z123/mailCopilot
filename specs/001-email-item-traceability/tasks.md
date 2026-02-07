@@ -226,10 +226,10 @@
 
 ### Feedback IPC Handlers for US3 (UPDATED for plan v2.7)
 
-- [~] T063 [US3] **[AFFECTED BY v2.7]** Update IPC handler for feedback submission in src/main/ipc/handlers/feedback.handler.ts (store feedback in todo_items.feedback_type field with encryption per plan v2.7)
-- [ ] T064 [P] [US3] Implement IPC handler for feedback statistics in src/main/ipc/handlers/stats.handler.ts (query error corrections this month from todo_items, aggregate feedback)
-- [ ] T065 [P] [US3] Implement IPC handler for feedback export in src/main/ipc/handlers/export.handler.ts (export unencrypted feedback data as file)
-- [ ] T066 [P] [US3] Implement IPC handler for feedback destruction in src/main/ipc/handlers/cleanup.handler.ts (permanent deletion of feedback_type values with confirmation per plan v2.7)
+- [X] T063 [US3] **[COMPLETED 2026-02-07]** Update IPC handler for feedback submission in src/main/ipc/handlers/feedback.handler.ts (store feedback in todo_items.feedback_type field with encryption per plan v2.7) **[IMPLEMENTED: registerFeedbackHandlers() with validation, encryption, and error handling]**
+- [X] T064 [P] [US3] **[COMPLETED 2026-02-07]** Implement IPC handler for feedback statistics in src/main/ipc/handlers/stats.handler.ts (query error corrections this month from todo_items, aggregate feedback) **[IMPLEMENTED: registerStatsHandlers() with monthly aggregation and decryption]**
+- [X] T065 [P] [US3] **[COMPLETED 2026-02-07]** Implement IPC handler for feedback export in src/main/ipc/handlers/export.handler.ts (export unencrypted feedback data as file) **[IMPLEMENTED: registerExportHandlers() with JSON/CSV export and save dialog]**
+- [X] T066 [P] [US3] **[COMPLETED 2026-02-07]** Implement IPC handler for feedback destruction in src/main/ipc/handlers/cleanup.handler.ts (permanent deletion of feedback_type values with confirmation per plan v2.7) **[IMPLEMENTED: registerCleanupHandlers() with transaction-wrapped deletion]**
 
 **Checkpoint**: User Story 3 complete - users can provide feedback locally, data is encrypted, export/destroy functions work correctly
 
@@ -388,15 +388,15 @@
 - **Setup**: 9 tasks (9 completed ✅)
 - **Foundational**: 12 tasks (12 completed ✅)
 - **User Story 1 (MVP)**: 30 tasks (30 completed ✅)
-- **User Story 2**: 7 tasks (0 completed, 7 pending)
-- **User Story 3**: 11 tasks (0 completed, 11 pending, 3 affected by v2.7)
+- **User Story 2**: 7 tasks (7 completed ✅)
+- **User Story 3**: 11 tasks (11 completed ✅)
 - **User Story 4**: 10 tasks (0 completed, 10 pending)
 - **User Story 5**: 13 tasks (0 completed, 13 pending, 2 updated for v2.7)
 - **User Story 6**: 7 tasks (0 completed, 7 pending, 3 updated for v2.7)
-- **Polish**: 20 tasks (0 completed, 20 pending, 5 new for v2.7 frontend stack + constitution compliance)
+- **Polish**: 20 tasks (4 completed, 16 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 51/118 tasks (43.2%)
-**Remaining**: 67/118 tasks (56.8%)
+**Completed**: 62/118 tasks (52.5%)
+**Remaining**: 56/118 tasks (47.5%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
 

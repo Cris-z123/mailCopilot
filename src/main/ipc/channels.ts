@@ -30,6 +30,7 @@ export const IPC_CHANNELS = {
   // Feedback submission
   FEEDBACK_SUBMIT: 'feedback:submit',
   FEEDBACK_STATS: 'feedback:stats',
+  FEEDBACK_EXPORT: 'feedback:export',
   FEEDBACK_DESTROY: 'feedback:destroy',
 
   // Onboarding / First-run disclosure

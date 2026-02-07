@@ -368,6 +368,111 @@ export const EmailFetchMetaResponseSchema = z.object({
 export type EmailFetchMetaResponse = z.infer<typeof EmailFetchMetaResponseSchema>;
 
 // =============================================================================
+// Feedback Schemas (US3)
+// =============================================================================
+
+/**
+ * Feedback type enum for user error reporting
+ * Per plan.md FR-022: 4 error categories when user marks item as incorrect
+ */
+export const FeedbackTypeEnum = z.enum(['content_error', 'priority_error', 'not_actionable', 'source_error']);
+
+export type FeedbackType = z.infer<typeof FeedbackTypeEnum>;
+
+/**
+ * Feedback submission request schema
+ * Per plan.md FR-022, FR-023: User feedback on item accuracy
+ */
+export const FeedbackSubmitRequestSchema = z.object({
+  item_id: z.string().uuid(),
+  is_correct: z.boolean(),
+  feedback_type: FeedbackTypeEnum.optional(),
+});
+
+export type FeedbackSubmitRequest = z.infer<typeof FeedbackSubmitRequestSchema>;
+
+/**
+ * Feedback submission response schema
+ */
+export const FeedbackSubmitResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+});
+
+export type FeedbackSubmitResponse = z.infer<typeof FeedbackSubmitResponseSchema>;
+
+/**
+ * Feedback statistics request schema
+ * Per US3: "本月修正X处错误" - Query error corrections this month
+ */
+export const FeedbackStatsRequestSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/).optional(), // YYYY-MM format
+});
+
+export type FeedbackStatsRequest = z.infer<typeof FeedbackStatsRequestSchema>;
+
+/**
+ * Feedback statistics response schema
+ */
+export const FeedbackStatsResponseSchema = z.object({
+  total_feedback_count: z.number(),
+  correct_count: z.number(),
+  incorrect_count: z.number(),
+  error_breakdown: z.record(z.string(), z.number()), // { content_error: 5, priority_error: 2, ... }
+  month: z.string(),
+});
+
+export type FeedbackStatsResponse = z.infer<typeof FeedbackStatsResponseSchema>;
+
+/**
+ * Feedback export request schema
+ * Per US3: Export unencrypted feedback data as file
+ */
+export const FeedbackExportRequestSchema = z.object({
+  format: z.enum(['json', 'csv']),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), // YYYY-MM-DD
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), // YYYY-MM-DD
+  include_correct: z.boolean().optional().default(false), // Only export incorrect by default
+});
+
+export type FeedbackExportRequest = z.infer<typeof FeedbackExportRequestSchema>;
+
+/**
+ * Feedback export response schema
+ */
+export const FeedbackExportResponseSchema = z.object({
+  success: z.boolean(),
+  file_path: z.string(),
+  format: z.enum(['json', 'csv']),
+  item_count: z.number(),
+  message: z.string().optional(),
+});
+
+export type FeedbackExportResponse = z.infer<typeof FeedbackExportResponseSchema>;
+
+/**
+ * Feedback destroy request schema
+ * Per US3: Permanent deletion of feedback data with confirmation
+ */
+export const FeedbackDestroyRequestSchema = z.object({
+  confirm: z.boolean(), // User must confirm
+  item_id: z.string().uuid().optional(), // If not provided, destroy ALL feedback
+});
+
+export type FeedbackDestroyRequest = z.infer<typeof FeedbackDestroyRequestSchema>;
+
+/**
+ * Feedback destroy response schema
+ */
+export const FeedbackDestroyResponseSchema = z.object({
+  success: z.boolean(),
+  destroyed_count: z.number(),
+  message: z.string(),
+});
+
+export type FeedbackDestroyResponse = z.infer<typeof FeedbackDestroyResponseSchema>;
+
+// =============================================================================
 // Helper Functions
 // =============================================================================
 
@@ -399,6 +504,10 @@ export default {
   ConfigSetRequestSchema,
   UpdateCheckRequestSchema,
   EmailFetchMetaRequestSchema,
+  FeedbackSubmitRequestSchema,
+  FeedbackStatsRequestSchema,
+  FeedbackExportRequestSchema,
+  FeedbackDestroyRequestSchema,
   validateData,
   safeValidateData,
 };
