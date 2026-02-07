@@ -292,7 +292,7 @@ export class MboxParser implements EmailParser {
         if (!isNaN(date.getTime())) {
           return formatISO8601(date);
         }
-      } catch (error) {
+      } catch {
         logger.debug('MboxParser', 'Failed to parse date header');
       }
     }
