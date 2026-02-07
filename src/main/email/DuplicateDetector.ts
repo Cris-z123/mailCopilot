@@ -15,9 +15,9 @@
  */
 
 import { createHash } from 'crypto';
-import { logger } from '@/config/logger';
-import { EmailSourceRepository } from '@/database/entities/EmailSource';
-import type { ParsedEmail } from './parsers/EmailParser';
+import { logger } from '../config/logger.js';
+import { EmailSourceRepository } from '../database/entities/EmailSource.js';
+import type { ParsedEmail } from './parsers/EmailParser.js';
 
 /**
  * Result of duplicate check

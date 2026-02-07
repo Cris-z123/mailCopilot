@@ -8,4 +8,4 @@
  *   npm run build:main
  */
 
-require('../dist/main/index.js');
+await import('../dist/main/index.js');

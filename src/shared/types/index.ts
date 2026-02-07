@@ -5,7 +5,7 @@
  * These types provide type safety across IPC boundaries.
  */
 
-import type { Item, TodoItemWithSources, DailyReportSummary, ItemSourceRef } from '@shared/schemas/validation';
+import type { Item, TodoItemWithSources, DailyReportSummary, ItemSourceRef } from '../schemas/validation.js';
 
 // Re-export frequently used types from schemas
 export type { Item, TodoItemWithSources, DailyReportSummary, ItemSourceRef };

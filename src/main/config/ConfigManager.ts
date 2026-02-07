@@ -1,15 +1,23 @@
-import { safeStorage } from 'electron';
-import DatabaseManager from '@/database/Database.js';
+import { app, safeStorage } from 'electron';
+import fs from 'fs';
+import path from 'path';
+import DatabaseManager from '../database/Database.js';
 import * as encryption from './encryption.js';
 import type { CryptoKey } from './encryption.js';
 
-/**
- * Extended SafeStorage interface for keychain-style storage
- * Supports multi-parameter getPassword/setPassword for service + account
- */
-interface ExtendedSafeStorage {
-  getPassword(service: string, account: string): Buffer | undefined;
-  setPassword(service: string, account: string, password: string): void;
+/** Directory for storing encrypted key files (userData) */
+function getKeyStorageDir(): string {
+  return path.join(app.getPath('userData'), 'keys');
+}
+
+/** Path for encrypted encryption key file */
+function getEncryptionKeyPath(): string {
+  return path.join(getKeyStorageDir(), 'encryption.key');
+}
+
+/** Path for encrypted HMAC key file */
+function getHmacKeyPath(): string {
+  return path.join(getKeyStorageDir(), 'hmac.key');
 }
 
 /**
@@ -38,35 +46,45 @@ export class ConfigManager {
     }
 
     try {
-      // Load or generate encryption key
-      const keyData = (safeStorage as unknown as ExtendedSafeStorage).getPassword('mailcopilot', 'encryption_key');
-
-      if (keyData) {
-        // Import existing key
-        this.encryptionKey = await encryption.importKey(keyData.toString());
-      } else {
-        // Generate new key (first run)
-        this.encryptionKey = await encryption.generateKey();
-        const exportedKey = await encryption.exportKey(this.encryptionKey);
-        (safeStorage as unknown as ExtendedSafeStorage).setPassword('mailcopilot', 'encryption_key', exportedKey);
+      if (!safeStorage.isEncryptionAvailable()) {
+        throw new Error('SafeStorage encryption is not available on this system');
       }
 
-      // Generate or load HMAC key
-      const hmacKeyData = (safeStorage as unknown as ExtendedSafeStorage).getPassword('mailcopilot', 'hmac_key');
+      const keyDir = getKeyStorageDir();
+      const encryptionKeyPath = getEncryptionKeyPath();
+      const hmacKeyPath = getHmacKeyPath();
 
-      if (hmacKeyData) {
-        // Note: HMAC keys can't be easily imported/exported with Web Crypto API
-        // For simplicity, we'll regenerate on each restart
-        this.hmacKey = await encryption.generateHMACKey();
+      // Ensure key directory exists
+      if (!fs.existsSync(keyDir)) {
+        fs.mkdirSync(keyDir, { recursive: true });
+      }
+
+      // Load or generate encryption key (using Electron safeStorage + file)
+      if (fs.existsSync(encryptionKeyPath)) {
+        const encrypted = fs.readFileSync(encryptionKeyPath);
+        const plain = safeStorage.decryptString(encrypted);
+        this.encryptionKey = await encryption.importKey(plain);
+      } else {
+        this.encryptionKey = await encryption.generateKey();
+        const exportedKey = await encryption.exportKey(this.encryptionKey);
+        const encrypted = safeStorage.encryptString(exportedKey);
+        fs.writeFileSync(encryptionKeyPath, encrypted);
+      }
+
+      // Load or generate HMAC key
+      if (fs.existsSync(hmacKeyPath)) {
+        const encrypted = fs.readFileSync(hmacKeyPath);
+        const plain = safeStorage.decryptString(encrypted);
+        this.hmacKey = await encryption.importHMACKey(plain);
       } else {
         this.hmacKey = await encryption.generateHMACKey();
         const exportedHmacKey = await encryption.exportKey(this.hmacKey as CryptoKey);
-        (safeStorage as unknown as ExtendedSafeStorage).setPassword('mailcopilot', 'hmac_key', exportedHmacKey);
+        const encrypted = safeStorage.encryptString(exportedHmacKey);
+        fs.writeFileSync(hmacKeyPath, encrypted);
       }
 
       this.isInitialized = true;
     } catch (error) {
-      // Keyring access failure - device environment changed
       console.error('Failed to access encryption key. Device environment may have changed.', error);
       throw new Error('CONFIG_KEY_ACCESS_FAILED');
     }
@@ -92,16 +110,19 @@ export class ConfigManager {
 
     const rows = db.prepare(query).all(...params) as Array<{
       config_key: string;
-      config_value: string;
+      config_value: string | Buffer;
     }>;
 
     const config: Record<string, any> = {};
 
     for (const row of rows) {
       try {
+        const blob = row.config_value;
+        const configValueStr =
+          typeof blob === 'string' ? blob : Buffer.from(blob).toString('utf8');
         const decrypted = await encryption.decryptField(
           this.encryptionKey!,
-          row.config_value
+          configValueStr
         );
         config[row.config_key] = JSON.parse(decrypted);
       } catch (error) {
@@ -122,43 +143,39 @@ export class ConfigManager {
   static async set(updates: Record<string, any>): Promise<string[]> {
     await this.ensureInitialized();
 
-    const updatedKeys: string[] = [];
     const db = DatabaseManager.getDatabase();
+    const entries: Array<{ key: string; encrypted: string }> = [];
 
-    await DatabaseManager.transaction(async () => {
-      for (const [key, value] of Object.entries(updates)) {
-        const jsonValue = JSON.stringify(value);
-        const encrypted = await encryption.encryptField(
-          this.encryptionKey!,
-          jsonValue
-        );
+    for (const [key, value] of Object.entries(updates)) {
+      const jsonValue = JSON.stringify(value);
+      const encrypted = await encryption.encryptField(
+        this.encryptionKey!,
+        jsonValue
+      );
+      await encryption.hmacSha256(this.hmacKey!, jsonValue);
+      entries.push({ key, encrypted });
+    }
 
-        // Compute HMAC for integrity
-        // TODO: Store HMAC in database for tamper detection
-        await encryption.hmacSha256(this.hmacKey!, jsonValue);
-
-        // Check if key exists
+    DatabaseManager.transaction(() => {
+      for (const { key, encrypted } of entries) {
         const existing = db
           .prepare('SELECT config_key FROM user_config WHERE config_key = ?')
           .get(key);
 
+        const blob = Buffer.from(encrypted, 'utf8');
         if (existing) {
-          // Update existing
           db.prepare(
-            'UPDATE user_config SET config_value = ?, updated_at = strftime("%s", "now") WHERE config_key = ?'
-          ).run(encrypted, key);
+            "UPDATE user_config SET config_value = ?, updated_at = strftime('%s', 'now') WHERE config_key = ?"
+          ).run(blob, key);
         } else {
-          // Insert new
           db.prepare(
-            'INSERT INTO user_config (config_key, config_value, updated_at) VALUES (?, ?, strftime("%s", "now"))'
-          ).run(key, encrypted);
+            "INSERT INTO user_config (config_key, config_value, updated_at) VALUES (?, ?, strftime('%s', 'now'))"
+          ).run(key, blob);
         }
-
-        updatedKeys.push(key);
       }
     });
 
-    return updatedKeys;
+    return entries.map((e) => e.key);
   }
 
   /**

@@ -8,8 +8,8 @@
  */
 
 import { z } from 'zod';
-import { logger } from '@/config/logger.js';
-import { ItemSchema, LLMOutputSchema } from '@shared/schemas/validation.js';
+import { logger } from '../config/logger.js';
+import { ItemSchema, LLMOutputSchema } from '../../shared/schemas/validation.js';
 import type { LLMOutput } from './LLMAdapter.js';
 
 /**

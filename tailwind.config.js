@@ -2,7 +2,7 @@
 export default {
   darkMode: ["class"],
   content: [
-    "./renderer/src/**/*.{js,ts,jsx,tsx}",
+    "./src/renderer/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     container: {

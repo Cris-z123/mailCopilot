@@ -16,9 +16,9 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { logger } from '@/config/logger';
-import type { EmailParser, ParsedEmail } from './EmailParser';
-import { formatISO8601 } from '@shared/utils/dateUtils';
+import { logger } from '../../config/logger.js';
+import type { EmailParser, ParsedEmail } from './EmailParser.js';
+import { formatISO8601 } from '../../../shared/utils/dateUtils.js';
 
 const execAsync = promisify(exec);
 

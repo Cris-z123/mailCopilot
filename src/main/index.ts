@@ -1,5 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import DatabaseManager from './database/Database.js';
 import { SchemaManager } from './database/schema.js';
 import { ConfigManager } from './config/ConfigManager.js';
@@ -165,8 +168,8 @@ class Application {
     // Database query history
     ipcMain.handle(IPC_CHANNELS.DB_QUERY_HISTORY, async (_event, _request) => {
       logger.debug('IPC', 'Database query history request received');
-      // TODO: Implement in US1
-      return { reports: [], total: 0 };
+      // TODO: Implement in US1 - query daily_reports / todo_items by reportDate
+      return [];
     });
 
     // Database export
@@ -225,19 +228,7 @@ class Application {
       return { success: false, error: 'NOT_IMPLEMENTED' };
     });
 
-    // Onboarding get status (T018b)
-    ipcMain.handle(IPC_CHANNELS.ONBOARDING_GET_STATUS, async () => {
-      logger.debug('IPC', 'Onboarding status request received');
-      // Handled by registerOnboardingHandlers
-      return { hasAcknowledgedDisclosure: false, disclosureVersion: '1.0.0' };
-    });
-
-    // Onboarding acknowledge (T018b)
-    ipcMain.handle(IPC_CHANNELS.ONBOARDING_ACKNOWLEDGE, async () => {
-      logger.debug('IPC', 'Onboarding acknowledge request received');
-      // Handled by registerOnboardingHandlers
-      return { success: true };
-    });
+    // Onboarding get status / acknowledge are registered by registerOnboardingHandlers() above
 
     logger.info('IPC', 'All IPC handlers registered');
   }

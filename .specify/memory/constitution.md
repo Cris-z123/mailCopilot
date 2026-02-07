@@ -1,16 +1,16 @@
 <!--
 Sync Impact Report:
-- Version change: 1.1.0 → 1.2.0
+- Version change: 1.2.0 → 1.3.0
 - Modified principles:
-  - Principle V (Testing & Quality Standards): Relaxed coverage requirements (85%/80% → 80%/70%)
+  - None
+- Modified sections:
+  - Module Import/Export Standards: Comprehensive rewrite to document layer-specific patterns for main/renderer/shared
 - Added sections:
-  - Technology Stack Constraints: Updated Electron version, added Tailwind CSS v3.4 and shadcn/ui
-  - Module Import/Export Standards: Unified import/export conventions for all code modules
+  - Layer-Specific Export Patterns: Detailed patterns for each architectural layer
+  - Barrel Export Patterns: Where barrels are/aren't used with examples
+  - Architectural Separation Summary: Comparison table of all three layers
 - Removed sections: None
-- Templates requiring updates:
-  ✅ .specify/templates/plan-template.md (Constitution Check section aligned)
-  ✅ .specify/templates/spec-template.md (Functional requirements aligned)
-  ✅ .specify/templates/tasks-template.md (Testing requirements aligned)
+- Templates requiring updates: None (structure only, no principle changes)
 - Follow-up TODOs: None
 -->
 
@@ -151,63 +151,95 @@ All pull requests MUST verify:
 
 ### Module Import/Export Standards
 
-All code modules MUST follow unified import/export conventions to maintain code clarity and prevent circular dependencies:
+All code modules MUST follow unified import/export conventions to maintain code clarity and prevent circular dependencies. The codebase is organized into three distinct layers with different export patterns:
 
-#### Component Export Rules (renderer/src/components)
+#### Layer-Specific Export Patterns
 
-1. **Main Business Components** → Default Export
-   - Use `export default ComponentName` for primary page/view components
-   - Export Props interfaces as named exports: `export interface ComponentProps`
-   - Examples: `ReportView`, `FirstRunDisclosure`
+**1. src/main (Backend Process)**
+- **Primary Pattern**: Default exports for main service classes
+  - Examples: `export default Application`, `export default SchemaManager`, `export default ActionItemRepository`
+- **Named Exports**: Interfaces, types, enums, and utilities
+  - Examples: `export interface ActionItemData`, `export enum ItemType`
+- **Mixed Pattern**: IPC handlers use both named and default exports
+  - Example: `export function registerLLMHandlers()` + `export default { registerLLMHandlers, unregisterLLMHandlers }`
+- **File Extensions**: Use `.js` extensions for imports (compiled output)
+  - Example: `import DatabaseManager from './database/Database.js'`
+- **Architectural Patterns**:
+  - Singleton pattern (database, config, LLM adapters)
+  - Repository pattern (database entities)
+  - Factory pattern (email parsers)
 
-2. **Utility/Child Components** → Named Export
-   - Use `export const ComponentName` for reusable, smaller components
-   - Export Props interfaces as named exports
-   - Examples: `TraceabilityInfo`, `ConfidenceBadge`, `ConfidenceSummaryBanner`
+**2. src/renderer (Frontend Process)**
+- **Primary Pattern**: Named exports for components
+  - Examples: `export { TraceabilityInfo }`, `export { ConfidenceBadge }`
+- **Default Exports**: Stores and services
+  - Examples: `export default IPCClient`, `export default useReportStore`
+- **Barrel Exports**: Organize components via index.ts files
+  - Default: `export { default, default as ReportView } from './ReportView'`
+  - Named: `export { TraceabilityInfo } from './TraceabilityInfo'`
+- **Path Aliases**: Use `@renderer` and `@shared` for clean imports
+  - Example: `import type { DisplayItem } from '@shared/types'`
+- **Architectural Patterns**:
+  - State management with Zustand stores
+  - IPC client abstraction for backend communication
+  - Component barrels for organization
 
-3. **UI Base Components** → Named Export Multiple
-   - Use `export { Component, variants }` for shadcn/ui style components
-   - Export Props interfaces as named exports
-   - Examples: `Badge`, `Button`, `Card`
+**3. src/shared (Cross-Process Contracts)**
+- **Primary Pattern**: Named exports only (NO default exports)
+  - Examples: `export type { Item, TodoItemWithSources }`
+  - Examples: `export const ItemSchema = z.object({...})`
+- **Type-First Design**: Zod schemas with inferred types
+  - Example: `export type Item = z.infer<typeof ItemSchema>`
+- **Pure Library Structure**: No side effects, only definitions
+- **Cross-Process Safety**: Shared interfaces for IPC communication
+- **No Runtime Code**: Only types, schemas, and constants
 
-4. **Barrel Exports (index.ts)**
-   - Default exports: `export { default, default as ComponentName } from './Component'`
-   - Named exports: `export { ComponentName } from './Component'`
-   - Every component directory MUST provide index.ts for unified imports
+#### Import Path Conventions
 
-#### Import Path Rules
+**1. Cross-Layer Imports (renderer → main)**
+- ❌ PROHIBITED: Direct imports from renderer to main
+- ✅ Use IPC channels via `@renderer/services/ipc`
+- Example: `import { ipcClient } from '@renderer/services/ipc'`
 
-1. **Cross-Directory Imports** → MUST use barrel imports
-   - ✅ `import ReportView from '@renderer/components/ReportView'`
-   - ✅ `import { ConfidenceBadge } from '@renderer/components/reports'`
-   - ❌ `import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge'`
+**2. Shared Type Imports (any layer)**
+- ✅ Use `@shared/types` or `@shared/schemas`
+- ✅ Use `import type` for type-only imports (zero runtime overhead)
+- Example: `import type { Item, DisplayItem } from '@shared/types'`
 
-2. **Same-Directory Imports** → Use relative paths
-   - ✅ `import { TraceabilityInfo } from './TraceabilityInfo'`
-   - ✅ `import { TraceabilityInfo } from '@renderer/components/ReportView'`
+**3. Renderer Component Imports**
+- Cross-directory: MUST use barrel imports
+  - ✅ `import { ConfidenceBadge } from '@renderer/components/reports'`
+  - ❌ `import { ConfidenceBadge } from '@renderer/components/reports/ConfidenceBadge'`
+- Same-directory: Use relative paths
+  - ✅ `import { TraceabilityInfo } from './TraceabilityInfo'`
+  - ✅ `import { TraceabilityInfo } from '@renderer/components/ReportView'`
 
-3. **Multiple Component Imports** → Single barrel import
-   - ✅ `import { Card, CardContent } from '@renderer/components/ui/card'`
-   - ✅ `import { ConfidenceBadge, ConfidenceSummaryBanner } from '@renderer/components/reports'`
+**4. Main Process Module Imports**
+- Match export style (named import for named export, default import for default export)
+- ✅ Named: `import { ConfigManager } from './config/ConfigManager.js'`
+- ✅ Default: `import DatabaseManager from './database/Database.js'`
+- Use `.js` extensions (compiled output)
 
-#### Main Process Module Rules (main/)
+#### Barrel Export Patterns
 
-1. **Service Classes** → Consistent export style per module
-   - Choose between default export OR named export, not both
-   - Examples:
-     - `ConfigManager`: Named export (`export class ConfigManager`)
-     - `DatabaseManager`: Default export (`export default DatabaseManager`)
-     - `EmailProcessor`: Named export (`export class EmailProcessor`)
+**Where Barrels Are Used**:
+- ✅ `src/renderer/components/ReportView/index.ts` - Component organization
+- ✅ `src/renderer/components/reports/index.ts` - Report components
+- ✅ `src/shared/types/index.ts` - Frequently used types
+- ✅ `src/shared/schemas/validation.ts` - Schema exports
 
-2. **Index Files** → Re-export consistently
-   - Follow same pattern as renderer components
-   - Named: `export { ServiceName } from './Service'`
-   - Default: `export { default, default as ServiceName } from './Service'`
+**Where Barrels Are NOT Used**:
+- ❌ `src/main` - Direct imports only (reflects backend architecture)
 
-3. **Import Consistency** → Match export style
-   - If using named export: `import { ServiceName } from '@/modules/Service'`
-   - If using default export: `import ServiceName from '@/modules/Service'`
-   - Never mix: Don't use named import for default-exported module
+**Barrel Export Syntax**:
+```typescript
+// Default export barrel
+export { default, default as ReportView } from './ReportView';
+
+// Named export barrel
+export { TraceabilityInfo, ConfidenceBadge } from './TraceabilityInfo';
+export { ConfidenceSummaryBanner } from './ConfidenceSummaryBanner';
+```
 
 #### Type/Interface Export Rules
 
@@ -216,28 +248,45 @@ All code modules MUST follow unified import/export conventions to maintain code 
    - ❌ Never bundle interfaces with default exports only
 
 2. **Type Re-exports** → Use `export type` for type-only imports
-   - ✅ `export type { DisplayItem } from '@shared/types'`
+   - ✅ `export type { DisplayItem, TodoItem } from '@shared/types'`
    - Prevents runtime import overhead for pure types
+
+3. **Zod Schema Patterns** (shared layer)
+   - Define schema: `export const ItemSchema = z.object({...})`
+   - Infer type: `export type Item = z.infer<typeof ItemSchema>`
+   - Export both for consumers
 
 #### Prohibited Patterns
 
 1. **Mixed Export Styles**
    - ❌ `export const Component = ...; export default Component;`
-   - Choose ONE style and stick to it
+   - Choose ONE style per module (except IPC handlers with specific patterns)
 
 2. **Deep Path Imports**
    - ❌ `import { X } from '@renderer/components/reports/ConfidenceBadge'`
    - ✅ `import { X } from '@renderer/components/reports'`
 
 3. **Circular Dependencies**
-   - Use barrel exports to prevent circular imports
+   - Use barrel exports and shared types to prevent circular imports
    - If A imports B, B should not import A (use shared types instead)
 
 4. **Wildcard Imports**
    - ❌ `import * as Components from './components'`
    - ✅ Named imports: `import { ComponentA, ComponentB } from './components'`
 
-**Rationale**: Consistent import/export patterns improve code readability, enable easier refactoring, prevent circular dependencies, and align with TypeScript/React community best practices. Barrel exports provide clean public APIs for module directories while hiding internal implementation details.
+5. **Cross-Process Direct Imports**
+   - ❌ Renderer importing main process modules directly
+   - ✅ Use IPC channels through `@renderer/services/ipc`
+
+#### Architectural Separation Summary
+
+| Layer | Export Style | File Extension | Path Alias | Barrel Exports | Typical Use |
+|-------|-------------|----------------|------------|----------------|-------------|
+| **src/main** | Default (services) + Named (types) | `.js` | None | ❌ No | Backend services, database, IPC handlers |
+| **src/renderer** | Named (components) + Default (stores) | `.ts` | `@renderer` | ✅ Yes | UI components, state management, IPC client |
+| **src/shared** | Named only (no defaults) | `.ts` | `@shared` | ✅ Yes | Types, schemas, validation, IPC contracts |
+
+**Rationale**: Layer-specific export patterns reflect distinct architectural roles. Main process uses default exports for service singletons. Renderer uses named exports and barrels for UI composition. Shared layer uses named exports only for type safety across IPC boundaries. Barrel exports in renderer/shared provide clean public APIs while main process uses direct imports for backend clarity. `.js` extensions in main reflect compiled output, while `.ts` in renderer/shared preserves source structure.
 
 ### Error Handling Standards
 
@@ -272,4 +321,4 @@ All code modules MUST follow unified import/export conventions to maintain code 
 
 For detailed implementation guidance, refer to technical architecture documentation: `docs/tech-architecture.md`
 
-**Version**: 1.2.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-02-06
+**Version**: 1.3.0 | **Ratified**: 2026-01-31 | **Last Amended**: 2026-02-08

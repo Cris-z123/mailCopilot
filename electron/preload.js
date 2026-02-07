@@ -19,26 +19,26 @@ const electronAPI = {
     generate: (emailBatch) => ipcRenderer.invoke('llm:generate', emailBatch),
   },
 
-  // Database Operations
-  database: {
-    queryHistory: (params) => ipcRenderer.invoke('db:query:history', params),
-    export: (reportDate) => ipcRenderer.invoke('db:export', reportDate),
+  // Database Operations (exposed as 'db' for renderer ipcClient)
+  db: {
+    queryHistory: (request) => ipcRenderer.invoke('db:query:history', request),
+    export: (request) => ipcRenderer.invoke('db:export', request),
   },
 
   // Configuration Management
   config: {
-    get: () => ipcRenderer.invoke('config:get'),
-    set: (config) => ipcRenderer.invoke('config:set', config),
+    get: (keys) => ipcRenderer.invoke('config:get', { keys }),
+    set: (updates) => ipcRenderer.invoke('config:set', { updates }),
   },
 
   // Application Updates
   app: {
-    checkUpdate: () => ipcRenderer.invoke('app:check-update'),
+    checkUpdate: (mode) => ipcRenderer.invoke('app:check-update', mode),
   },
 
   // Email Metadata Fetching
   email: {
-    fetchMetadata: (emailHash) => ipcRenderer.invoke('email:fetch-meta', emailHash),
+    fetchMeta: (filePath, format) => ipcRenderer.invoke('email:fetch-meta', { filePath, format }),
   },
 
   // Event listeners for renderer-to-main communication
