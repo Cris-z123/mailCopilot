@@ -245,10 +245,10 @@
 
 ### Additional Parsers for US4
 
-- [ ] T067 [P] [US4] Implement MsgParser in src/main/email-processing/parsers/MsgParser.ts (Outlook .msg parsing using msg-extractor, ≥85% Message-ID extraction, SHA-256 fallback per SC-004)
-- [ ] T068 [P] [US4] Implement PstParser in src/main/email-processing/parsers/PstParser.ts (Outlook .pst/.ost archive parsing using libpff/readpst, ≥90% Message-ID extraction, ~200ms overhead per email per plan v2.7)
-- [ ] T069 [P] [US4] Implement MboxParser in src/main/email-processing/parsers/MboxParser.ts (Unix mbox format, From_ delimiter logic, file offset recording, ≥95% Message-ID extraction)
-- [ ] T070 [P] [US4] Implement HtmlParser in src/main/email-processing/parsers/HtmlParser.ts (Exported .htm/.html parsing, metadata from <meta>/<title>, ~30% Message-ID extraction, confidence capped at 0.6)
+- [X] T067 [P] [US4] Implement MsgParser in src/main/email/parsers/MsgParser.ts (Outlook .msg parsing using msg-extractor, ≥85% Message-ID extraction, SHA-256 fallback per SC-004) **[COMPLETED 2026-02-07]**
+- [X] T068 [P] [US4] Implement PstParser in src/main/email/parsers/PstParser.ts (Outlook .pst/.ost archive parsing using libpff/readpst, ≥90% Message-ID extraction, ~200ms overhead per email per plan v2.7) **[COMPLETED 2026-02-07]**
+- [X] T069 [P] [US4] Implement MboxParser in src/main/email/parsers/MboxParser.ts (Unix mbox format, From_ delimiter logic, file offset recording, ≥95% Message-ID extraction) **[COMPLETED 2026-02-07]**
+- [X] T070 [P] [US4] Implement HtmlParser in src/main/email/parsers/HtmlParser.ts (Exported .htm/.html parsing, metadata from <meta>/<title>, ~30% Message-ID extraction, confidence capped at 0.6) **[COMPLETED 2026-02-07]**
 
 ### Parser Tests for US4
 
@@ -259,7 +259,7 @@
 
 ### Format Detection for US4
 
-- [ ] T075 [US4] Implement format detection in src/main/email-processing/parsers/EmailParser.ts (detect format from file extension, delegate to appropriate parser)
+- [X] T075 [US4] Implement format detection in src/main/email/parsers/ParserFactory.ts (detect format from file extension, delegate to appropriate parser) **[COMPLETED 2026-02-07: Factory pattern with automatic format detection and parser selection]**
 - [ ] T076 [P] [US4] Unit test for format detection in tests/unit/email-processing/parser-dispatch.test.ts (correct parser selection for .eml/.msg/.pst/.mbox/.html files)
 
 **Checkpoint**: User Story 4 complete - all 5 email formats supported with specified extraction rates

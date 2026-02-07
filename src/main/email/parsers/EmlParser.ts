@@ -7,12 +7,13 @@
  * @module main/email/parsers/EmlParser
  */
 
-import { simpleParser, ParsedMail, Attachment } from 'mailparser';
+import { simpleParser } from 'mailparser';
+import type { ParsedMail, Attachment } from 'mailparser';
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { logger } from '@/config/logger';
-import { EmailParser, ParsedEmail } from './EmailParser';
+import type { EmailParser, ParsedEmail } from './EmailParser';
 import { formatISO8601 } from '@shared/utils/dateUtils';
 
 /**

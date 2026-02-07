@@ -97,5 +97,3 @@ export interface EmailParser {
    */
   canParse(filePath: string): boolean;
 }
-
-export default EmailParser;
