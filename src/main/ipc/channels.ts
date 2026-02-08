@@ -36,6 +36,11 @@ export const IPC_CHANNELS = {
   // Onboarding / First-run disclosure
   ONBOARDING_GET_STATUS: 'onboarding:get-status',
   ONBOARDING_ACKNOWLEDGE: 'onboarding:acknowledge',
+
+  // Mode switching (US5: Dual-mode operation)
+  MODE_GET: 'mode:get',
+  MODE_SWITCH: 'mode:switch',
+  MODE_CANCEL: 'mode:cancel',
 } as const;
 
 export type IPCChannel = typeof IPC_CHANNELS[keyof typeof IPC_CHANNELS];

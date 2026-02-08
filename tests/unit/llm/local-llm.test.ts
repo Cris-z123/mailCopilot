@@ -40,6 +40,35 @@ describe('LocalLLM (Ollama API)', () => {
     });
   };
 
+  /**
+   * Helper: Mock successful health check response
+   * Per T082: Health check at start of generate() requires mock setup
+   */
+  const mockHealthCheckSuccess = () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('/api/tags')) {
+        // Health check endpoint - return success
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            models: [
+              {
+                name: 'llama2',
+                modified_at: '2026-02-08T00:00:00Z',
+                size: 3735369706,
+              },
+            ],
+          }),
+        } as Response);
+      }
+      // Other endpoints - return default (will be overridden in specific tests)
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+    });
+  };
+
   describe('generate', () => {
     const mockEmailBatch: EmailBatch = {
       emails: [
@@ -81,15 +110,30 @@ describe('LocalLLM (Ollama API)', () => {
         },
       };
 
-      // Mock Ollama API response
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          model: 'llama2',
-          created_at: '2026-02-08T10:00:00Z',
-          response: JSON.stringify(mockLLMOutput),
-          done: true,
-        }),
+      // Per T082: Mock health check to succeed before testing generate
+      mockHealthCheckSuccess();
+
+      // Mock Ollama API response for generate endpoint
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        // Generate endpoint
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            model: 'llama2',
+            created_at: '2026-02-08T10:00:00Z',
+            response: JSON.stringify(mockLLMOutput),
+            done: true,
+          }),
+        } as Response);
       });
 
       const result = await localLLM.generate(mockEmailBatch);
@@ -109,6 +153,9 @@ describe('LocalLLM (Ollama API)', () => {
 
     it('should handle batch size validation (max 50 emails)', async () => {
       localLLM = createLLM();
+
+      // Per T082: Mock health check to succeed so batch size validation can run
+      mockHealthCheckSuccess();
 
       const largeBatch: EmailBatch = {
         emails: Array.from({ length: 51 }, (_, i) => ({
@@ -135,10 +182,23 @@ describe('LocalLLM (Ollama API)', () => {
     it('should handle Ollama API errors correctly (HTTP 500)', async () => {
       localLLM = createLLM();
 
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500,
-        text: async () => 'Internal server error',
+      // Per T082: Mock health check to succeed, then generate endpoint fails
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check succeeds
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        // Generate endpoint fails
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          text: async () => 'Internal server error',
+        } as Response);
       });
 
       await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow('Ollama API returned 500');
@@ -157,27 +217,18 @@ describe('LocalLLM (Ollama API)', () => {
     it('should handle timeout errors', async () => {
       localLLM = createLLM();
 
-      // Mock fetch to call abort callback
-      const mockAbort = vi.fn();
-      const mockSignal = {
-        aborted: false,
-        addEventListener: vi.fn((_, handler) => {
-          // Simulate immediate abort
-          handler();
-        }),
-        removeEventListener: vi.fn(),
-      };
-      const controller = {
-        signal: mockSignal,
-        abort: mockAbort,
-      };
-
-      // Mock AbortController to return our mock
-      global.AbortController = vi.fn().mockImplementation(() => controller) as any;
-
-      mockFetch.mockImplementation(() => {
-        // Simulate timeout by aborting immediately
-        mockAbort();
+      // Per T082: Mock health check to succeed, then generate times out
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check succeeds
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        // Generate endpoint times out
         const error = new Error('Request timeout');
         error.name = 'AbortError';
         return Promise.reject(error);
@@ -207,46 +258,89 @@ describe('LocalLLM (Ollama API)', () => {
         },
       };
 
-      // Fail twice, then succeed
-      mockFetch
-        .mockRejectedValueOnce(new Error('ECONNREFUSED'))
-        .mockRejectedValueOnce(new Error('ECONNRESET'))
-        .mockResolvedValueOnce({
+      // Per T082: Mock health check to succeed, then retry logic
+      let generateCallCount = 0;
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check always succeeds
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+
+        // Generate endpoint: Fail twice, then succeed
+        generateCallCount++;
+        if (generateCallCount <= 2) { // First two calls to generate endpoint
+          const error = new Error(generateCallCount === 1 ? 'ECONNREFUSED' : 'ECONNRESET');
+          return Promise.reject(error);
+        }
+
+        // Third call succeeds
+        return Promise.resolve({
           ok: true,
           json: async () => ({
             model: 'llama2',
             response: JSON.stringify(mockLLMOutput),
             done: true,
           }),
-        });
+        } as Response);
+      });
 
       const result = await localLLM.generate(mockEmailBatch);
 
       expect(result.items).toHaveLength(1);
-      expect(mockFetch).toHaveBeenCalledTimes(3); // 2 failures + 1 success
+      expect(mockFetch).toHaveBeenCalledTimes(4); // 1 health check + 2 failures + 1 success = 4 total
     });
 
     it('should fail after max retries exhausted', async () => {
       localLLM = createLLM();
 
-      // Always fail
-      mockFetch.mockRejectedValue(new Error('ECONNREFUSED'));
+      // Per T082: Mock health check to succeed, then generate always fails
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check succeeds
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        // Generate endpoint always fails
+        return Promise.reject(new Error('ECONNREFUSED'));
+      });
 
       await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow('Ollama API request failed after 3 attempts');
-      expect(mockFetch).toHaveBeenCalledTimes(3); // Initial + 2 retries
+      expect(mockFetch).toHaveBeenCalledTimes(4); // 1 health check + 3 failed generate calls (initial + 2 retries)
     });
 
     it('should not retry on non-retryable errors (400 bad request)', async () => {
       localLLM = createLLM();
 
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 400,
-        text: async () => 'Bad request',
+      // Per T082: Mock health check to succeed, then generate returns 400 error
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check succeeds
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        // Generate endpoint returns 400 error (non-retryable)
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          text: async () => 'Bad request',
+        } as Response);
       });
 
       await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow('Ollama API returned 400');
-      expect(mockFetch).toHaveBeenCalledTimes(1); // No retry
+      expect(mockFetch).toHaveBeenCalledTimes(2); // 1 health check + 1 generate call (no retry)
     });
 
     it('should parse JSON response with markdown code blocks', async () => {
@@ -270,13 +364,24 @@ describe('LocalLLM (Ollama API)', () => {
         },
       };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          model: 'llama2',
-          response: '```json\n' + JSON.stringify(mockLLMOutput) + '\n```',
-          done: true,
-        }),
+      // Per T082: Mock health check to succeed
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            model: 'llama2',
+            response: '```json\n' + JSON.stringify(mockLLMOutput) + '\n```',
+            done: true,
+          }),
+        } as Response);
       });
 
       const result = await localLLM.generate(mockEmailBatch);
@@ -288,13 +393,24 @@ describe('LocalLLM (Ollama API)', () => {
     it('should handle invalid JSON response', async () => {
       localLLM = createLLM();
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          model: 'llama2',
-          response: 'invalid json {{{',
-          done: true,
-        }),
+      // Per T082: Mock health check to succeed
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            model: 'llama2',
+            response: 'invalid json {{{',
+            done: true,
+          }),
+        } as Response);
       });
 
       await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow('Failed to parse Ollama JSON response');
@@ -303,13 +419,24 @@ describe('LocalLLM (Ollama API)', () => {
     it('should handle response missing items array', async () => {
       localLLM = createLLM();
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          model: 'llama2',
-          response: JSON.stringify({ batch_info: {} }), // Missing items
-          done: true,
-        }),
+      // Per T082: Mock health check to succeed
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            model: 'llama2',
+            response: JSON.stringify({ batch_info: {} }), // Missing items
+            done: true,
+          }),
+        } as Response);
       });
 
       await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow('Response missing "items" array');
@@ -323,20 +450,31 @@ describe('LocalLLM (Ollama API)', () => {
         // Missing type, source_email_indices, evidence, confidence
       };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          model: 'llama2',
-          response: JSON.stringify({
-            items: [incompleteItem],
-            batch_info: {
-              total_emails: 1,
-              processed_emails: 1,
-              skipped_emails: 0,
-            },
+      // Per T082: Mock health check to succeed
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            model: 'llama2',
+            response: JSON.stringify({
+              items: [incompleteItem],
+              batch_info: {
+                total_emails: 1,
+                processed_emails: 1,
+                skipped_emails: 0,
+              },
+            }),
+            done: true,
           }),
-          done: true,
-        }),
+        } as Response);
       });
 
       const result = await localLLM.generate(mockEmailBatch);
@@ -360,18 +498,33 @@ describe('LocalLLM (Ollama API)', () => {
         },
       };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          model: 'llama2',
-          response: JSON.stringify(mockLLMOutput),
-          done: true,
-        }),
+      // Per T082: Mock health check to succeed
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            model: 'llama2',
+            response: JSON.stringify(mockLLMOutput),
+            done: true,
+          }),
+        } as Response);
       });
 
       await localLLM.generate(mockEmailBatch);
 
-      const callArgs = mockFetch.mock.calls[0];
+      // Find the generate endpoint call (not the health check)
+      const generateCall = mockFetch.mock.calls.find((call) => !call[0].includes('/api/tags'));
+      expect(generateCall).toBeDefined();
+
+      const callArgs = generateCall!;
       const requestBody = JSON.parse(callArgs[1].body);
 
       expect(requestBody).toMatchObject({
@@ -647,23 +800,38 @@ describe('LocalLLM (Ollama API)', () => {
         },
       };
 
-      // First call fails with network error, second succeeds
-      mockFetch
-        .mockRejectedValueOnce(new Error('ECONNREFUSED'))
-        .mockResolvedValueOnce({
+      // Per T082: Mock health check to succeed, then first generate call fails with network error
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check succeeds
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        // Generate endpoint: First call fails, second succeeds
+        const callCount = mockFetch.mock.calls.filter((c) => !c[0].includes('/api/tags')).length;
+        if (callCount === 1) { // First generate call
+          return Promise.reject(new Error('ECONNREFUSED'));
+        }
+        // Second generate call succeeds
+        return Promise.resolve({
           ok: true,
           json: async () => ({
             model: 'llama2',
             response: JSON.stringify(mockLLMOutput),
             done: true,
           }),
-        });
+        } as Response);
+      });
 
       // Should retry and succeed
       const result = await localLLM.generate(mockEmailBatch);
 
       expect(result).toBeDefined();
-      expect(mockFetch).toHaveBeenCalledTimes(2); // 1 failure + 1 success
+      expect(mockFetch).toHaveBeenCalledTimes(3); // 1 health check + 1 failure + 1 success
     });
 
     it('should classify 429 rate limit as retryable', async () => {
@@ -678,60 +846,88 @@ describe('LocalLLM (Ollama API)', () => {
         },
       };
 
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 429,
-          text: async () => 'Rate limit exceeded',
-        })
-        .mockResolvedValueOnce({
+      // Per T082: Mock health check to succeed, then first generate call returns 429
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          // Health check succeeds
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        // Generate endpoint: First call returns 429, second succeeds
+        const callCount = mockFetch.mock.calls.filter((c) => !c[0].includes('/api/tags')).length;
+        if (callCount === 1) { // First generate call
+          return Promise.resolve({
+            ok: false,
+            status: 429,
+            text: async () => 'Rate limit exceeded',
+          } as Response);
+        }
+        // Second generate call succeeds
+        return Promise.resolve({
           ok: true,
           json: async () => ({
             model: 'llama2',
             response: JSON.stringify(mockLLMOutput),
             done: true,
           }),
-        });
+        } as Response);
+      });
 
       const result = await localLLM.generate(mockEmailBatch);
 
       expect(result).toBeDefined();
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(3); // 1 health check + 1 failure (429) + 1 success
     });
 
     it('should classify 400 bad request as non-retryable', async () => {
       localLLM = createLLM();
 
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 400,
-        text: async () => 'Bad request',
+      // Per T082: Mock health check to succeed, then generate returns 400
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: false,
+          status: 400,
+          text: async () => 'Bad request',
+        } as Response);
       });
 
       await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow();
-      expect(mockFetch).toHaveBeenCalledTimes(1); // No retry
+      expect(mockFetch).toHaveBeenCalledTimes(2); // 1 health check + 1 generate call (no retry)
     });
 
     it('should classify JSON parse errors as non-retryable', async () => {
       localLLM = createLLM();
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => {
-          throw new Error('JSON parse error');
-        },
-      });
-
-      // Even though it's a fetch error, the JSON parse should fail immediately
-      // Actually, this will fail at the response.ok.json() stage
-      // Let's test with an invalid response instead
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          model: 'llama2',
-          response: 'invalid json',
-          done: true,
-        }),
+      // Per T082: Mock health check to succeed, then generate returns invalid JSON
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/tags')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              models: [{ name: 'llama2', modified_at: '2026-02-08T00:00:00Z', size: 3735369706 }],
+            }),
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            model: 'llama2',
+            response: 'invalid json',
+            done: true,
+          }),
+        } as Response);
       });
 
       await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow('Failed to parse Ollama JSON response');
@@ -748,16 +944,19 @@ describe('LocalLLM (Ollama API)', () => {
         mode: 'local',
       };
 
-      // Mock fetch to always fail
+      // Mock fetch to always fail (health check will fail)
       mockFetch.mockRejectedValue(new Error('Ollama not running'));
 
-      // Should fail with Ollama error, not attempt remote API
-      await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow('Ollama API request failed');
+      // Per FR-036: Health check should block with clear error message
+      await expect(localLLM.generate(mockEmailBatch)).rejects.toThrow(
+        'Local LLM service unavailable'
+      );
 
-      // All fetch calls should be to localhost, not remote endpoints
+      // All fetch calls should be to localhost (health check endpoint), not remote endpoints
       mockFetch.mock.calls.forEach((call) => {
-        const url = call[0];
+        const url = call[0] as string;
         expect(url).toContain('localhost');
+        expect(url).toContain('/api/tags'); // Health check endpoint
         expect(url).not.toContain('api.openai.com');
       });
     });
