@@ -78,6 +78,8 @@ export class LocalLLM implements LLMAdapter {
     endpoint: 'http://localhost:11434',
     apiKey: '', // Not used for local Ollama
     model: 'llama2', // Default Ollama model
+    parallelRequests: false, // Per T102: Parallel processing disabled by default
+    maxConcurrency: 5, // Maximum concurrent requests when enabled
   };
 
   /**
