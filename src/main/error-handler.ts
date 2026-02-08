@@ -443,7 +443,7 @@ class GlobalErrorHandler {
    * @returns Error severity
    */
   private determineSeverity(
-    error: Error,
+    _error: Error,
     category: ErrorCategory
   ): ErrorSeverity {
     // Renderer and database errors are critical
