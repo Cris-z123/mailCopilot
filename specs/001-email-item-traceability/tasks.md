@@ -368,9 +368,9 @@
 
 ### Documentation
 
-- [ ] T110 [P] Create API documentation in docs/api/llm-api.md (document LLM adapter interface, RemoteLLM with OpenAI SDK usage, LocalLLM with Ollama)
-- [ ] T111 [P] Create deployment guide in docs/deployment.md (packaging with electron-builder, code signing, distribution via GitHub Releases)
-- [ ] T112 [P] Update README.md with quickstart instructions (feature overview, setup steps, usage examples)
+- [X] T110 [P] Create API documentation in docs/api/llm-api.md (document LLM adapter interface, RemoteLLM with OpenAI SDK usage, LocalLLM with Ollama) **[COMPLETED 2026-02-08: Complete LLM adapter API documentation with type definitions, usage examples, error handling, and testing guidelines]**
+- [X] T111 [P] Create deployment guide in docs/deployment.md (packaging with electron-builder, code signing, distribution via GitHub Releases) **[COMPLETED 2026-02-08: Comprehensive deployment guide with build configuration, code signing, GitHub Releases publishing, CI/CD integration, and troubleshooting]**
+- [X] T112 [P] Update README.md with quickstart instructions (feature overview, setup steps, usage examples) **[COMPLETED 2026-02-08: Updated README with comprehensive quickstart guide, feature usage instructions, development guide, testing requirements, project structure, and security documentation]**
 
 ### Final Testing
 
@@ -393,15 +393,16 @@
 - **User Story 4**: 10 tasks (10 completed ✅) **[COMPLETED 2026-02-07: T067-T076 all parsers and tests implemented]**
 - **User Story 5**: 13 tasks (13 completed ✅) **[COMPLETE 2026-02-08: T077-T089 all local mode, switching, UI, lifecycle, and network tasks]**
 - **User Story 6**: 7 tasks (7 completed ✅) **[COMPLETE 2026-02-08: T090-T096 all retention cleanup, UI, and tests implemented]**
-- **Polish**: 20 tasks (7 completed, 13 pending, 5 new for v2.7 frontend stack + constitution compliance)
+- **Polish**: 20 tasks (10 completed, 10 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 95/118 tasks (80.5%)
-**Remaining**: 23/118 tasks (19.5%)
+**Completed**: 98/118 tasks (83.1%)
+**Remaining**: 20/118 tasks (16.9%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
 **User Story 4**: ✅ COMPLETE - All 10 tasks finished (T067-T076)
 **User Story 5**: ✅ COMPLETE - All 13 tasks finished (T077-T089) - Dual-mode operation with hot switching, auto-update policy, and network isolation
 **User Story 6**: ✅ COMPLETE - All 7 tasks finished (T090-T096) - Configurable data retention with permanent option, automatic cleanup, and manual cleanup
+**Documentation**: ✅ COMPLETE - All 3 documentation tasks finished (T110-T112) - LLM API documentation, deployment guide, and comprehensive README updated (2026-02-08)
 
 ### Plan v2.7 Impact Summary
 
