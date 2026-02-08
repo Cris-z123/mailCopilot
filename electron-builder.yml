@@ -36,20 +36,16 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
 
-linux:
-  target:
-    - target: AppImage
-    - target: deb
-  icon: build/icon.png
-  category: Productivity
-
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
+  perMachine: false  # 默认安装到用户目录，不需要管理员权限
+  allowElevation: true  # 允许用户选择以管理员身份安装
 
 publish:
   provider: github
-  owner: your-org
-  repo: mailcopilot
+  owner: Cris-z123
+  repo: mailCopilot
+  releaseType: release
