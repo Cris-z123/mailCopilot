@@ -282,10 +282,10 @@
 
 ### Mode Switching Logic for US5 (UPDATED for plan v2.7)
 
-- [ ] T080 [US5] **[UPDATED for v2.7]** Implement ModeManager in src/main/app/mode-manager.ts (mode state: local/remote, queue management during switch, batch completion wait WITHOUT restart per FR-033, plan v2.7)
-- [ ] T081 [P] [US5] Implement IPC handler for mode switching in src/main/ipc/handlers/mode.handler.ts (switch request, queue new tasks, notify user of pending switch per FR-035)
-- [ ] T082 [P] [US5] Implement local mode failure blocking in src/main/llm/LocalLLM.ts (check health before processing, block with error if unavailable per FR-036, NO auto-fallback per FR-037)
-- [ ] T083 [P] [US5] Unit test for mode switching in tests/unit/config/mode-switching.test.ts (batch completion wait, queue management, user notification, NO restart per plan v2.7)
+- [X] T080 [US5] **[COMPLETED 2026-02-08]** Implement ModeManager in src/main/app/mode-manager.ts (mode state: local/remote, queue management during switch, batch completion wait WITHOUT restart per FR-033, plan v2.7) **[IMPLEMENTED: Complete ModeManager with state tracking, event emissions, and queue management]**
+- [X] T081 [P] [US5] **[COMPLETED 2026-02-08]** Implement IPC handler for mode switching in src/main/ipc/handlers/mode.handler.ts (switch request, queue new tasks, notify user of pending switch per FR-035) **[IMPLEMENTED: Complete IPC handlers with mode:get, mode:switch, mode:cancel channels and event notifications]**
+- [X] T082 [P] [US5] **[COMPLETED 2026-02-08]** Implement local mode failure blocking in src/main/llm/LocalLLM.ts (check health before processing, block with error if unavailable per FR-036, NO auto-fallback per FR-037) **[IMPLEMENTED: Health check blocking at start of generate() with FR-036 compliance]**
+- [X] T083 [P] [US5] **[COMPLETED 2026-02-08]** Unit test for mode switching in tests/unit/config/mode-switching.test.ts (batch completion wait, queue management, user notification, NO restart per plan v2.7) **[IMPLEMENTED: All 36 tests passing ✅ covering hot switching, queue management, batch state tracking, and FR-033/FR-034/FR-035 compliance]**
 
 ### Mode Switching UI for US5
 
@@ -391,12 +391,12 @@
 - **User Story 2**: 7 tasks (7 completed ✅)
 - **User Story 3**: 11 tasks (11 completed ✅)
 - **User Story 4**: 10 tasks (10 completed ✅) **[COMPLETED 2026-02-07: T067-T076 all parsers and tests implemented]**
-- **User Story 5**: 13 tasks (3 completed, 10 pending, 2 updated for v2.7) **[T077-T079 COMPLETED 2026-02-08]**
+- **User Story 5**: 13 tasks (7 completed, 6 pending, 4 updated for v2.7) **[T077-T083 COMPLETED 2026-02-08: LocalLLM, ModeManager, IPC handlers, and tests]**
 - **User Story 6**: 7 tasks (0 completed, 7 pending, 3 updated for v2.7)
 - **Polish**: 20 tasks (4 completed, 16 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 75/118 tasks (63.6%)
-**Remaining**: 43/118 tasks (36.4%)
+**Completed**: 79/118 tasks (66.9%)
+**Remaining**: 39/118 tasks (33.1%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
 **User Story 4**: ✅ COMPLETE - All 10 tasks finished (T067-T076)
@@ -404,9 +404,9 @@
 ### Plan v2.7 Impact Summary
 
 **Affected Tasks** (completed but need refactoring):
-- T058: ActionItem entity - Refactor to integrate feedback into todo_items table
-- T063: Feedback submission handler - Update for integrated feedback schema
-- T080: ModeManager - Update for hot switching without restart
+- T058: ActionItem entity - Refactor to integrate feedback into todo_items table ✅
+- T063: Feedback submission handler - Update for integrated feedback schema ✅
+- T080: ModeManager - Update for hot switching without restart ✅ [COMPLETED 2026-02-08]
 - T085: ModeSwitchNotification - Update notification UI
 - T090: Retention cleanup - Add support for -1 (permanent) option
 - T091: Retention change handler - Add -1 option handling
@@ -428,7 +428,7 @@
 1. ⏭️ **User Story 2** - Low Confidence Item Warning System (T049-T055)
 2. ⏭️ **User Story 3** - Local Privacy-Preserving Feedback System (T056-T066) - **AFFECTED BY v2.7**
 3. ⏭️ **User Story 4** - Multi-Format Email Parsing (T067-T076)
-4. ⏭️ **User Story 5** - Dual-Mode Operation with Hot Switching (T077-T089) - **UPDATED FOR v2.7**
+4. ⏭️ **User Story 5** - Dual-Mode Operation with Hot Switching (T077-T089) - **IN PROGRESS: T077-T083 completed, T084-T089 pending**
 5. ⏭️ **User Story 6** - Configurable Data Retention (T090-T096) - **UPDATED FOR v2.7**
 
 ---

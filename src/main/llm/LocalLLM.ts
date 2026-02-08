@@ -34,13 +34,6 @@ interface OllamaGenerateResponse {
 }
 
 /**
- * Ollama API error response
- */
-interface OllamaErrorResponse {
-  error: string;
-}
-
-/**
  * Ollama /api/tags response for health check
  */
 interface OllamaTagsResponse {
@@ -128,6 +121,22 @@ export class LocalLLM implements LLMAdapter {
       mode: batch.mode,
       model: this.modelName,
     });
+
+    // Per FR-036: Check health before processing, block if unavailable
+    const isHealthy = await this.checkHealth();
+
+    if (!isHealthy) {
+      const errorMessage = 'Local LLM service unavailable. Please ensure Ollama is running on http://localhost:11434. Per FR-036: Local mode requires Ollama service to be available.';
+
+      logger.error('LocalLLM', 'Health check failed - blocking request per FR-036', {
+        endpoint: this.baseUrl,
+        model: this.modelName,
+      });
+
+      throw new Error(errorMessage);
+    }
+
+    logger.debug('LocalLLM', 'Health check passed - proceeding with batch processing');
 
     // Validate batch size
     if (batch.emails.length > 50) {
