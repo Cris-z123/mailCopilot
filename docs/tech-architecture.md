@@ -623,22 +623,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
-      - run: npm run test:unit -- --coverage
-      - run: npm run test:integration
-      - run: npm run test:security
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:unit -- --coverage
+      - run: pnpm run test:integration
+      - run: pnpm run test:security
       - uses: codecov/codecov-action@v3
 
   security-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - uses: github/codeql-action/init@v3
-      - run: npm ci
-      - run: npm run build
+      - run: pnpm run build
       - uses: github/codeql-action/analyze@v3
 ```
 

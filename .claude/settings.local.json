@@ -2,13 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(bash:*)",
-      "Bash(npm run lint)",
-      "Bash(npm test:*)",
-      "Bash(npm run lint:*)",
-      "Bash(npx tsc:*)",
-      "Bash(npx eslint:*)",
+      "Bash(pnpm run lint)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm exec eslint:*)",
       "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
-      "Bash(npm run test:*)",
+      "Bash(pnpm run test:*)",
       "Bash(if:*)",
       "Bash(then find:*)"
     ]
