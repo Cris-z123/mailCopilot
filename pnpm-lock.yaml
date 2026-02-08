@@ -86,7 +86,7 @@ importers:
         version: 3.4.6
       '@types/node':
         specifier: ^20.11.5
-        version: 20.19.32
+        version: 20.19.33
       '@types/react':
         specifier: ^18.2.48
         version: 18.3.28
@@ -104,10 +104,10 @@ importers:
         version: 8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.32))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.33))
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.32)(happy-dom@20.5.0))
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.33)(happy-dom@20.5.0))
       autoprefixer:
         specifier: ^10.4.24
         version: 10.4.24(postcss@8.5.6)
@@ -173,10 +173,10 @@ importers:
         version: 13.0.0
       vite:
         specifier: ^5.0.12
-        version: 5.4.21(@types/node@20.19.32)
+        version: 5.4.21(@types/node@20.19.33)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.32)(happy-dom@20.5.0)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.33)(happy-dom@20.5.0)
       zustand:
         specifier: ^4.5.0
         version: 4.5.7(@types/react@18.3.28)(react@18.3.1)
@@ -1351,8 +1351,8 @@ packages:
   '@types/node@18.19.130':
     resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
 
-  '@types/node@20.19.32':
-    resolution: {integrity: sha512-Ez8QE4DMfhjjTsES9K2dwfV258qBui7qxUsoaixZDiTzbde4U12e1pXGNu/ECsUIOi5/zoCxAQxIhQnaUQ2VvA==}
+  '@types/node@20.19.33':
+    resolution: {integrity: sha512-Rs1bVAIdBs5gbTIKza/tgpMuG1k3U/UMJLWecIMxNdJFDMzcM5LOiLVRYh3PilWEYDIeUDv7bpiHPLPsbydGcw==}
 
   '@types/plist@3.0.5':
     resolution: {integrity: sha512-E6OCaRmAe4WDmWNsL/9RMqdkkzDCY1etutkflWk4c+AcjDU07Pcz1fQwTX0TQz+Pxqn9i4L1TU3UFpjnrcDgxA==}
@@ -5376,13 +5376,13 @@ snapshots:
 
   '@types/better-sqlite3@7.6.13':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
 
   '@types/cacheable-request@6.0.3':
     dependencies:
       '@types/http-cache-semantics': 4.2.0
       '@types/keyv': 3.1.4
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       '@types/responselike': 1.0.3
 
   '@types/chai@5.2.3':
@@ -5392,7 +5392,7 @@ snapshots:
 
   '@types/cheerio@0.22.35':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
 
   '@types/debug@4.1.12':
     dependencies:
@@ -5404,7 +5404,7 @@ snapshots:
 
   '@types/fs-extra@9.0.13':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
 
   '@types/http-cache-semantics@4.2.0': {}
 
@@ -5412,31 +5412,31 @@ snapshots:
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
 
   '@types/mailparser@3.4.6':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       iconv-lite: 0.6.3
 
   '@types/ms@2.1.0': {}
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       form-data: 4.0.5
 
   '@types/node@18.19.130':
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@20.19.32':
+  '@types/node@20.19.33':
     dependencies:
       undici-types: 6.21.0
 
   '@types/plist@3.0.5':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       xmlbuilder: 15.1.1
     optional: true
 
@@ -5453,7 +5453,7 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
 
   '@types/uuid@10.0.0': {}
 
@@ -5464,11 +5464,11 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.54.0(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3)':
@@ -5562,7 +5562,7 @@ snapshots:
       '@typescript-eslint/types': 8.54.0
       eslint-visitor-keys: 4.2.1
 
-  '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@20.19.32))':
+  '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@20.19.33))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -5570,11 +5570,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 5.4.21(@types/node@20.19.32)
+      vite: 5.4.21(@types/node@20.19.33)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.32)(happy-dom@20.5.0))':
+  '@vitest/coverage-v8@3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.33)(happy-dom@20.5.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -5589,7 +5589,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.32)(happy-dom@20.5.0)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.33)(happy-dom@20.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -5601,13 +5601,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@20.19.32))':
+  '@vitest/mocker@3.2.4(vite@5.4.21(@types/node@20.19.33))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 5.4.21(@types/node@20.19.32)
+      vite: 5.4.21(@types/node@20.19.33)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -6510,7 +6510,7 @@ snapshots:
   electron@29.4.6:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -7108,7 +7108,7 @@ snapshots:
 
   happy-dom@20.5.0:
     dependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
       entities: 4.5.0
@@ -8910,13 +8910,13 @@ snapshots:
       extsprintf: 1.4.1
     optional: true
 
-  vite-node@3.2.4(@types/node@20.19.32):
+  vite-node@3.2.4(@types/node@20.19.33):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 5.4.21(@types/node@20.19.32)
+      vite: 5.4.21(@types/node@20.19.33)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -8928,20 +8928,20 @@ snapshots:
       - supports-color
       - terser
 
-  vite@5.4.21(@types/node@20.19.32):
+  vite@5.4.21(@types/node@20.19.33):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.6
       rollup: 4.57.1
     optionalDependencies:
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       fsevents: 2.3.3
 
-  vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.32)(happy-dom@20.5.0):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@20.19.33)(happy-dom@20.5.0):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@20.19.32))
+      '@vitest/mocker': 3.2.4(vite@5.4.21(@types/node@20.19.33))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -8959,12 +8959,12 @@ snapshots:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 5.4.21(@types/node@20.19.32)
-      vite-node: 3.2.4(@types/node@20.19.32)
+      vite: 5.4.21(@types/node@20.19.33)
+      vite-node: 3.2.4(@types/node@20.19.33)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
-      '@types/node': 20.19.32
+      '@types/node': 20.19.33
       happy-dom: 20.5.0
     transitivePeerDependencies:
       - less
