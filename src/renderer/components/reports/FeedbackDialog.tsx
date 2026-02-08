@@ -18,6 +18,8 @@
  * - FR-022: 4 error type categories
  * - FR-023: Local-only feedback (no network transmission)
  * - FR-024: Encrypted feedback storage
+ *
+ * @module renderer/components/reports/FeedbackDialog
  */
 
 import { useState } from 'react';

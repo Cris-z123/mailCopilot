@@ -5,3 +5,5 @@
  */
 
 export { FeedbackSettings } from './FeedbackSettings';
+export { DataManagement } from './DataManagement';
+export { ModeSwitchCard } from './ModeSwitchCard';

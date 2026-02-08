@@ -12,7 +12,6 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "better-sqlite3",
       "electron",
       "esbuild",
       "puppeteer"
@@ -20,14 +19,14 @@
   },
   "scripts": {
     "dev": "concurrently \"pnpm run dev:renderer\" \"pnpm run dev:main\"",
-    "dev:main": "tsc -p tsconfig.main.json && cross-env NODE_ENV=development electron .",
+    "dev:main": "pnpm exec electron-rebuild -f -w better-sqlite3 && tsc -p tsconfig.main.json && cross-env NODE_ENV=development electron .",
     "dev:renderer": "vite",
     "build": "pnpm run build:renderer && pnpm run build:main",
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json && node scripts/copy-migrations.mjs",
-    "start": "electron .",
-    "postinstall": "electron-rebuild",
-    "rebuild": "electron-rebuild",
+    "start": "pnpm exec electron-rebuild -f -w better-sqlite3 && electron .",
+    "postinstall": "pnpm exec electron-rebuild -f -w better-sqlite3",
+    "rebuild": "pnpm exec electron-rebuild -f -w better-sqlite3",
     "test": "vitest",
     "test:unit": "vitest --config vitest.unit.config.ts",
     "test:integration": "vitest --config vitest.integration.config.ts",
@@ -51,6 +50,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.0.0",
     "electron-log": "^5.0.0",
+    "electron-updater": "^6.3.9",
     "lucide-react": "^0.563.0",
     "mailparser": "^3.6.5",
     "openai": "^4.104.0",
