@@ -5,7 +5,7 @@
 
 -- Metadata table
 CREATE TABLE IF NOT EXISTS app_metadata (
-    key TEXT PRIMARY KEY CHECK(key IN ('schema_version', 'install_time', 'device_fingerprint')),
+    key TEXT PRIMARY KEY CHECK(key IN ('schema_version', 'install_time', 'device_fingerprint', 'onboarding_disclosure')),
     value TEXT NOT NULL,
     updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 ) STRICT;

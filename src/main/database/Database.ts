@@ -15,7 +15,7 @@ import fs from 'fs';
  */
 class DatabaseManager {
   private static instance: Database.Database | null = null;
-  private static dbPath: string;
+  private static dbPath: string = '';
 
   /**
    * Initialize database connection
@@ -103,10 +103,11 @@ class DatabaseManager {
   }
 
   /**
-   * Get database path for logging/debugging
+   * Get database path for logging/debugging.
+   * Returns empty string if initialize() has not been called.
    */
   static getPath(): string {
-    return this.dbPath;
+    return this.dbPath ?? '';
   }
 
   /**

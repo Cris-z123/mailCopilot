@@ -304,11 +304,6 @@ export class EmailProcessor {
       context.isDegraded = validationResult.isDegraded;
 
       logger.info('EmailProcessor', 'Output validation complete', {
-        itemCount: validationResult.output.items.length,
-        firstItem: validationResult.output.items[0],
-      });
-
-      logger.info('EmailProcessor', 'Output validation complete', {
         isValid: validationResult.isValid,
         isDegraded: validationResult.isDegraded,
         retryCount: validationResult.retryCount,
@@ -322,13 +317,15 @@ export class EmailProcessor {
         context.isDegraded
       );
 
+      const avgConfidence =
+        confidenceResults.length > 0
+          ? confidenceResults.reduce((sum: number, r: ConfidenceResult) => sum + r.confidence, 0) /
+            confidenceResults.length
+          : 0;
       logger.info('EmailProcessor', 'Confidence calculation complete', {
         itemCount: confidenceResults.length,
         isDegraded: context.isDegraded,
-        avgConfidence: (
-          confidenceResults.reduce((sum: number, r: ConfidenceResult) => sum + r.confidence, 0) /
-          confidenceResults.length
-        ).toFixed(3),
+        avgConfidence: avgConfidence.toFixed(3),
       });
 
       // Step 7: Store to database
@@ -428,10 +425,11 @@ export class EmailProcessor {
 
         // Truncate body if necessary (per FR-057)
         if (parsedEmail.body && parsedEmail.body.length > this.options.maxBodyLength) {
+          const originalLength = parsedEmail.body.length;
           parsedEmail.body = parsedEmail.body.substring(0, this.options.maxBodyLength);
           logger.debug('EmailProcessor', 'Email body truncated', {
             filePath,
-            originalLength: parsedEmail.body.length,
+            originalLength,
             truncatedLength: this.options.maxBodyLength,
           });
         }
