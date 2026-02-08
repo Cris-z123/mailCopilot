@@ -477,6 +477,125 @@ export const FeedbackDestroyResponseSchema = z.object({
 export type FeedbackDestroyResponse = z.infer<typeof FeedbackDestroyResponseSchema>;
 
 // =============================================================================
+// Retention Cleanup Schemas (US6)
+// =============================================================================
+
+/**
+ * Retention config request schema
+ * Per US6: Get current retention configuration
+ */
+export const RetentionGetConfigRequestSchema = z.object({
+  // No parameters needed
+});
+
+export type RetentionGetConfigRequest = z.infer<typeof RetentionGetConfigRequestSchema>;
+
+/**
+ * Retention config response schema
+ */
+export const RetentionGetConfigResponseSchema = z.object({
+  email_metadata_retention_days: z.union([z.number(), z.literal(-1)]),
+  feedback_retention_days: z.union([z.number(), z.literal(-1)]),
+  last_cleanup_at: z.number(),
+  estimated_storage_bytes: z.number(),
+});
+
+export type RetentionGetConfigResponse = z.infer<typeof RetentionGetConfigResponseSchema>;
+
+/**
+ * Retention set periods request schema
+ * Per US6: Set retention periods with optional immediate cleanup
+ */
+export const RetentionSetPeriodsRequestSchema = z.object({
+  email_metadata_retention_days: z.union([z.number(), z.literal(-1)]),
+  feedback_retention_days: z.union([z.number(), z.literal(-1)]),
+  perform_immediate_cleanup: z.boolean().optional().default(true),
+  show_confirmation: z.boolean().optional().default(true),
+});
+
+export type RetentionSetPeriodsRequest = z.infer<typeof RetentionSetPeriodsRequestSchema>;
+
+/**
+ * Retention set periods response schema
+ */
+export const RetentionSetPeriodsResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  email_metadata_deleted: z.number().optional(),
+  feedback_deleted: z.number().optional(),
+  cleanup_triggered: z.boolean().optional(),
+});
+
+export type RetentionSetPeriodsResponse = z.infer<typeof RetentionSetPeriodsResponseSchema>;
+
+/**
+ * Retention get preview request schema
+ * Per US6: Get cleanup preview before changing retention period
+ */
+export const RetentionGetPreviewRequestSchema = z.object({
+  email_metadata_retention_days: z.union([z.number(), z.literal(-1)]),
+  feedback_retention_days: z.union([z.number(), z.literal(-1)]),
+});
+
+export type RetentionGetPreviewRequest = z.infer<typeof RetentionGetPreviewRequestSchema>;
+
+/**
+ * Retention get preview response schema
+ */
+export const RetentionGetPreviewResponseSchema = z.object({
+  email_count: z.number(),
+  feedback_count: z.number(),
+});
+
+export type RetentionGetPreviewResponse = z.infer<typeof RetentionGetPreviewResponseSchema>;
+
+/**
+ * Retention manual cleanup request schema
+ * Per FR-048: "清理30天前数据" button
+ * One-time cleanup regardless of retention setting
+ */
+export const RetentionManualCleanupRequestSchema = z.object({
+  confirm: z.boolean(), // User must confirm
+});
+
+export type RetentionManualCleanupRequest = z.infer<typeof RetentionManualCleanupRequestSchema>;
+
+/**
+ * Retention manual cleanup response schema
+ */
+export const RetentionManualCleanupResponseSchema = z.object({
+  success: z.boolean(),
+  email_metadata_deleted: z.number(),
+  feedback_deleted: z.number(),
+  message: z.string(),
+});
+
+export type RetentionManualCleanupResponse = z.infer<typeof RetentionManualCleanupResponseSchema>;
+
+/**
+ * Retention get storage request schema
+ */
+export const RetentionGetStorageRequestSchema = z.object({
+  // No parameters needed
+});
+
+export type RetentionGetStorageRequest = z.infer<typeof RetentionGetStorageRequestSchema>;
+
+/**
+ * Retention get storage response schema
+ */
+export const RetentionGetStorageResponseSchema = z.object({
+  email_metadata_bytes: z.number(),
+  feedback_data_bytes: z.number(),
+  total_bytes: z.number(),
+  email_metadata_mb: z.number(),
+  feedback_data_mb: z.number(),
+  total_mb: z.number(),
+});
+
+export type RetentionGetStorageResponse = z.infer<typeof RetentionGetStorageResponseSchema>;
+
+// =============================================================================
 // Helper Functions
 // =============================================================================
 
@@ -512,6 +631,11 @@ export default {
   FeedbackStatsRequestSchema,
   FeedbackExportRequestSchema,
   FeedbackDestroyRequestSchema,
+  RetentionGetConfigRequestSchema,
+  RetentionSetPeriodsRequestSchema,
+  RetentionGetPreviewRequestSchema,
+  RetentionManualCleanupRequestSchema,
+  RetentionGetStorageRequestSchema,
   validateData,
   safeValidateData,
 };

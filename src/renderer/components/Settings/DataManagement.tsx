@@ -141,9 +141,13 @@ export function DataManagement() {
    */
   async function loadStorageUsage() {
     try {
-      // TODO: Implement storage stats query
-      // const result = await ipcClient.invoke('db:storage-stats');
-      // setStorageUsage(result);
+      const result = await ipcClient.invoke(IPC_CHANNELS.RETENTION_GET_STORAGE);
+
+      setStorageUsage({
+        emailMetadataBytes: result.email_metadata_bytes,
+        feedbackDataBytes: result.feedback_data_bytes,
+        totalBytes: result.total_bytes,
+      });
     } catch (err) {
       console.error('Failed to load storage usage:', err);
     }
@@ -217,14 +221,14 @@ export function DataManagement() {
     });
 
     try {
-      const result = await ipcClient.invoke('db:cleanup-manual', {
-        retentionDays: 30,
+      const result = await ipcClient.invoke(IPC_CHANNELS.RETENTION_MANUAL_CLEANUP, {
+        confirm: true,
       });
 
       if (result.success) {
         setCleanupState({
           isCleaning: false,
-          message: `清理完成！删除了 ${result.deletedCount} 条记录`,
+          message: result.message,
         });
 
         // Refresh storage usage
@@ -241,7 +245,7 @@ export function DataManagement() {
         setCleanupState({
           isCleaning: false,
           message: '',
-          error: result.error || '清理失败',
+          error: result.message || '清理失败',
         });
       }
     } catch (err) {

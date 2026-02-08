@@ -24,6 +24,12 @@ export const IPC_CHANNELS = {
   APP_CHECK_UPDATE: 'app:check-update',
   APP_DOWNLOAD_UPDATE: 'app:download-update',
   EMAIL_FETCH_META: 'email:fetch-meta',
+  // Retention (US6)
+  RETENTION_GET_CONFIG: 'retention:get-config',
+  RETENTION_SET_PERIODS: 'retention:set-periods',
+  RETENTION_GET_PREVIEW: 'retention:get-preview',
+  RETENTION_MANUAL_CLEANUP: 'retention:manual-cleanup',
+  RETENTION_GET_STORAGE: 'retention:get-storage',
 } as const;
 
 /**
