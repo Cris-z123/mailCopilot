@@ -23,35 +23,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
       
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-      
-      # Windows 特定：安装构建工具
-      - name: Install Windows Build Tools
-        if: runner.os == 'Windows'
-        run: |
-          npm install --global --production windows-build-tools
-        continue-on-error: true
+          node-version: 20
+          cache: 'pnpm'
       
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -66,9 +47,9 @@ jobs:
       - name: Build application
         run: pnpm run build
       
-      # macOS 特定：导入代码签名证书（如果有）
+      # macOS 特定：导入代码签名证书（需在仓库 Settings → Secrets 配置 MACOS_CERTIFICATE）
       - name: Import Code Signing Certificate (macOS)
-        if: runner.os == 'macOS' && env.CERTIFICATE_P12 != ''
+        if: runner.os == 'macOS' && secrets.MACOS_CERTIFICATE != ''
         env:
           CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE }}
           CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
@@ -92,9 +73,9 @@ jobs:
         run: echo "Notarization configured"
         continue-on-error: true
       
-      # Windows 特定：代码签名（如果有）
+      # Windows 特定：代码签名（需在仓库 Settings → Secrets 配置 WINDOWS_CERT_PASSWORD）
       - name: Sign app (Windows)
-        if: runner.os == 'Windows' && env.CERT_PASSWORD != ''
+        if: runner.os == 'Windows' && secrets.WINDOWS_CERT_PASSWORD != ''
         env:
           CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
         run: echo "Code signing configured"
@@ -115,11 +96,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ runner.os }}-release
-          path: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.zip
-            dist/*.yml
+          path: dist
           retention-days: 7
 
   # 创建 Release 说明
@@ -164,10 +141,10 @@ jobs:
             ## 📦 Installation
             
             ### Windows
-            Download `mailCopilot-Setup-${{ github.ref_name }}.exe` and run the installer.
+            Download the `.exe` installer (e.g. `mailCopilot Setup X.X.X.exe`) and run it.
             
             ### macOS
-            Download `mailCopilot-${{ github.ref_name }}.dmg`, open it, and drag the app to your Applications folder.
+            Download the `.dmg` (e.g. `mailCopilot-X.X.X.dmg`), open it, and drag the app to Applications.
             
             ## 🔄 Auto Update
             If you're already using mailCopilot, the app will automatically notify you of this update.
