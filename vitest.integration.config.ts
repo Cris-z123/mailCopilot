@@ -38,8 +38,4 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, './src/shared'),
     },
   },
-  // Add tsconfig for type checking
-  tsconfig: {
-    configFile: path.resolve(__dirname, './tsconfig.renderer.json'),
-  },
 });

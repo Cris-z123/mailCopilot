@@ -52,7 +52,12 @@ const ReportView: React.FC<ReportViewProps> = ({ reportDate, items: itemsProp, e
 
   // Calculate confidence summary for the banner (T052)
   const summary = useMemo(() => {
-    return ConfidenceThresholds.getSummary(items);
+    // Map DisplayItem (confidence_score) to ConfidenceItem (confidence)
+    const confidenceItems = items.map(item => ({
+      ...item,
+      confidence: item.confidence_score,
+    }));
+    return ConfidenceThresholds.getSummary(confidenceItems);
   }, [items]);
 
   // Load report on mount if reportDate is provided and items not from props
