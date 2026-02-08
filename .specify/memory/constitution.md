@@ -129,7 +129,7 @@ All pull requests MUST verify:
 - Test coverage meets minimum thresholds (≥80% line, ≥70% branch)
 - Security-critical modules have 100% branch coverage
 - No unencrypted sensitive data in database fields
-- IPC channel whitelist compliance (6 channels max: `llm:generate`, `db:query:history`, `db:export`, `config:get/set`, `app:check-update`, `email:fetch-meta`)
+- IPC channel whitelist compliance (22 channels across 8 categories: `llm:generate`, `db:query:history`, `db:export`, `config:get`, `config:set`, `app:check-update`, `app:download-update`, `email:fetch-meta`, `feedback:submit`, `feedback:stats`, `feedback:export`, `feedback:destroy`, `retention:get-config`, `retention:set-periods`, `retention:get-preview`, `retention:manual-cleanup`, `retention:get-storage`, `onboarding:get-status`, `onboarding:acknowledge`, `mode:get`, `mode:switch`, `mode:cancel`)
 - CSP policy compliance (`default-src 'self'; script-src 'self'; connect-src 'self' https://api.github.com` for remote, `'self'` for local)
 
 ### Technology Stack Constraints

@@ -11,6 +11,7 @@ import { IPC_CHANNELS } from './ipc/channels.js';
 import { SingleInstanceManager, ApplicationManager } from './app.js';
 import { registerOnboardingHandlers } from './ipc/handlers/onboardingHandler.js';
 import { checkForUpdates, downloadAndInstallUpdate } from './app/lifecycle.js';
+import { errorHandler } from './error-handler.js';
 
 /**
  * Main Process Entry Point
@@ -27,6 +28,10 @@ class Application {
   private isQuitting = false;
 
   constructor() {
+    // Initialize global error handler (T104 - per plan v2.7)
+    errorHandler.initialize();
+    logger.info('ErrorHandler', 'Global error handler initialized');
+
     // Initialize application manager and check for single-instance
     if (!ApplicationManager.initialize()) {
       // Second instance detected - quit immediately
@@ -135,15 +140,19 @@ class Application {
     // Register window with single-instance manager
     SingleInstanceManager.setMainWindow(this.mainWindow);
 
+    // Set main window for error handler (T104)
+    errorHandler.setMainWindow(this.mainWindow);
+
     // Handle window closed
     this.mainWindow.on('closed', () => {
+      errorHandler.setMainWindow(null);
       this.mainWindow = null;
       logger.info('Window', 'Main window closed');
     });
 
-    // Log renderer errors
+    // Log renderer errors (T104 - using global error handler)
     this.mainWindow.webContents.on('render-process-gone', (_event, details) => {
-      logger.error('Renderer', `Render process gone: ${details.reason}`, details);
+      errorHandler.handleRendererProcessGone(details);
     });
   }
 
