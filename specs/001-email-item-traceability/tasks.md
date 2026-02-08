@@ -289,18 +289,18 @@
 
 ### Mode Switching UI for US5
 
-- [ ] T084 [P] [US5] Create ModeSelector component in src/renderer/src/components/settings/ModeSwitchCard.tsx (radio buttons for local/remote mode, current mode display per plan v2.7)
-- [ ] T085 [US5] Create ModeSwitchNotification component in src/renderer/src/components/settings/ModeSwitchCard.tsx (display "当前任务处理完成后将切换模式，新任务已进入队列等待" per FR-035, plan v2.7)
+- [X] T084 [P] [US5] Create ModeSelector component in src/renderer/src/components/settings/ModeSwitchCard.tsx (radio buttons for local/remote mode, current mode display per plan v2.7) **[COMPLETED 2026-02-08: ModeSelector component with radio buttons, current mode display, and IPC integration]**
+- [X] T085 [US5] Create ModeSwitchNotification component in src/renderer/src/components/settings/ModeSwitchCard.tsx (display "当前任务处理完成后将切换模式，新任务已进入队列等待" per FR-035, plan v2.7) **[COMPLETED 2026-02-08: ModeSwitchNotification component with pending switch notification and cancel button]**
 
 ### Auto-Update Policy for US5
 
-- [ ] T086 [P] [US5] Implement auto-update check in src/main/app/lifecycle.ts (remote mode: check on startup per FR-038, local mode: disable auto-check, manual trigger via Settings per FR-039)
-- [ ] T087 [P] [US5] Create manual update check button in src/renderer/src/components/settings/DataManagement.tsx ("手动检查更新" button for local mode per plan v2.7)
+- [X] T086 [P] [US5] Implement auto-update check in src/main/app/lifecycle.ts (remote mode: check on startup per FR-038, local mode: disable auto-check, manual trigger via Settings per FR-039) **[COMPLETED 2026-02-08: Complete lifecycle.ts with mode-based update policy, electron-updater integration]**
+- [X] T087 [P] [US5] Create manual update check button in src/renderer/src/components/settings/DataManagement.tsx ("手动检查更新" button for local mode per plan v2.7) **[COMPLETED 2026-02-08: DataManagement component with manual update check, storage usage display, cleanup controls]**
 
 ### Network Isolation for US5
 
-- [ ] T088 [US5] Implement network interceptor in src/main/security/network-interceptor.ts (local mode: block non-localhost requests at network layer per FR-040, remote mode: allow TLS 1.3 to LLM endpoints per plan v2.7)
-- [ ] T089 [P] [US5] Integration test for network isolation in tests/integration/security/network-interceptor.test.ts (verify non-local requests blocked in local mode, allow LLM API in remote mode)
+- [X] T088 [US5] Implement network interceptor in src/main/security/network-interceptor.ts (local mode: block non-localhost requests at network layer per FR-040, remote mode: allow TLS 1.3 to LLM endpoints per plan v2.7) **[COMPLETED 2026-02-08: Complete network-interceptor.ts with webRequest API blocking, mode-based policies, endpoint whitelist]**
+- [X] T089 [P] [US5] Integration test for network isolation in tests/integration/security/network-interceptor.test.ts (verify non-local requests blocked in local mode, allow LLM API in remote mode) **[COMPLETED 2026-02-08: Comprehensive integration tests covering FR-040 compliance, mode switching, edge cases]**
 
 **Checkpoint**: User Story 5 complete - hot mode switching works without restart, local mode blocks on failure, network isolation enforced
 
@@ -391,15 +391,16 @@
 - **User Story 2**: 7 tasks (7 completed ✅)
 - **User Story 3**: 11 tasks (11 completed ✅)
 - **User Story 4**: 10 tasks (10 completed ✅) **[COMPLETED 2026-02-07: T067-T076 all parsers and tests implemented]**
-- **User Story 5**: 13 tasks (7 completed, 6 pending, 4 updated for v2.7) **[T077-T083 COMPLETED 2026-02-08: LocalLLM, ModeManager, IPC handlers, and tests]**
+- **User Story 5**: 13 tasks (13 completed ✅) **[COMPLETE 2026-02-08: T077-T089 all local mode, switching, UI, lifecycle, and network tasks]**
 - **User Story 6**: 7 tasks (0 completed, 7 pending, 3 updated for v2.7)
 - **Polish**: 20 tasks (4 completed, 16 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 79/118 tasks (66.9%)
-**Remaining**: 39/118 tasks (33.1%)
+**Completed**: 85/118 tasks (72.0%)
+**Remaining**: 33/118 tasks (28.0%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
 **User Story 4**: ✅ COMPLETE - All 10 tasks finished (T067-T076)
+**User Story 5**: ✅ COMPLETE - All 13 tasks finished (T077-T089) - Dual-mode operation with hot switching, auto-update policy, and network isolation
 
 ### Plan v2.7 Impact Summary
 
