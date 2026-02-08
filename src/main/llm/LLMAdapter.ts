@@ -105,6 +105,12 @@ export interface LLMAdapterConfig {
 
   /** Model name/identifier */
   model?: string;
+
+  /** Enable parallel processing for independent emails (Per T102: future enhancement) */
+  parallelRequests?: boolean;
+
+  /** Maximum concurrent requests when parallel processing is enabled */
+  maxConcurrency?: number;
 }
 
 /**

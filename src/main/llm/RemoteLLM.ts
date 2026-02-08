@@ -47,6 +47,8 @@ export class RemoteLLM implements LLMAdapter {
     endpoint: 'https://api.openai.com/v1',
     apiKey: '',
     model: 'gpt-4-turbo-preview',
+    parallelRequests: false, // Per T102: Parallel processing disabled by default
+    maxConcurrency: 5, // Maximum concurrent requests when enabled
   };
 
   /**
@@ -94,21 +96,112 @@ export class RemoteLLM implements LLMAdapter {
    * - Built-in retry logic with exponential backoff (configured via maxRetries)
    * - Automatic error classification (rate limits, timeouts, network errors)
    * Per R0-5: 2-retry limit enforced by OpenAI SDK configuration
+   * Per T102: Parallel processing for independent emails when enabled
    */
   async generate(batch: EmailBatch): Promise<LLMOutput> {
-    const startTime = Date.now();
-
     logger.info('RemoteLLM', 'Processing email batch using OpenAI SDK', {
       emailCount: batch.emails.length,
       reportDate: batch.reportDate,
       mode: batch.mode,
       model: this.config.model,
+      parallelEnabled: this.config.parallelRequests,
     });
 
     // Validate batch size
     if (batch.emails.length > 50) {
       throw new Error('Batch size exceeds maximum of 50 emails per plan.md constraints');
     }
+
+    // Use parallel processing if enabled (Per T102)
+    if (this.config.parallelRequests && batch.emails.length > 1) {
+      return this.generateParallel(batch);
+    }
+
+    // Sequential processing (default behavior)
+    return this.generateSequential(batch);
+  }
+
+  /**
+   * Generate action items using parallel processing
+   * Per T102: Concurrent requests for independent emails in batch
+   *
+   * @param batch - Email batch with parsed metadata and content
+   * @returns Promise resolving to LLM output with extracted items
+   * @private
+   */
+  private async generateParallel(batch: EmailBatch): Promise<LLMOutput> {
+    const startTime = Date.now();
+    const maxConcurrency = this.config.maxConcurrency || 5;
+
+    logger.info('RemoteLLM', 'Using parallel processing', {
+      emailCount: batch.emails.length,
+      maxConcurrency,
+    });
+
+    // Split emails into chunks for concurrent processing
+    const chunks: EmailBatch[] = [];
+    for (let i = 0; i < batch.emails.length; i += maxConcurrency) {
+      chunks.push({
+        ...batch,
+        emails: batch.emails.slice(i, i + maxConcurrency),
+      });
+    }
+
+    // Process chunks in parallel, then process emails within each chunk in parallel
+    const allItems: LLMOutput['items'] = [];
+    let processedCount = 0;
+    let skippedCount = 0;
+
+    for (const chunk of chunks) {
+      const chunkResults = await Promise.allSettled(
+        chunk.emails.map((email) => this.processSingleEmail(email, batch))
+      );
+
+      for (const result of chunkResults) {
+        if (result.status === 'fulfilled') {
+          allItems.push(...result.value.items);
+          processedCount += result.value.processed;
+          skippedCount += result.value.skipped;
+        } else {
+          // Log error but continue processing other emails
+          logger.warn('RemoteLLM', 'Failed to process email in parallel mode', {
+            error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+          });
+          skippedCount++;
+        }
+      }
+    }
+
+    const output: LLMOutput = {
+      items: allItems,
+      batch_info: {
+        total_emails: batch.emails.length,
+        processed_emails: processedCount,
+        skipped_emails: skippedCount,
+      },
+    };
+
+    // Log duration for performance monitoring
+    const duration = Date.now() - startTime;
+    logger.info('RemoteLLM', 'Parallel batch processing completed', {
+      itemCount: output.items.length,
+      processedEmails: output.batch_info.processed_emails,
+      skippedEmails: output.batch_info.skipped_emails,
+      duration,
+    });
+
+    return output;
+  }
+
+  /**
+   * Generate action items using sequential processing (default)
+   *
+   * @param batch - Email batch with parsed metadata and content
+   * @returns Promise resolving to LLM output with extracted items
+   * @private
+   */
+  private async generateSequential(batch: EmailBatch): Promise<LLMOutput> {
+    const startTime = Date.now();
 
     // Build prompts
     const systemPrompt = this.buildSystemPrompt();
@@ -136,7 +229,7 @@ export class RemoteLLM implements LLMAdapter {
 
       const output = this.parseJSONResponse(content);
 
-      logger.info('RemoteLLM', 'Batch processing completed with OpenAI SDK', {
+      logger.info('RemoteLLM', 'Sequential batch processing completed with OpenAI SDK', {
         itemCount: output.items.length,
         processedEmails: output.batch_info.processed_emails,
         skippedEmails: output.batch_info.skipped_emails,
@@ -193,6 +286,51 @@ export class RemoteLLM implements LLMAdapter {
       // Re-throw unknown errors
       throw error;
     }
+  }
+
+  /**
+   * Process a single email for parallel processing
+   * Per T102: Process individual email independently
+   *
+   * @param email - Single email to process
+   * @param batch - Original batch context
+   * @returns Promise resolving to partial LLM output
+   * @private
+   */
+  private async processSingleEmail(
+    email: EmailBatch['emails'][0],
+    batch: EmailBatch
+  ): Promise<{
+    items: LLMOutput['items'];
+    processed: number;
+    skipped: number;
+  }> {
+    const systemPrompt = this.buildSystemPrompt();
+    const userPrompt = this.buildUserPrompt({ ...batch, emails: [email] });
+
+    const response = await this.client.chat.completions.create({
+      model: this.config.model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 4000,
+      response_format: { type: 'json_object' },
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('OpenAI API returned empty response content');
+    }
+
+    const output = this.parseJSONResponse(content);
+
+    return {
+      items: output.items,
+      processed: output.batch_info.processed_emails,
+      skipped: output.batch_info.skipped_emails,
+    };
   }
 
   /**
