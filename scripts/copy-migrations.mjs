@@ -1,6 +1,6 @@
 /**
  * Copy database migration SQL files from src to dist.
- * Used only in build (npm run build:main); dev reads migrations from src.
+ * Used only in build (pnpm run build:main); dev reads migrations from src.
  */
 import fs from 'node:fs';
 import path from 'node:path';

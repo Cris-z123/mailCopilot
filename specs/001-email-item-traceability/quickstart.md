@@ -13,10 +13,10 @@ This guide helps you quickly set up the development environment and understand t
 ### Required Software
 
 - **Node.js**: v20.x (https://nodejs.org/)
-- **npm**: v10.x (comes with Node.js)
+- **pnpm**: v8.x (https://pnpm.io/)
 - **Git**: Latest version (https://git-scm.com/)
-- **Electron**: v29.4.6 (installed via npm)
-- **TypeScript**: v5.4.5 (installed via npm)
+- **Electron**: v29.4.6 (installed via pnpm)
+- **TypeScript**: v5.4.5 (installed via pnpm)
 
 ### Optional Software (for local mode testing)
 
@@ -37,7 +37,7 @@ cd mailCopilot
 ### 2. Install Dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 **Key Dependencies**:
@@ -75,7 +75,7 @@ FEEDBACK_RETENTION=90
 ### 4. Build Application
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 This compiles TypeScript to JavaScript in the `dist/` directory.
@@ -84,43 +84,43 @@ This compiles TypeScript to JavaScript in the `dist/` directory.
 
 ```bash
 # All tests
-npm test
+pnpm test
 
 # Unit tests only
-npm run test:unit
+pnpm run test:unit
 
 # Integration tests only
-npm run test:integration
+pnpm run test:integration
 
 # Security tests
-npm run test:security
+pnpm run test:security
 
 # Coverage report
-npm run test:coverage
+pnpm run test:coverage
 ```
 
 ### 6. Lint and Type Check
 
 ```bash
 # Lint
-npm run lint
+pnpm run lint
 
 # Auto-fix lint issues
-npm run lint:fix
+pnpm run lint:fix
 
 # Type check
-npm run typecheck
+pnpm run typecheck
 ```
 
 ### 7. Start Development
 
 ```bash
 # Development mode (hot reload)
-npm run dev
+pnpm run dev
 
 # Production build
-npm run build
-npm start
+pnpm run build
+pnpm start
 ```
 
 ---
@@ -378,7 +378,7 @@ ON action_items(confidence);
 
 2. Run migration:
 ```bash
-npm run migrate:up
+pnpm run migrate:up
 ```
 
 ### Task 5: Debug Email Processing
@@ -391,7 +391,7 @@ LOG_LEVEL=debug
 2. Check logs in console or file:
 ```bash
 # Console output
-npm run dev
+pnpm run dev
 
 # File output (macOS)
 ~/Library/Logs/mailCopilot/main.log
@@ -660,7 +660,7 @@ logger.info('ProcessEmail', 'Email processed', { duration });
 
 **Solution**: Rebuild native dependencies
 ```bash
-npm rebuild better-sqlite3
+pnpm rebuild better-sqlite3
 ```
 
 ### Issue 2: "OpenAI API timeout"
@@ -716,7 +716,7 @@ db.pragma('journal_mode = WAL');
 ## Getting Help
 
 1. **Check logs**: Look for error messages in console or log files
-2. **Run tests**: `npm test` to identify failing tests
+2. **Run tests**: `pnpm test` to identify failing tests
 3. **Read spec**: Check [spec.md](./spec.md) for requirements
 4. **Ask questions**: Contact team via GitHub Issues or Slack
 

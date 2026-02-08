@@ -5,7 +5,7 @@
  * Source: src/main/index.ts
  *
  * To rebuild after changes:
- *   npm run build:main
+ *   pnpm run build:main
  */
 
 await import('../dist/main/index.js');

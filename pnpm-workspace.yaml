@@ -1,0 +1,9 @@
+# Single-package project; required for pnpm 10+ onlyBuiltDependencies.
+packages:
+  - '.'
+
+onlyBuiltDependencies:
+  - better-sqlite3
+  - electron
+  - esbuild
+  - puppeteer

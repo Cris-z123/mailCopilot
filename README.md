@@ -29,7 +29,7 @@ mailCopilot 是一款面向隐私敏感场景的**本地邮件智能处理客户
 ### 环境要求
 
 - **Node.js**: 20.x (LTS)
-- **npm**: 10.x 或 pnpm 8.x
+- **pnpm**: 8.x
 - **操作系统**: Windows 10+, macOS 11+, Linux
 
 ### 安装步骤
@@ -40,16 +40,16 @@ git clone https://github.com/your-org/mailcopilot.git
 cd mailcopilot
 
 # 安装依赖
-npm install
+pnpm install
 
 # 开发模式运行
-npm run dev
+pnpm run dev
 
 # 构建生产版本
-npm run build
+pnpm run build
 
 # 运行生产版本
-npm run start
+pnpm run start
 ```
 
 ### 本地模式要求（可选）
@@ -70,38 +70,38 @@ npm run start
 
 ```bash
 # 启动开发服务器（热重载）
-npm run dev
+pnpm run dev
 
 # 类型检查
-npm run typecheck
+pnpm run typecheck
 
 # 代码检查
-npm run lint
+pnpm run lint
 
 # 自动修复代码风格
-npm run lint:fix
+pnpm run lint:fix
 
 # 格式化代码
-npm run format
+pnpm run format
 ```
 
 ### 测试命令
 
 ```bash
 # 运行所有测试
-npm test
+pnpm test
 
 # 单元测试
-npm run test:unit
+pnpm run test:unit
 
 # 集成测试
-npm run test:integration
+pnpm run test:integration
 
 # 安全测试
-npm run test:security
+pnpm run test:security
 
 # 代码覆盖率
-npm run test:coverage
+pnpm run test:coverage
 ```
 
 ## 📖 文档
