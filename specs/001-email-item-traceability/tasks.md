@@ -276,9 +276,9 @@
 
 ### Local LLM Integration for US5
 
-- [ ] T077 [P] [US5] Implement LocalLLM adapter in src/main/llm/LocalLLM.ts (Ollama API integration, fetch API to http://localhost:11434/api/generate, no auto-degradation per FR-037)
-- [ ] T078 [P] [US5] Implement Ollama health check in src/main/llm/LocalLLM.ts (GET http://localhost:11434/api/tags to verify service availability)
-- [ ] T079 [P] [US5] Unit test for LocalLLM in tests/unit/llm/local-llm.test.ts (Ollama API integration, health check, error handling)
+- [X] T077 [P] [US5] **[COMPLETED 2026-02-08]** Implement LocalLLM adapter in src/main/llm/LocalLLM.ts (Ollama API integration, fetch API to http://localhost:11434/api/generate, no auto-degradation per FR-037) **[IMPLEMENTED: Complete Ollama API integration with native fetch, 2-retry logic, timeout enforcement, and manual retry classification]**
+- [X] T078 [P] [US5] **[COMPLETED 2026-02-08]** Implement Ollama health check in src/main/llm/LocalLLM.ts (GET http://localhost:11434/api/tags to verify service availability) **[IMPLEMENTED: Health check with 5s timeout, service availability verification, and model detection]**
+- [X] T079 [P] [US5] **[COMPLETED 2026-02-08]** Unit test for LocalLLM in tests/unit/llm/local-llm.test.ts (Ollama API integration, health check, error handling) **[IMPLEMENTED: All 32 tests passing ✅ covering generate, checkHealth, getConfig, updateConfig, error classification, and FR-037 compliance]**
 
 ### Mode Switching Logic for US5 (UPDATED for plan v2.7)
 
@@ -391,12 +391,12 @@
 - **User Story 2**: 7 tasks (7 completed ✅)
 - **User Story 3**: 11 tasks (11 completed ✅)
 - **User Story 4**: 10 tasks (10 completed ✅) **[COMPLETED 2026-02-07: T067-T076 all parsers and tests implemented]**
-- **User Story 5**: 13 tasks (0 completed, 13 pending, 2 updated for v2.7)
+- **User Story 5**: 13 tasks (3 completed, 10 pending, 2 updated for v2.7) **[T077-T079 COMPLETED 2026-02-08]**
 - **User Story 6**: 7 tasks (0 completed, 7 pending, 3 updated for v2.7)
 - **Polish**: 20 tasks (4 completed, 16 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 72/118 tasks (61.0%)
-**Remaining**: 46/118 tasks (39.0%)
+**Completed**: 75/118 tasks (63.6%)
+**Remaining**: 43/118 tasks (36.4%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
 **User Story 4**: ✅ COMPLETE - All 10 tasks finished (T067-T076)
