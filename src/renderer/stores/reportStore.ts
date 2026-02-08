@@ -109,7 +109,7 @@ export const useReportStore = create<ReportStore>((set) => ({
         confidence_score: item.confidence / 100, // Convert to 0-1 scale
         tags: [],
         created_at: Date.now(),
-        sources: item.source_email_indices.map((index) => ({
+        sources: (item.source_email_indices ?? []).map((index) => ({
           email_hash: response.processed_emails[index]?.email_hash || '',
           search_string: response.processed_emails[index]?.search_string || '',
           file_path: response.processed_emails[index]?.file_path || '',
