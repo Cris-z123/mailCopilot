@@ -316,19 +316,19 @@
 
 ### Retention Policy Logic for US6 (UPDATED for plan v2.7)
 
-- [ ] T090 [US6] **[UPDATED for v2.7]** Implement retention cleanup task in src/main/database/cleanup.ts (daily cron job at 2:00 AM, delete metadata older than retention period, SKIP cleanup if retention_days=-1 per plan v2.7)
-- [ ] T091 [P] [US6] Implement immediate cleanup on retention change in src/main/config/manager.ts (trigger cleanup immediately when user changes retention period, show confirmation, handle -1 permanent option per plan v2.7)
-- [ ] T092 [P] [US6] Implement 30-day manual cleanup in src/main/ipc/handlers/cleanup.handler.ts ("清理30天前数据" button, one-time cleanup regardless of retention setting per FR-048)
+- [X] T090 [US6] **[COMPLETED 2026-02-08]** Implement retention cleanup task in src/main/database/cleanup.ts (daily cron job at 2:00 AM, delete metadata older than retention period, SKIP cleanup if retention_days=-1 per plan v2.7) **[IMPLEMENTED: Complete cleanup.ts with performRetentionCleanup(), performManual30DayCleanup(), getCleanupPreview(), getStorageUsage(), and scheduled cleanup with startScheduledCleanup()]**
+- [X] T091 [P] [US6] **[COMPLETED 2026-02-08]** Implement immediate cleanup on retention change in src/main/config/manager.ts (trigger cleanup immediately when user changes retention period, show confirmation, handle -1 permanent option per plan v2.7) **[IMPLEMENTED: Updated DataRetentionConfigRepository.setEmailRetention(), setFeedbackRetention(), and setRetentionPeriods() with immediate cleanup support]**
+- [X] T092 [P] [US6] **[COMPLETED 2026-02-08]** Implement 30-day manual cleanup in src/main/ipc/handlers/cleanup.handler.ts ("清理30天前数据" button, one-time cleanup regardless of retention setting per FR-048) **[IMPLEMENTED: Complete retention.handler.ts with 5 IPC channels: retention:get-config, retention:set-periods, retention:get-preview, retention:manual-cleanup, retention:get-storage]**
 
 ### Retention UI for US6
 
-- [ ] T093 [P] [US6] Create RetentionSettings component in src/renderer/src/components/settings/RetentionConfig.tsx (email metadata retention selector: 30/90/180/365/永久 with -1 value, feedback retention selector, estimated storage usage display per FR-046, plan v2.7)
-- [ ] T094 [US6] Create ManualCleanupButton component in src/renderer/src/components/settings/DataManagement.tsx ("清理30天前数据" button, confirmation dialog per FR-048)
+- [X] T093 [P] [US6] **[COMPLETED 2026-02-08]** Create RetentionSettings component in src/renderer/src/components/settings/RetentionConfig.tsx (email metadata retention selector: 30/90/180/365/永久 with -1 value, feedback retention selector, estimated storage usage display per FR-046, plan v2.7) **[IMPLEMENTED: Complete RetentionConfig component with cleanup preview, confirmation dialog, and immediate cleanup]**
+- [X] T094 [US6] **[COMPLETED 2026-02-08]** Create ManualCleanupButton component in src/renderer/src/components/settings/DataManagement.tsx ("清理30天前数据" button, confirmation dialog per FR-048) **[IMPLEMENTED: Updated DataManagement component to use new retention:manual-cleanup IPC channel]**
 
 ### Retention Tests for US6
 
-- [ ] T095 [P] [US6] Unit test for retention cleanup in tests/unit/database/cleanup.test.ts (delete records older than retention period, preserve records if retention_days=-1 per plan v2.7)
-- [ ] T096 [P] [US6] Integration test for immediate cleanup in tests/integration/config/retention-change.test.ts (verify cleanup triggers immediately on retention period change for both email metadata AND feedback data, -1 permanent option preserves both per plan v2.7)
+- [X] T095 [P] [US6] **[COMPLETED 2026-02-08]** Unit test for retention cleanup in tests/unit/database/cleanup.test.ts (delete records older than retention period, preserve records if retention_days=-1 per plan v2.7) **[IMPLEMENTED: Comprehensive unit tests covering permanent option, cleanup preview, manual cleanup, storage usage, and error handling]**
+- [X] T096 [P] [US6] **[COMPLETED 2026-02-08]** Integration test for immediate cleanup in tests/integration/config/retention-change.test.ts (verify cleanup triggers immediately on retention period change for both email metadata AND feedback data, -1 permanent option preserves both per plan v2.7) **[IMPLEMENTED: Complete integration tests covering immediate cleanup triggers, permanent option preservation, and transaction integrity]**
 
 **Checkpoint**: User Story 6 complete - retention periods configurable including permanent option, automatic cleanup works, manual cleanup available
 
@@ -392,15 +392,16 @@
 - **User Story 3**: 11 tasks (11 completed ✅)
 - **User Story 4**: 10 tasks (10 completed ✅) **[COMPLETED 2026-02-07: T067-T076 all parsers and tests implemented]**
 - **User Story 5**: 13 tasks (13 completed ✅) **[COMPLETE 2026-02-08: T077-T089 all local mode, switching, UI, lifecycle, and network tasks]**
-- **User Story 6**: 7 tasks (0 completed, 7 pending, 3 updated for v2.7)
+- **User Story 6**: 7 tasks (7 completed ✅) **[COMPLETE 2026-02-08: T090-T096 all retention cleanup, UI, and tests implemented]**
 - **Polish**: 20 tasks (4 completed, 16 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 85/118 tasks (72.0%)
-**Remaining**: 33/118 tasks (28.0%)
+**Completed**: 92/118 tasks (78.0%)
+**Remaining**: 26/118 tasks (22.0%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
 **User Story 4**: ✅ COMPLETE - All 10 tasks finished (T067-T076)
 **User Story 5**: ✅ COMPLETE - All 13 tasks finished (T077-T089) - Dual-mode operation with hot switching, auto-update policy, and network isolation
+**User Story 6**: ✅ COMPLETE - All 7 tasks finished (T090-T096) - Configurable data retention with permanent option, automatic cleanup, and manual cleanup
 
 ### Plan v2.7 Impact Summary
 

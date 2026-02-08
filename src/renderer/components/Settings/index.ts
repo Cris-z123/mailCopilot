@@ -7,3 +7,4 @@
 export { FeedbackSettings } from './FeedbackSettings';
 export { DataManagement } from './DataManagement';
 export { ModeSwitchCard } from './ModeSwitchCard';
+export { RetentionConfig } from './RetentionConfig';

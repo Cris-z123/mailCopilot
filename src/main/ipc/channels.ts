@@ -34,6 +34,13 @@ export const IPC_CHANNELS = {
   FEEDBACK_EXPORT: 'feedback:export',
   FEEDBACK_DESTROY: 'feedback:destroy',
 
+  // Retention cleanup (US6: Configurable data retention)
+  RETENTION_GET_CONFIG: 'retention:get-config',
+  RETENTION_SET_PERIODS: 'retention:set-periods',
+  RETENTION_GET_PREVIEW: 'retention:get-preview',
+  RETENTION_MANUAL_CLEANUP: 'retention:manual-cleanup',
+  RETENTION_GET_STORAGE: 'retention:get-storage',
+
   // Onboarding / First-run disclosure
   ONBOARDING_GET_STATUS: 'onboarding:get-status',
   ONBOARDING_ACKNOWLEDGE: 'onboarding:acknowledge',
