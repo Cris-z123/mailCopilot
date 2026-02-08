@@ -6,12 +6,12 @@
  *
  * Per plan.md FR-039: Local mode requires manual update check trigger.
  *
- * @module renderer/components/settings/DataManagement
+ * @module renderer/components/Settings/DataManagement
  */
 
 import { useState, useEffect } from 'react';
 import { RefreshCw, Download, Trash2, HardDrive, Loader2, CheckCircle, XCircle } from 'lucide-react';
-import { ipcClient } from '../../services/ipc-client';
+import ipcClient, { IPC_CHANNELS } from '@renderer/services/ipc-client';
 
 /**
  * Update check state
@@ -81,6 +81,8 @@ export function DataManagement() {
     feedbackDataBytes: 0,
     totalBytes: 0,
   });
+  // TODO: call setStorageUsage in loadStorageUsage when db:storage-stats is implemented
+  void setStorageUsage;
 
   /**
    * Load storage usage on mount
@@ -89,34 +91,43 @@ export function DataManagement() {
     loadStorageUsage();
 
     // Listen for update events from main process
-    const cleanupUpdateAvailable = ipcClient.on('update-available', (_event, data) => {
-      setUpdateState({
-        isChecking: false,
-        hasUpdate: true,
-        version: data.version,
-        releaseDate: data.releaseDate,
-        releaseNotes: data.releaseNotes,
-        lastChecked: new Date(),
-      });
-    });
+    const cleanupUpdateAvailable = ipcClient.on(
+      'update-available',
+      (_event: Electron.IpcRendererEvent, data: { version?: string; releaseDate?: string; releaseNotes?: string }) => {
+        setUpdateState({
+          isChecking: false,
+          hasUpdate: true,
+          version: data.version,
+          releaseDate: data.releaseDate,
+          releaseNotes: data.releaseNotes,
+          lastChecked: new Date(),
+        });
+      }
+    );
 
-    const cleanupUpdateNotAvailable = ipcClient.on('update-not-available', (_event, data) => {
-      setUpdateState((prev) => ({
-        ...prev,
-        isChecking: false,
-        hasUpdate: false,
-        lastChecked: new Date(),
-      }));
-    });
+    const cleanupUpdateNotAvailable = ipcClient.on(
+      'update-not-available',
+      (_event: Electron.IpcRendererEvent, _data: unknown) => {
+        setUpdateState((prev) => ({
+          ...prev,
+          isChecking: false,
+          hasUpdate: false,
+          lastChecked: new Date(),
+        }));
+      }
+    );
 
-    const cleanupUpdateError = ipcClient.on('update-error', (_event, data) => {
-      setUpdateState((prev) => ({
-        ...prev,
-        isChecking: false,
-        error: data.error,
-        lastChecked: new Date(),
-      }));
-    });
+    const cleanupUpdateError = ipcClient.on(
+      'update-error',
+      (_event: Electron.IpcRendererEvent, data: { error?: string }) => {
+        setUpdateState((prev) => ({
+          ...prev,
+          isChecking: false,
+          error: data.error,
+          lastChecked: new Date(),
+        }));
+      }
+    );
 
     return () => {
       cleanupUpdateAvailable();
@@ -151,7 +162,7 @@ export function DataManagement() {
     }));
 
     try {
-      const result = await ipcClient.invoke('app:check-update', { manual: true });
+      const result = await ipcClient.invoke(IPC_CHANNELS.APP_CHECK_UPDATE, { manual: true });
 
       if (result.success) {
         setUpdateState((prev) => ({
@@ -187,7 +198,7 @@ export function DataManagement() {
    */
   async function handleDownloadUpdate() {
     try {
-      await ipcClient.invoke('app:download-update');
+      await ipcClient.invoke(IPC_CHANNELS.APP_DOWNLOAD_UPDATE);
       // TODO: Show download progress and install prompt
     } catch (err) {
       console.error('Failed to download update:', err);
@@ -311,7 +322,7 @@ export function DataManagement() {
                   onClick={handleDownloadUpdate}
                   className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <Download className="w-3 h-3 mr-1" />
+                  <Download className="w-4 h-3 mr-1" />
                   下载并安装
                 </button>
               </div>
@@ -369,8 +380,8 @@ export function DataManagement() {
         </button>
 
         <p className="text-xs text-gray-500 mt-2">
-          {updateState.lastChecking
-            ? `上次检查：${updateState.lastChecking.toLocaleString('zh-CN')}`
+          {updateState.lastChecked
+            ? `上次检查：${updateState.lastChecked.toLocaleString('zh-CN')}`
             : '尚未检查过更新'}
         </p>
       </div>

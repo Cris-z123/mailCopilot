@@ -5,12 +5,12 @@
  * Per plan.md FR-033, FR-034, FR-035: Displays current mode, allows mode switching,
  * shows notification when switch is queued during batch processing.
  *
- * @module renderer/components/settings/ModeSwitchCard
+ * @module renderer/components/Settings/ModeSwitchCard
  */
 
 import { useState, useEffect } from 'react';
 import { Info, Loader2 } from 'lucide-react';
-import { ipcClient } from '../../services/ipc-client';
+import ipcClient from '@renderer/services/ipc-client';
 
 /**
  * Processing mode type
@@ -74,34 +74,40 @@ export function ModeSwitchCard() {
     loadCurrentMode();
 
     // Listen for mode change events from main process
-    const cleanupModeChanged = ipcClient.on('mode-changed', (_event, data) => {
-      setModeState((prev) => ({
-        ...prev,
-        currentMode: data.to,
-        pendingMode: null,
-        isProcessing: false,
-        switchRequestedAt: null,
-      }));
-      setIsSwitching(false);
-    });
+    const cleanupModeChanged = ipcClient.on(
+      'mode-changed',
+      (_event: Electron.IpcRendererEvent, data: { to: ProcessingMode }) => {
+        setModeState((prev) => ({
+          ...prev,
+          currentMode: data.to,
+          pendingMode: null,
+          isProcessing: false,
+          switchRequestedAt: null,
+        }));
+        setIsSwitching(false);
+      }
+    );
 
-    const cleanupSwitchQueued = ipcClient.on('mode-switch-queued', (_event, data) => {
-      setModeState((prev) => ({
-        ...prev,
-        pendingMode: data.to,
-        switchRequestedAt: data.requestedAt,
-      }));
-      setIsSwitching(false);
-    });
+    const cleanupSwitchQueued = ipcClient.on(
+      'mode-switch-queued',
+      (_event: Electron.IpcRendererEvent, data: { to: ProcessingMode; requestedAt: number }) => {
+        setModeState((prev) => ({
+          ...prev,
+          pendingMode: data.to,
+          switchRequestedAt: data.requestedAt,
+        }));
+        setIsSwitching(false);
+      }
+    );
 
-    const cleanupBatchStart = ipcClient.on('batch-start', (_event, data) => {
+    const cleanupBatchStart = ipcClient.on('batch-start', (_event: Electron.IpcRendererEvent, _data: unknown) => {
       setModeState((prev) => ({
         ...prev,
         isProcessing: true,
       }));
     });
 
-    const cleanupBatchComplete = ipcClient.on('batch-complete', (_event, data) => {
+    const cleanupBatchComplete = ipcClient.on('batch-complete', (_event: Electron.IpcRendererEvent, _data: unknown) => {
       setModeState((prev) => ({
         ...prev,
         isProcessing: false,
@@ -197,8 +203,9 @@ export function ModeSwitchCard() {
   }
 
   const currentConfig = MODE_CONFIG[modeState.currentMode];
-  const hasPendingSwitch = modeState.pendingMode !== null;
-  const pendingConfig = hasPendingSwitch ? MODE_CONFIG[modeState.pendingMode] : null;
+  const pendingMode = modeState.pendingMode;
+  const hasPendingSwitch = pendingMode !== null;
+  const pendingConfig = pendingMode !== null ? MODE_CONFIG[pendingMode] : null;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

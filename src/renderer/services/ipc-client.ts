@@ -22,6 +22,7 @@ export const IPC_CHANNELS = {
   CONFIG_GET: 'config:get',
   CONFIG_SET: 'config:set',
   APP_CHECK_UPDATE: 'app:check-update',
+  APP_DOWNLOAD_UPDATE: 'app:download-update',
   EMAIL_FETCH_META: 'email:fetch-meta',
 } as const;
 

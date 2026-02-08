@@ -23,6 +23,7 @@ export const IPC_CHANNELS = {
 
   // Update checking
   APP_CHECK_UPDATE: 'app:check-update',
+  APP_DOWNLOAD_UPDATE: 'app:download-update',
 
   // Email metadata fetching
   EMAIL_FETCH_META: 'email:fetch-meta',

@@ -10,6 +10,7 @@ import { logger } from './config/logger.js';
 import { IPC_CHANNELS } from './ipc/channels.js';
 import { SingleInstanceManager, ApplicationManager } from './app.js';
 import { registerOnboardingHandlers } from './ipc/handlers/onboardingHandler.js';
+import { checkForUpdates, downloadAndInstallUpdate } from './app/lifecycle.js';
 
 /**
  * Main Process Entry Point
@@ -194,10 +195,25 @@ class Application {
     });
 
     // App check update
-    ipcMain.handle(IPC_CHANNELS.APP_CHECK_UPDATE, async (_event, _request) => {
+    ipcMain.handle(IPC_CHANNELS.APP_CHECK_UPDATE, async (_event, request?: { manual?: boolean }) => {
       logger.debug('IPC', 'Update check request received');
-      // TODO: Implement in US5
-      return { hasUpdate: false };
+      const manual = request?.manual ?? false;
+      const result = await checkForUpdates(manual);
+      return {
+        success: result.success,
+        hasUpdate: result.hasUpdate,
+        version: result.version,
+        releaseDate: result.releaseDate,
+        releaseNotes: result.releaseNotes,
+        error: result.error,
+      };
+    });
+
+    // App download and install update
+    ipcMain.handle(IPC_CHANNELS.APP_DOWNLOAD_UPDATE, async () => {
+      logger.debug('IPC', 'Download update request received');
+      await downloadAndInstallUpdate();
+      return { success: true };
     });
 
     // Email fetch metadata

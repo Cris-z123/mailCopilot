@@ -8,9 +8,13 @@
  */
 
 import { app, BrowserWindow } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import electronUpdater from 'electron-updater';
+import type { UpdateInfo } from 'electron-updater';
+
+const { autoUpdater } = electronUpdater;
 import { logger } from '../config/logger.js';
-import { getModeManager, ProcessingMode } from './mode-manager.js';
+import { getModeManager } from './mode-manager.js';
+import type { ModeSwitchEvent } from './mode-manager.js';
 
 /**
  * Update check result
@@ -26,10 +30,12 @@ export interface UpdateCheckResult {
 
 /**
  * Auto-updater configuration
+ * Set GITHUB_REPO_OWNER in environment or .env for update checks to work.
  */
+const GITHUB_REPO_OWNER = process.env.GITHUB_REPO_OWNER ?? 'your-username';
 autoUpdater.setFeedURL({
   provider: 'github',
-  owner: 'your-username', // TODO: Replace with actual GitHub username
+  owner: GITHUB_REPO_OWNER,
   repo: 'mailCopilot',
 });
 
@@ -157,7 +163,7 @@ export function initializeLifecycle(mainWindow: BrowserWindow): void {
    */
 
   // Update available
-  autoUpdater.on('update-available', (info) => {
+  autoUpdater.on('update-available', (info: UpdateInfo) => {
     logger.info('Lifecycle', 'Update available event', {
       version: info.version,
       releaseDate: info.releaseDate,
@@ -174,7 +180,7 @@ export function initializeLifecycle(mainWindow: BrowserWindow): void {
   });
 
   // Update not available
-  autoUpdater.on('update-not-available', (info) => {
+  autoUpdater.on('update-not-available', (_info: UpdateInfo) => {
     logger.info('Lifecycle', 'No updates available');
 
     // Send notification to renderer (for manual checks)
@@ -186,7 +192,7 @@ export function initializeLifecycle(mainWindow: BrowserWindow): void {
   });
 
   // Update downloaded
-  autoUpdater.on('update-downloaded', (info) => {
+  autoUpdater.on('update-downloaded', (info: { version: string }) => {
     logger.info('Lifecycle', 'Update downloaded', {
       version: info.version,
     });
@@ -200,7 +206,7 @@ export function initializeLifecycle(mainWindow: BrowserWindow): void {
   });
 
   // Update error
-  autoUpdater.on('error', (error) => {
+  autoUpdater.on('error', (error: Error) => {
     logger.error('Lifecycle', 'Auto-updater error', {
       error: error instanceof Error ? error.message : String(error),
     });
@@ -217,8 +223,8 @@ export function initializeLifecycle(mainWindow: BrowserWindow): void {
    * Mode change event
    * Re-evaluate auto-update policy when mode changes
    */
-  modeManager.on('mode-changed', (event: any) => {
-    const newMode = event.to as ProcessingMode;
+  modeManager.on('mode-changed', (event: ModeSwitchEvent) => {
+    const newMode = event.to;
 
     logger.info('Lifecycle', 'Mode changed', {
       from: event.from,
