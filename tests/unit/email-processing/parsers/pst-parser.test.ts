@@ -515,7 +515,7 @@ ${'L'.repeat(300)}`;
     });
 
     it('should include file path in error message', async () => {
-      mockExec.mockImplementation((cmd: string, callback: any) => {
+      mockExec.mockImplementation((_cmd: string, callback: any) => {
         callback(new Error('Command failed'), { stdout: '', stderr: '' });
       });
 

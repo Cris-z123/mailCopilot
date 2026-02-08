@@ -14,11 +14,14 @@ process.env.VITEST = 'true';
 // Initialize happy-dom window if not already present
 if (!global.window || typeof global.window.document === 'undefined') {
   const happyWindow = new Window();
-  global.window = happyWindow as any;
-  global.document = happyWindow.document;
-  global.HTMLElement = happyWindow.HTMLElement;
-  global.Element = happyWindow.Element;
-  global.Node = happyWindow.Node;
+
+  // Cast through unknown to bypass strict type checking for happy-dom globals
+  // Note: happy-dom has different type signatures than native DOM types
+  global.window = happyWindow as unknown as typeof global.window;
+  global.document = happyWindow.document as unknown as typeof global.document;
+  global.HTMLElement = happyWindow.HTMLElement as unknown as typeof global.HTMLElement;
+  global.Element = happyWindow.Element as unknown as typeof global.Element;
+  global.Node = happyWindow.Node as unknown as typeof global.Node;
 }
 
 // Mock window.electronAPI for renderer process tests

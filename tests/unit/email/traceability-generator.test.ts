@@ -7,7 +7,7 @@
  * @module tests/unit/email/traceability-generator.test
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { TraceabilityGenerator } from '@/email/TraceabilityGenerator';
 import type { ParsedEmail } from '@/email/parsers/EmailParser';
 

@@ -153,7 +153,7 @@ describe('Local-Only Feedback Storage (T057)', () => {
 
       // Mock safeStorage
       const safeStorageMock = {
-        getPassword: vi.fn(() => Buffer.from('local-key')),
+        getPassword: vi.fn((_service: string, _account: string) => Buffer.from('local-key')),
         setPassword: vi.fn(() => {}),
       };
 

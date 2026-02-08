@@ -8,7 +8,7 @@
  * @module main/llm/LLMAdapter
  */
 
-import { ParsedEmail } from '../email/parsers/EmailParser.js';
+import type { ParsedEmail } from '../email/parsers/EmailParser.js';
 
 /**
  * Email batch input for LLM processing
@@ -198,5 +198,3 @@ export interface LLMAdapter {
    */
   updateConfig(config: Partial<LLMAdapterConfig>): void;
 }
-
-export default LLMAdapter;
