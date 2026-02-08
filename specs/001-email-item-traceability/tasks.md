@@ -355,9 +355,9 @@
 
 ### Error Handling & Logging
 
-- [ ] T104 Implement global error handler in src/main/error-handler.ts (catch unhandled errors, log with context, show user-friendly error messages per plan v2.7)
-- [ ] T105 [P] Implement structured error logging in src/main/config/logger.ts (error type, module, message, timestamp, context ID per FR-053)
-- [ ] T106 [P] Implement audit logging for duplicate detection in src/main/email-processing/duplicate-detector.ts (log "跳过N封重复邮件", "跳过N封已处理邮件" per FR-008A)
+- [X] T104 Implement global error handler in src/main/error-handler.ts (catch unhandled errors, log with context, show user-friendly error messages per plan v2.7) **[COMPLETED 2026-02-08: Complete error handler with uncaughtException, unhandledRejection, and render-process-gone handlers, error categorization, user-friendly dialogs, and error rate tracking]**
+- [X] T105 [P] Implement structured error logging in src/main/config/logger.ts (error type, module, message, timestamp, context ID per FR-053) **[ALREADY IMPLEMENTED: logger.ts has all required fields - error type (level), module, message, timestamp, context ID support]**
+- [X] T106 [P] Implement audit logging for duplicate detection in src/main/email/DuplicateDetector.ts (log "跳过N封重复邮件", "跳过N封已处理邮件" per FR-008A) **[ALREADY IMPLEMENTED: logSummary() method logs duplicate detection summary per FR-008A]**
 
 ### Security Hardening
 
@@ -393,10 +393,10 @@
 - **User Story 4**: 10 tasks (10 completed ✅) **[COMPLETED 2026-02-07: T067-T076 all parsers and tests implemented]**
 - **User Story 5**: 13 tasks (13 completed ✅) **[COMPLETE 2026-02-08: T077-T089 all local mode, switching, UI, lifecycle, and network tasks]**
 - **User Story 6**: 7 tasks (7 completed ✅) **[COMPLETE 2026-02-08: T090-T096 all retention cleanup, UI, and tests implemented]**
-- **Polish**: 20 tasks (4 completed, 16 pending, 5 new for v2.7 frontend stack + constitution compliance)
+- **Polish**: 20 tasks (7 completed, 13 pending, 5 new for v2.7 frontend stack + constitution compliance)
 
-**Completed**: 92/118 tasks (78.0%)
-**Remaining**: 26/118 tasks (22.0%)
+**Completed**: 95/118 tasks (80.5%)
+**Remaining**: 23/118 tasks (19.5%)
 
 **MVP Scope (User Story 1)**: ✅ COMPLETE - All 30 tasks finished
 **User Story 4**: ✅ COMPLETE - All 10 tasks finished (T067-T076)
