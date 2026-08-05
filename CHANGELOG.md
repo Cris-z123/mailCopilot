@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.2](https://github.com/Cris-z123/maelor/compare/maelor-v3.0.1...maelor-v3.0.2) (2026-08-05)
+
+
+### Bug Fixes
+
+* **renderer:** add vite/client type declarations for asset imports ([b9fb8bd](https://github.com/Cris-z123/maelor/commit/b9fb8bdc532f4e9002abd0573d988f9cf4f1f2ab))
+* **renderer:** replace garbled apiUnavailableMessage with english text ([9c735f7](https://github.com/Cris-z123/maelor/commit/9c735f77b1e6c9a032e5bed26ced6369c8ab92e6))
+
 ## [3.0.1](https://github.com/Cris-z123/maelor/compare/maelor-v3.0.0...maelor-v3.0.1) (2026-04-10)
 
 

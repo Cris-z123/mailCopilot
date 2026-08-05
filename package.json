@@ -1,6 +1,6 @@
 {
   "name": "maelor",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "type": "module",
   "description": "Maelor — A secure and reliable email copilot",
   "main": "electron/main.js",
