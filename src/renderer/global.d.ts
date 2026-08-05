@@ -4,6 +4,8 @@
  * Extends the global Window interface with Electron IPC APIs.
  */
 
+/// <reference types="vite/client" />
+
 import type {
     ConnectionResult,
     OnboardingStatus,
