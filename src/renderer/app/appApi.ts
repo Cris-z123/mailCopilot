@@ -15,7 +15,8 @@ const fallbackSettings: SettingsView = {
     databaseSizeBytes: 0,
 };
 
-const apiUnavailableMessage = 'Electron API �����á�';
+const apiUnavailableMessage =
+    'Electron API is unavailable. This may be due to running in a non-Electron environment.';
 
 function getApi() {
     return window.electronAPI;
